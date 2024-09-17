@@ -45,17 +45,18 @@ public class HomeFragment extends Fragment {
         LinearLayout transactionList = view.findViewById(R.id.transaction_list);
 
         // Create five transaction items dynamically
-        addTransactionItem(transactionList, "1 Aug 2024", "Netflix", "Auto Transfer", "- RM11.00", getActivity());
-        addTransactionItem(transactionList, "2 Aug 2024", "Spotify", "Auto Transfer", "- RM15.00", getActivity());
-        addTransactionItem(transactionList, "3 Aug 2024", "Apple Music", "Auto Transfer", "- RM20.00", getActivity());
-        addTransactionItem(transactionList, "4 Aug 2024", "HBO Max", "Auto Transfer", "- RM25.00", getActivity());
-        addTransactionItem(transactionList, "5 Aug 2024", "Disney+", "Auto Transfer", "- RM30.00", getActivity());
+        addTransactionItem(transactionList, R.drawable.add, "1 Aug 2024", "Netflix", "Auto Transfer", "- RM11.00", getActivity());
+        addTransactionItem(transactionList, R.drawable.add,"2 Aug 2024", "Spotify", "Auto Transfer", "- RM15.00", getActivity());
+        addTransactionItem(transactionList, R.drawable.add, "3 Aug 2024", "Apple Music", "Auto Transfer", "- RM20.00", getActivity());
+        addTransactionItem(transactionList, R.drawable.add, "4 Aug 2024", "HBO Max", "Auto Transfer", "- RM25.00", getActivity());
+        addTransactionItem(transactionList, R.drawable.add, "5 Aug 2024", "Disney+", "Auto Transfer", "- RM30.00", getActivity());
 
         return view;
     }
 
     // Helper method to add transaction items dynamically
-    private void addTransactionItem(LinearLayout parent, String date, String label, String source, String amount, Context context) {
+// Helper method to add transaction items dynamically
+    private void addTransactionItem(LinearLayout parent, int iconResId, String date, String label, String source, String amount, Context context) {
         // Create the main container for the transaction item
         LinearLayout transactionItem = new LinearLayout(context);
         transactionItem.setOrientation(LinearLayout.HORIZONTAL);
@@ -70,7 +71,7 @@ public class HomeFragment extends Fragment {
         ImageView icon = new ImageView(context);
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dpToPx(context, 40), dpToPx(context, 40)); // Consistent 40dp width and height
         icon.setLayoutParams(iconParams);
-        icon.setImageResource(R.drawable.add); // Replace with your icon
+        icon.setImageResource(iconResId); // Use the passed iconResId
         transactionItem.addView(icon);
 
         // Create the LinearLayout for the text content (date, label, source)

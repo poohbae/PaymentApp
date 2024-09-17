@@ -64,7 +64,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:contentDescription="@string/scan"
-                android:src="@drawable/qr_code_scanner"
+                android:src="@drawable/scan"
                 app:layout_anchor="@id/bottomAppBar"
                 app:maxImageSize="40dp"/>
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
