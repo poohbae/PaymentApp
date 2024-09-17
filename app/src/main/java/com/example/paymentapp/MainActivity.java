@@ -28,6 +28,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FloatingActionButton fab;
     DrawerLayout drawerLayout;
     BottomNavigationView bottomNavigationView;
+    NavigationView sideNavigationView;  // Declare the side navigation view
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,12 +39,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         fab = findViewById(R.id.fab);
         drawerLayout = findViewById(R.id.drawerLayout);
+        sideNavigationView = findViewById(R.id.sideNavigationView);  // Initialize the side navigation view
 
         Toolbar toolbar = findViewById(R.id.toolBar);
         setSupportActionBar(toolbar);
 
-        NavigationView sideNavigationView = findViewById(R.id.sideNavigationView);
-        sideNavigationView.setNavigationItemSelectedListener(this);
+        sideNavigationView.setNavigationItemSelectedListener(this);  // Set listener for side navigation
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(this, drawerLayout, toolbar, R.string.open_nav, R.string.close_nav);
         drawerLayout.addDrawerListener(toggle);
@@ -56,6 +57,21 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Set up bottom navigation item selection listener
         bottomNavigationView.setOnItemSelectedListener(item -> {
+            // Uncheck all bottom navigation items
+            for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
+                MenuItem menuItem = bottomNavigationView.getMenu().getItem(i);
+                menuItem.setChecked(false); // Uncheck all items
+            }
+
+            // Check only the clicked item
+            item.setChecked(true);
+
+            // Uncheck all items in the side navigation when a bottom nav item is selected
+            sideNavigationView.getMenu().setGroupCheckable(0, true, false);
+            for (int i = 0; i < sideNavigationView.getMenu().size(); i++) {
+                sideNavigationView.getMenu().getItem(i).setChecked(false);
+            }
+
             if (item.getItemId() == R.id.home) {
                 Toast.makeText(MainActivity.this, "Home is clicked", Toast.LENGTH_SHORT).show();
                 getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new HomeFragment()).commit();
@@ -78,6 +94,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        // Uncheck all bottom navigation items when a side nav item is selected
+        bottomNavigationView.getMenu().setGroupCheckable(0, true, false);
+        for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
+            bottomNavigationView.getMenu().getItem(i).setChecked(false);
+        }
+
         if (item.getItemId() == R.id.dashboard) {
             Toast.makeText(MainActivity.this, "Dashboard is clicked", Toast.LENGTH_SHORT).show();
             getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new DashboardFragment()).commit();
@@ -87,7 +109,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         } else if (item.getItemId() == R.id.logout) {
             Toast.makeText(MainActivity.this, "Logout is clicked", Toast.LENGTH_SHORT).show();
         }
+
         drawerLayout.closeDrawer(GravityCompat.START);  // Close the drawer after selection
+        item.setChecked(true);  // Ensure the selected item in the side navigation is checked
         return true;
     }
 
