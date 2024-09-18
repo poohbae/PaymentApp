@@ -11,6 +11,8 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import android.content.Context;
 import android.graphics.Color;
@@ -46,7 +48,17 @@ public class HomeFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        // Find the "See All" button in the inflated layout
+        CardView reloadButton = view.findViewById(R.id.reload_button);
+
+        // Set click listener for the reload button
+        reloadButton.setOnClickListener(v -> {
+            // Navigate to ReloadFragment
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, new ReloadFragment())
+                    .addToBackStack(null) // Add the transaction to the back stack
+                    .commit();
+        });
+
         TextView seeAllButton = view.findViewById(R.id.see_all_button);
 
         // Set a click listener on the "See All" button

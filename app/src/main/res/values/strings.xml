@@ -18,4 +18,9 @@
     <string name="transfer">Transfer</string>
     <string name="transaction_history">Transaction History</string>
     <string name="see_all">See All</string>
+    <string name="current_balance">Current Balance</string>
+    <string name="enter_amount">Enter your amount</string>
+    <string name="payment_method">Payment Method</string>
+    <string name="top_up_amount">Top Up Amount</string>
+    <string name="total_amount">Total Amount</string>
 </resources>
