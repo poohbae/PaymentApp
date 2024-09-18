@@ -2,6 +2,7 @@
     <string name="app_name">PaymentApp</string>
     <string name="open_nav">Open Navigation Drawer</string>
     <string name="close_nav">Close Navigation Drawer</string>
+    <string name="greeting">Good Day</string>
     <string name="home">Home</string>
     <string name="portfolio">Portfolio</string>
     <string name="scan">Scan</string>

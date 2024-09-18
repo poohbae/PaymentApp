@@ -1,9 +1,13 @@
 package com.example.paymentapp;
 
+import android.app.Dialog;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -12,19 +16,29 @@ import android.content.Context;
 import android.graphics.Color;
 import android.util.TypedValue;
 import android.widget.Toast;
+import java.util.ArrayList;
+import java.util.List;
+
+class Transaction {
+    public int iconResId;
+    public String date;
+    public String label;
+    public String source;
+    public String amount;
+
+    // Constructor
+    public Transaction(int iconResId, String date, String label, String source, String amount) {
+        this.iconResId = iconResId;
+        this.date = date;
+        this.label = label;
+        this.source = source;
+        this.amount = amount;
+    }
+}
 
 public class HomeFragment extends Fragment {
 
-    public HomeFragment() {
-        // Required empty public constructor
-    }
-
-    public static HomeFragment newInstance(String param1, String param2) {
-        HomeFragment fragment = new HomeFragment();
-        Bundle args = new Bundle();
-        fragment.setArguments(args);
-        return fragment;
-    }
+    private List<Transaction> transactions;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -37,27 +51,66 @@ public class HomeFragment extends Fragment {
 
         // Set a click listener on the "See All" button
         seeAllButton.setOnClickListener(v -> {
-            // Handle the click event here
+            showBottomDialog();
             Toast.makeText(getActivity(), "See All Clicked", Toast.LENGTH_SHORT).show();
         });
+
+        // Initialize the transactions list
+        transactions = new ArrayList<>();
+        transactions.add(new Transaction(R.drawable.add, "1 Aug 2024", "Netflix", "Auto Transfer", "- RM11.00"));
+        transactions.add(new Transaction(R.drawable.add, "2 Aug 2024", "Spotify", "Auto Transfer", "- RM15.00"));
+        transactions.add(new Transaction(R.drawable.add, "3 Aug 2024", "Apple Music", "Auto Transfer", "- RM20.00"));
+        transactions.add(new Transaction(R.drawable.add, "4 Aug 2024", "HBO Max", "Auto Transfer", "- RM25.00"));
+        transactions.add(new Transaction(R.drawable.add, "5 Aug 2024", "Disney+", "Auto Transfer", "- RM30.00"));
+        transactions.add(new Transaction(R.drawable.add, "1 Aug 2024", "Netflix", "Auto Transfer", "- RM11.00"));
+        transactions.add(new Transaction(R.drawable.add, "2 Aug 2024", "Spotify", "Auto Transfer", "- RM15.00"));
+        transactions.add(new Transaction(R.drawable.add, "3 Aug 2024", "Apple Music", "Auto Transfer", "- RM20.00"));
+        transactions.add(new Transaction(R.drawable.add, "4 Aug 2024", "HBO Max", "Auto Transfer", "- RM25.00"));
+        transactions.add(new Transaction(R.drawable.add, "5 Aug 2024", "Disney+", "Auto Transfer", "- RM30.00"));
 
         // Find the parent LinearLayout where transaction items will be added
         LinearLayout transactionList = view.findViewById(R.id.transaction_list);
 
-        // Create five transaction items dynamically
-        addTransactionItem(transactionList, R.drawable.add, "1 Aug 2024", "Netflix", "Auto Transfer", "- RM11.00", getActivity());
-        addTransactionItem(transactionList, R.drawable.add,"2 Aug 2024", "Spotify", "Auto Transfer", "- RM15.00", getActivity());
-        addTransactionItem(transactionList, R.drawable.add, "3 Aug 2024", "Apple Music", "Auto Transfer", "- RM20.00", getActivity());
-        addTransactionItem(transactionList, R.drawable.add, "4 Aug 2024", "HBO Max", "Auto Transfer", "- RM25.00", getActivity());
-        addTransactionItem(transactionList, R.drawable.add, "5 Aug 2024", "Disney+", "Auto Transfer", "- RM30.00", getActivity());
+        // Populate transactionList using the transactions list
+        for (Transaction transaction : transactions) {
+            addTransactionItem(transactionList, transaction.iconResId, transaction.date, transaction.label, transaction.source, transaction.amount, getActivity());
+        }
 
         return view;
     }
 
+    // Method to show a bottom dialog
+    private void showBottomDialog() {
+        final Dialog dialog = new Dialog(getActivity());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.see_all);
+
+        // Initialize dialog views
+        LinearLayout transactionHistory = dialog.findViewById(R.id.transaction_history);
+        ImageView closeButton = dialog.findViewById(R.id.closeButton);
+
+        // Populate transactionHistory using the transactions list
+        for (Transaction transaction : transactions) {
+            addTransactionItem(transactionHistory, transaction.iconResId, transaction.date, transaction.label, transaction.source, transaction.amount, getActivity());
+        }
+
+        // Set up click listener for close button
+        closeButton.setOnClickListener(view -> dialog.dismiss());
+
+        // Show the dialog and set its properties
+        dialog.show();
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.getAttributes().windowAnimations = R.style.DialogAnimation;
+            window.setGravity(Gravity.BOTTOM);
+        }
+    }
+
     // Helper method to add transaction items dynamically
-// Helper method to add transaction items dynamically
     private void addTransactionItem(LinearLayout parent, int iconResId, String date, String label, String source, String amount, Context context) {
-        // Create the main container for the transaction item
+        // Same method as before to add transaction items to the parent layout
         LinearLayout transactionItem = new LinearLayout(context);
         transactionItem.setOrientation(LinearLayout.HORIZONTAL);
         transactionItem.setPadding(8, 8, 8, dpToPx(context, 15)); // 8dp padding and 15dp bottom padding
@@ -121,3 +174,4 @@ public class HomeFragment extends Fragment {
         return Math.round(dp * density);
     }
 }
+

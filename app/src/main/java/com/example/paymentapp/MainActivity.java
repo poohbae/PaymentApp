@@ -43,6 +43,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         Toolbar toolbar = findViewById(R.id.toolBar);
         setSupportActionBar(toolbar);
+        getSupportActionBar().setTitle(getString(R.string.greeting));
 
         sideNavigationView.setNavigationItemSelectedListener(this);  // Set listener for side navigation
 
@@ -127,7 +128,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Set up click listener for scan area
         scanArea.setOnClickListener(v -> {
-            dialog.dismiss();
             Toast.makeText(MainActivity.this, "Scan Area is clicked", Toast.LENGTH_SHORT).show();
         });
 
