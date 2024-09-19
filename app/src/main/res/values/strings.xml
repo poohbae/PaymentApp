@@ -23,4 +23,9 @@
     <string name="payment_method">Payment Method</string>
     <string name="top_up_amount">Top Up Amount</string>
     <string name="total_amount">Total Amount</string>
+    <string name="pay_now">Pay Now</string>
+    <string name="add_money">Add Money</string>
+    <string name="amount">Amount</string>
+    <string name="cancel">Cancel</string>
+    <string name="pay">Pay</string>
 </resources>
