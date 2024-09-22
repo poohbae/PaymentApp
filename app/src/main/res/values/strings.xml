@@ -28,4 +28,7 @@
     <string name="amount">Amount</string>
     <string name="cancel">Cancel</string>
     <string name="pay">Pay</string>
+    <string name="top_up_from">Top Up From</string>
+    <string name="reference">Reference ID</string>
+    <string name="ok">OK</string>
 </resources>

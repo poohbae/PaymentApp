@@ -1,0 +1,209 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/gray"
+    tools:context=".ReloadDoneFragment"
+    android:padding="10dp">
+
+    <!-- Close button aligned to the top-right -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:padding="10dp">
+
+        <!-- Close button aligned to the right -->
+        <ImageView
+            android:id="@+id/close_button"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:src="@drawable/close"
+            android:padding="10dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentTop="true" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="10dp"
+        android:layout_marginBottom="10dp">
+
+        <!-- Tick ImageView -->
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="150dp"
+            android:src="@drawable/tick" />
+
+        <!-- First row of text -->
+        <TextView
+            android:id="@+id/total_amount"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:layout_marginTop="5dp"
+            android:gravity="center"/>
+
+        <!-- Second row of text -->
+        <TextView
+            android:id="@+id/date_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/black"
+            android:textSize="15sp"
+            android:layout_marginTop="5dp"
+            android:gravity="center"/>
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:orientation="vertical"
+        android:padding="8dp">
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="15dp">
+
+                <!-- New Row: TextView for "Top up from" -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/top_up_from"
+                    android:textColor="@color/black"
+                    android:textSize="16sp"
+                    android:layout_marginBottom="10dp"
+                    android:gravity="center_vertical"/>
+
+                <!-- Existing Row: Icon and Maybank2u Text -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <!-- Icon on the left -->
+                    <ImageView
+                        android:layout_width="35dp"
+                        android:layout_height="40dp"
+                        android:src="@drawable/maybank"
+                        android:layout_marginEnd="15dp" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <!-- Payment Method Text -->
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginBottom="5dp"
+                            android:text="Maybank2u [*2256]"
+                            android:textColor="@color/black"
+                            android:textSize="15sp" />
+                    </LinearLayout>
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="25dp"
+            android:layout_marginBottom="15dp">
+
+            <!-- TextView for "Amount" at the start -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/amount"
+                android:textColor="@color/black"
+                android:textSize="20sp"
+                android:layout_marginEnd="8dp"/>
+
+            <!-- TextView for "RM20" at the end -->
+            <TextView
+                android:id="@+id/total_amount2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/indigo"
+                android:textSize="25sp"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+
+        <!-- Container -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/white"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:padding="20dp"
+            android:layout_marginBottom="20dp">
+
+            <!-- TextView for "Reference" at the start -->
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/reference"
+                android:textColor="@color/black"
+                android:textSize="17sp"
+                android:layout_marginEnd="8dp"/>
+
+            <!-- TextView for "id" at the end -->
+            <TextView
+                android:id="@+id/reference_id"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:textSize="17sp"/>
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Button at the bottom -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <Button
+            android:id="@+id/ok_button"
+            android:layout_width="0dp"
+            android:layout_height="60dp"
+            android:layout_weight="1"
+            android:text="@string/ok"
+            android:textColor="@color/white"
+            android:textSize="16sp"
+            android:layout_margin="8dp"
+            android:backgroundTint="@color/indigo"
+            android:elevation="4dp"
+            android:padding="8dp"
+            android:gravity="center" />
+    </LinearLayout>
+
+</LinearLayout>

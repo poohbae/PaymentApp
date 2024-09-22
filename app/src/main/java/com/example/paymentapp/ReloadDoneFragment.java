@@ -13,49 +13,73 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class AddMoneyFragment extends Fragment {
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Random;
+
+public class ReloadDoneFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_add_money, container, false);
+        View view = inflater.inflate(R.layout.fragment_reload_done, container, false);
+
+        // Find the close button (replacing back button with close button)
+        ImageView closeButton = view.findViewById(R.id.close_button);
+
+        // Set a click listener on the close button to navigate to HomeFragment
+        closeButton.setOnClickListener(v -> {
+            // Navigate to HomeFragment
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, new HomeFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         // Retrieve the amount from the arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
             String amount = arguments.getString("amount", "0");
 
-            // Now you can use the amount as needed, for example, display it in a TextView
+            // Set amount to the first TextView (total_amount)
             TextView totalAmount = view.findViewById(R.id.total_amount); // Ensure this TextView is in your layout
-            totalAmount.setText(amount);
+            totalAmount.setText("RM " + amount);
 
-            // Set up a click listener for proceeding to ReloadDoneFragment
-            Button payButton = view.findViewById(R.id.pay_button);  // Assuming there's a proceed button in the layout
-            payButton.setOnClickListener(v -> {
-                // Create a new bundle to pass the same amount to ReloadDoneFragment
-                Bundle bundle = new Bundle();
-                bundle.putString("amount", amount);
-
-                // Create ReloadDoneFragment instance and pass the arguments
-                ReloadDoneFragment reloadDoneFragment = new ReloadDoneFragment();
-                reloadDoneFragment.setArguments(bundle);
-
-                // Replace the current fragment with ReloadDoneFragment
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.frameLayout, reloadDoneFragment)
-                        .addToBackStack(null)
-                        .commit();
-            });
+            // Set amount to the second TextView (total_amount2)
+            TextView totalAmount2 = view.findViewById(R.id.total_amount2); // Ensure this TextView is also in your layout
+            totalAmount2.setText("RM " + amount);
         }
 
-        // Find the back button
-        ImageView backButton = view.findViewById(R.id.back_button);
+        TextView dateTime = view.findViewById(R.id.date_time);
 
-        // Set a click listener on the back button to navigate back to ReloadFragment
-        backButton.setOnClickListener(v -> {
-            // Go back to ReloadFragment using popBackStack, which preserves its state
-            getParentFragmentManager().popBackStack();
+        // Get current date and time in the desired format directly
+        String formattedDate = new SimpleDateFormat("dd MMM yyyy, hh:mma")
+                .format(Calendar.getInstance().getTime())
+                .replace("AM", "am").replace("PM", "pm");
+
+        // Set the formatted date and time to the TextView
+        dateTime.setText(formattedDate);
+
+        TextView referenceId = view.findViewById(R.id.reference_id);
+
+        // Generate a random 10-digit number
+        Random random = new Random();
+        long referenceNumber = 1000000000L + (long)(random.nextDouble() * 9000000000L);
+
+        // Set the generated reference ID to the TextView
+        referenceId.setText(String.valueOf(referenceNumber));
+
+        // Find the close button (replacing back button with close button)
+        Button okButton = view.findViewById(R.id.ok_button);
+
+        // Set a click listener on the close button to navigate to HomeFragment
+        okButton.setOnClickListener(v -> {
+            // Navigate to HomeFragment
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, new HomeFragment())
+                    .addToBackStack(null)
+                    .commit();
         });
 
         return view;

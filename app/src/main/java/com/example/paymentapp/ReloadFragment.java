@@ -7,6 +7,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.cardview.widget.CardView;
@@ -20,6 +21,7 @@ public class ReloadFragment extends Fragment {
     private EditText inputAmount;
     private Button rm100Button, rm200Button, rm300Button, rm500Button, payNowButton;
     private String selectedAmount = "";
+    private TextView topUpAmountTextView, totalAmountTextView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -35,6 +37,13 @@ public class ReloadFragment extends Fragment {
         rm500Button = view.findViewById(R.id.rm500_button);
         payNowButton = view.findViewById(R.id.pay_now_button);
 
+        // Bind top_up_amount and total_amount TextViews
+        topUpAmountTextView = view.findViewById(R.id.top_up_amount);  // Make sure the IDs are correct
+        totalAmountTextView = view.findViewById(R.id.total_amount);
+
+        // Set default values for top_up_amount and total_amount
+        updateAmount("0");
+
         // Find the back button
         ImageView backButton = view.findViewById(R.id.back_button);
 
@@ -48,21 +57,25 @@ public class ReloadFragment extends Fragment {
         rm100Button.setOnClickListener(v -> {
             selectedAmount = "100";
             inputAmount.setText("100");  // Clear the EditText to prioritize button selection
+            updateAmount("100");         // Update the displayed amounts
         });
 
         rm200Button.setOnClickListener(v -> {
             selectedAmount = "200";
-            inputAmount.setText("200");  // Clear the EditText to prioritize button selection
+            inputAmount.setText("200");
+            updateAmount("200");
         });
 
         rm300Button.setOnClickListener(v -> {
             selectedAmount = "300";
-            inputAmount.setText("300");  // Clear the EditText to prioritize button selection
+            inputAmount.setText("300");
+            updateAmount("300");
         });
 
         rm500Button.setOnClickListener(v -> {
             selectedAmount = "500";
-            inputAmount.setText("500");  // Clear the EditText to prioritize button selection
+            inputAmount.setText("500");
+            updateAmount("500");
         });
 
         // Pay button click listener
@@ -74,6 +87,7 @@ public class ReloadFragment extends Fragment {
             // Prioritize the manually entered amount if it's not empty
             if (!manualAmount.isEmpty()) {
                 amountToSend = manualAmount;
+                updateAmount(manualAmount);  // Update the displayed amounts with manual input
             } else if (!selectedAmount.isEmpty()) {
                 amountToSend = selectedAmount;
             } else {
@@ -96,6 +110,13 @@ public class ReloadFragment extends Fragment {
         });
 
         return view;
+    }
+
+    // Helper method to update the top_up_amount and total_amount TextViews
+    private void updateAmount(String amount) {
+        // Set the same amount for both top_up_amount and total_amount
+        topUpAmountTextView.setText("RM " + amount);
+        totalAmountTextView.setText("RM " + amount);
     }
 
     // Hide Toolbar and BottomAppBar when this fragment is visible
