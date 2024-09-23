@@ -59,6 +59,17 @@ public class HomeFragment extends Fragment {
                     .commit();
         });
 
+        CardView transferButton = view.findViewById(R.id.transfer_button);
+
+        // Set click listener for the reload button
+        transferButton.setOnClickListener(v -> {
+            // Navigate to ReloadFragment
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, new TransferFragment())
+                    .addToBackStack(null) // Add the transaction to the back stack
+                    .commit();
+        });
+
         TextView seeAllButton = view.findViewById(R.id.see_all_button);
 
         // Set a click listener on the "See All" button
