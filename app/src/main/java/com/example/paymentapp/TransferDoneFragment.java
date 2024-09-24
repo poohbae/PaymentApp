@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -17,33 +18,44 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Random;
 
-public class ReloadDoneFragment extends Fragment {
+public class TransferDoneFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_reload_done, container, false);
+        View view = inflater.inflate(R.layout.fragment_transfer_done, container, false);
 
-        // Retrieve the data from the arguments
+        // Find the close button (replacing back button with close button)
+        ImageView closeButton = view.findViewById(R.id.close_button);
+
+        // Set a click listener on the close button to navigate to HomeFragment
+        closeButton.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, new HomeFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
+
+        // Get the passed arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
-            String amount = arguments.getString("amount", "0");
-            int bankImageResId = arguments.getInt("bank_image", R.drawable.maybank);
-            String bankName = arguments.getString("bank_name", "Default Bank");
+            String personName = arguments.getString("person_name");
+            String amount = arguments.getString("amount");
+            String transferPurpose = arguments.getString("transfer_purpose");
+            int personImageResId = arguments.getInt("person_image", R.drawable.poh_zi_jun); // Default image if none is provided
 
-            // Set the amount to the TextViews
-            TextView totalAmount = view.findViewById(R.id.total_amount);
-            TextView totalAmount2 = view.findViewById(R.id.total_amount2);
-            totalAmount.setText("RM " + amount);
-            totalAmount2.setText("RM " + amount);
+            // Set the values to TextViews
+            ImageView personImageView = view.findViewById(R.id.person_image);
+            TextView personNameTextView = view.findViewById(R.id.person_name);
+            TextView amountTextView = view.findViewById(R.id.total_amount);
+            TextView transferPurposeTextView = view.findViewById(R.id.transfer_purpose);
 
-            // Set the bank name and image to the corresponding views
-            TextView bankNameTextView = view.findViewById(R.id.bank_name);
-            bankNameTextView.setText(bankName);
-
-            ImageView bankImageView = view.findViewById(R.id.bank_image);
-            bankImageView.setImageResource(bankImageResId); // Set the image resource
+            // Set the values retrieved from the bundle
+            personImageView.setImageResource(personImageResId);
+            personNameTextView.setText(personName);
+            amountTextView.setText("RM " + amount);
+            transferPurposeTextView.setText(transferPurpose);
         }
 
         // Set the current date and time
@@ -56,15 +68,17 @@ public class ReloadDoneFragment extends Fragment {
         // Generate and set a random reference ID
         TextView referenceId = view.findViewById(R.id.reference_id);
         Random random = new Random();
-        long referenceNumber = 1000000000L + (long)(random.nextDouble() * 9000000000L);
+        long referenceNumber = 1000000000L + (long) (random.nextDouble() * 9000000000L);
         referenceId.setText(String.valueOf(referenceNumber));
 
-        // Set click listener for the OK button
+        // Find the close button
         Button okButton = view.findViewById(R.id.ok_button);
-        okButton.setOnClickListener(v -> getParentFragmentManager().beginTransaction()
-                .replace(R.id.frameLayout, new HomeFragment())
-                .addToBackStack(null)
-                .commit());
+        okButton.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, new HomeFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         return view;
     }

@@ -37,4 +37,8 @@
     <string name="transfer_note">You can transfer up to RM 10,000</string>
     <string name="transfer_question">What\'s the transfer for?</string>
     <string name="fund_transfer">Fund Transfer</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="receiver">Receiver</string>
+    <string name="remark">Remark</string>
 </resources>

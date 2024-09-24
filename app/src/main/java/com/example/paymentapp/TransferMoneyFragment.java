@@ -4,18 +4,19 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 public class TransferMoneyFragment extends Fragment {
-
-    private TextView personNameTextView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -26,36 +27,63 @@ public class TransferMoneyFragment extends Fragment {
         // Find the back button
         ImageView backButton = view.findViewById(R.id.back_button);
 
-        // Set a click listener on the back button to navigate back to ReloadFragment
+        // Set a click listener on the back button to navigate back
         backButton.setOnClickListener(v -> {
-            // Go back to HomeFragment using popBackStack, which preserves its state
             getParentFragmentManager().popBackStack();
         });
 
-        // Find the TextView where we want to set the person name
-        personNameTextView = view.findViewById(R.id.person_name);
+        // Find the views
+        EditText inputAmountEditText = view.findViewById(R.id.input_amount);
+        ImageView personImageView = view.findViewById(R.id.person_image);
+        TextView personNameTextView = view.findViewById(R.id.person_name);
+        EditText transferPurposeEditText = view.findViewById(R.id.transfer_purpose);
 
         // Retrieve the person name from the arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
             String personName = arguments.getString("person_name");
-            // Set the person name to the TextView
             personNameTextView.setText(personName);
-        }
 
-        EditText transferPurpose = view.findViewById(R.id.transfer_purpose);
+            // Assuming person_image is a drawable resource, get its resource ID
+            int personImageResId = R.drawable.poh_zi_jun;  // Replace with actual drawable
 
-        // Add a listener to check when the user leaves the EditText
-        transferPurpose.setOnFocusChangeListener((v, hasFocus) -> {
-            if (!hasFocus) {
-                // Check if the input is empty
-                if (transferPurpose.getText().toString().trim().isEmpty()) {
-                    // Set default text if empty
-                    transferPurpose.setText(R.string.fund_transfer);
+            // Set up a click listener for proceeding to TransferDoneFragment
+            Button transferButton = view.findViewById(R.id.transfer_button);
+            transferButton.setOnClickListener(v -> {
+                // Get the values entered by the user
+                String amount = inputAmountEditText.getText().toString().trim();
+                String transferPurpose = transferPurposeEditText.getText().toString().trim();
+
+                // Validation: Check if the amount is empty
+                if (amount.isEmpty()) {
+                    inputAmountEditText.setError("Amount cannot be empty");
+                    inputAmountEditText.requestFocus();
+                    return;
                 }
-            }
-        });
 
+                // Validation: Check if transfer purpose is empty
+                if (transferPurpose.isEmpty()) {
+                    transferPurpose = "Fund Transfer"; // Set to default value if empty
+                }
+
+                // Create a new bundle to pass the data to TransferDoneFragment
+                Bundle bundle = new Bundle();
+                bundle.putString("amount", amount);
+                bundle.putInt("person_image", personImageResId);  // Pass the image resource ID
+                bundle.putString("person_name", personName);
+                bundle.putString("transfer_purpose", transferPurpose);
+
+                // Create TransferDoneFragment instance and pass the arguments
+                TransferDoneFragment transferDoneFragment = new TransferDoneFragment();
+                transferDoneFragment.setArguments(bundle);
+
+                // Replace the current fragment with TransferDoneFragment
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.frameLayout, transferDoneFragment)
+                        .addToBackStack(null)
+                        .commit();
+            });
+        }
 
         return view;
     }

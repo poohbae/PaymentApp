@@ -26,16 +26,25 @@ public class AddMoneyFragment extends Fragment {
         if (arguments != null) {
             String amount = arguments.getString("amount", "0");
 
-            // Now you can use the amount as needed, for example, display it in a TextView
-            TextView totalAmount = view.findViewById(R.id.total_amount); // Ensure this TextView is in your layout
+            // Display the amount in a TextView
+            TextView totalAmount = view.findViewById(R.id.total_amount);
             totalAmount.setText(amount);
 
+            // Retrieve bank details from the layout
+            ImageView bankImage = view.findViewById(R.id.bank_image);
+            TextView bankName = view.findViewById(R.id.bank_name);
+
+            // Get the drawable resource ID for the bank image
+            int bankImageResId = R.drawable.maybank;
+
             // Set up a click listener for proceeding to ReloadDoneFragment
-            Button payButton = view.findViewById(R.id.pay_button);  // Assuming there's a proceed button in the layout
+            Button payButton = view.findViewById(R.id.pay_button);
             payButton.setOnClickListener(v -> {
-                // Create a new bundle to pass the same amount to ReloadDoneFragment
+                // Create a new bundle to pass the data to ReloadDoneFragment
                 Bundle bundle = new Bundle();
                 bundle.putString("amount", amount);
+                bundle.putString("bank_name", bankName.getText().toString());
+                bundle.putInt("bank_image", bankImageResId);
 
                 // Create ReloadDoneFragment instance and pass the arguments
                 ReloadDoneFragment reloadDoneFragment = new ReloadDoneFragment();
@@ -53,10 +62,7 @@ public class AddMoneyFragment extends Fragment {
         ImageView backButton = view.findViewById(R.id.back_button);
 
         // Set a click listener on the back button to navigate back to ReloadFragment
-        backButton.setOnClickListener(v -> {
-            // Go back to ReloadFragment using popBackStack, which preserves its state
-            getParentFragmentManager().popBackStack();
-        });
+        backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
         return view;
     }
@@ -66,21 +72,18 @@ public class AddMoneyFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        // Hide the Toolbar
         if (getActivity() instanceof AppCompatActivity) {
             ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
         }
 
-        // Hide the BottomAppBar
         BottomAppBar bottomAppBar = getActivity().findViewById(R.id.bottomAppBar);
         if (bottomAppBar != null) {
             bottomAppBar.setVisibility(View.GONE);
         }
 
-        // Hide the FAB
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.hide();  // Hide FAB using the hide method
+            fab.hide();
         }
     }
 
@@ -89,21 +92,18 @@ public class AddMoneyFragment extends Fragment {
     public void onPause() {
         super.onPause();
 
-        // Show the Toolbar again when leaving this fragment
         if (getActivity() instanceof AppCompatActivity) {
             ((AppCompatActivity) getActivity()).getSupportActionBar().show();
         }
 
-        // Show the BottomAppBar again
         BottomAppBar bottomAppBar = getActivity().findViewById(R.id.bottomAppBar);
         if (bottomAppBar != null) {
             bottomAppBar.setVisibility(View.VISIBLE);
         }
 
-        // Show the FAB again
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.show();  // Show FAB using the show method
+            fab.show();
         }
     }
 }

@@ -98,6 +98,7 @@
 
                 <!-- Icon on the left -->
                 <ImageView
+                    android:id="@+id/bank_image"
                     android:layout_width="40dp"
                     android:layout_height="40dp"
                     android:src="@drawable/maybank"
@@ -111,6 +112,7 @@
 
                     <!-- Payment Method Text -->
                     <TextView
+                        android:id="@+id/bank_name"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginBottom="5dp"

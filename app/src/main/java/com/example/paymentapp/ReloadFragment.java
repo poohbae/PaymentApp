@@ -91,8 +91,9 @@ public class ReloadFragment extends Fragment {
             } else if (!selectedAmount.isEmpty()) {
                 amountToSend = selectedAmount;
             } else {
-                // If no amount is entered or selected, show a message and stop the action
-                Toast.makeText(getActivity(), "Please enter or select an amount", Toast.LENGTH_SHORT).show();
+                // If no amount is entered or selected, show an error message on the EditText
+                inputAmount.setError("Please enter or select an amount");
+                inputAmount.requestFocus();  // Focus the EditText to prompt user to correct it
                 return;
             }
 

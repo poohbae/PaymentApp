@@ -4,7 +4,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/gray"
-    tools:context=".ReloadDoneFragment"
+    tools:context=".TransferDoneFragment"
     android:padding="10dp">
 
     <!-- Close button aligned to the top-right -->
@@ -79,17 +79,17 @@
                 android:orientation="vertical"
                 android:padding="15dp">
 
-                <!-- New Row: TextView for "Top up from" -->
+                <!-- New Row: TextView for "Receiver" -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/top_up_from"
+                    android:text="@string/receiver"
                     android:textColor="@color/black"
                     android:textSize="16sp"
                     android:layout_marginBottom="10dp"
                     android:gravity="center_vertical"/>
 
-                <!-- Existing Row: Icon and Maybank2u Text -->
+                <!-- Existing Row: Icon and Receiver Text -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -98,10 +98,10 @@
 
                     <!-- Icon on the left -->
                     <ImageView
-                        android:id="@+id/bank_image"
-                        android:layout_width="40dp"
-                        android:layout_height="40dp"
-                        android:layout_marginEnd="15dp" />
+                        android:id="@+id/person_image"
+                        android:layout_width="60dp"
+                        android:layout_height="60dp"
+                        android:layout_marginEnd="10dp" />
 
                     <LinearLayout
                         android:layout_width="0dp"
@@ -109,14 +109,16 @@
                         android:layout_weight="1"
                         android:orientation="vertical">
 
-                        <!-- Payment Method Text -->
                         <TextView
-                            android:id="@+id/bank_name"
+                            android:id="@+id/person_name"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="5dp"
+                            android:layout_marginEnd="10dp"
+                            android:layout_gravity="end"
                             android:textColor="@color/black"
-                            android:textSize="15sp" />
+                            android:textSize="20sp"
+                            android:textStyle="bold"/>
                     </LinearLayout>
                 </LinearLayout>
             </LinearLayout>
@@ -132,24 +134,22 @@
             android:padding="25dp"
             android:layout_marginBottom="15dp">
 
-            <!-- TextView for "Amount" at the start -->
+            <!-- TextView for "Remark" at the start -->
             <TextView
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:text="@string/amount"
+                android:text="@string/remark"
                 android:textColor="@color/black"
-                android:textSize="20sp"
+                android:textSize="17sp"
                 android:layout_marginEnd="8dp"/>
 
-            <!-- TextView for "RM20" at the end -->
             <TextView
-                android:id="@+id/total_amount2"
+                android:id="@+id/transfer_purpose"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/indigo"
-                android:textSize="25sp"
-                android:textStyle="bold"/>
+                android:textColor="@color/black"
+                android:textSize="17sp"/>
 
         </LinearLayout>
 
