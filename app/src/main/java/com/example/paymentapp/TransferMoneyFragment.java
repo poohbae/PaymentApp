@@ -46,15 +46,12 @@ public class TransferMoneyFragment extends Fragment {
         EditText transferPurpose = view.findViewById(R.id.transfer_purpose);
 
         // Add a listener to check when the user leaves the EditText
-        transferPurpose.setOnFocusChangeListener(new View.OnFocusChangeListener() {
-            @Override
-            public void onFocusChange(View v, boolean hasFocus) {
-                if (!hasFocus) {
-                    // Check if the input is empty
-                    if (transferPurpose.getText().toString().trim().isEmpty()) {
-                        // Set default text if empty
-                        transferPurpose.setText("Fund Transfer");
-                    }
+        transferPurpose.setOnFocusChangeListener((v, hasFocus) -> {
+            if (!hasFocus) {
+                // Check if the input is empty
+                if (transferPurpose.getText().toString().trim().isEmpty()) {
+                    // Set default text if empty
+                    transferPurpose.setText(R.string.fund_transfer);
                 }
             }
         });

@@ -67,10 +67,10 @@
 
                 <!-- Icon on the left -->
                 <ImageView
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginEnd="20dp"
-                    android:src="@drawable/maybank" />
+                    android:layout_width="60dp"
+                    android:layout_height="60dp"
+                    android:layout_marginEnd="15dp"
+                    android:src="@drawable/poh_zi_jun" />
 
                 <!-- Column with Payment Method and Bank -->
                 <LinearLayout

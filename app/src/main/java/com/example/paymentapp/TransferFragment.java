@@ -27,9 +27,7 @@ public class TransferFragment extends Fragment {
         ImageView backButton = view.findViewById(R.id.back_button);
 
         // Set a click listener on the back button to navigate back to previous fragment
-        backButton.setOnClickListener(v -> {
-            getParentFragmentManager().popBackStack();
-        });
+        backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
         // Find the CardView by ID
         CardView person = view.findViewById(R.id.person);
