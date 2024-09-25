@@ -26,10 +26,7 @@ public class TransferDoneFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_transfer_done, container, false);
 
-        // Find the close button (replacing back button with close button)
         ImageView closeButton = view.findViewById(R.id.close_button);
-
-        // Set a click listener on the close button to navigate to HomeFragment
         closeButton.setOnClickListener(v -> {
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.frameLayout, new HomeFragment())
@@ -40,21 +37,21 @@ public class TransferDoneFragment extends Fragment {
         // Get the passed arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
-            String personName = arguments.getString("person_name");
             String amount = arguments.getString("amount");
+            int personImageResId = arguments.getInt("person_image_res", -1);
+            String personName = arguments.getString("person_name");
             String transferPurpose = arguments.getString("transfer_purpose");
-            int personImageResId = arguments.getInt("person_image", R.drawable.poh_zi_jun); // Default image if none is provided
 
             // Set the values to TextViews
+            TextView amountTextView = view.findViewById(R.id.total_amount);
             ImageView personImageView = view.findViewById(R.id.person_image);
             TextView personNameTextView = view.findViewById(R.id.person_name);
-            TextView amountTextView = view.findViewById(R.id.total_amount);
             TextView transferPurposeTextView = view.findViewById(R.id.transfer_purpose);
 
             // Set the values retrieved from the bundle
+            amountTextView.setText("RM " + amount);
             personImageView.setImageResource(personImageResId);
             personNameTextView.setText(personName);
-            amountTextView.setText("RM " + amount);
             transferPurposeTextView.setText(transferPurpose);
         }
 
@@ -71,14 +68,11 @@ public class TransferDoneFragment extends Fragment {
         long referenceNumber = 1000000000L + (long) (random.nextDouble() * 9000000000L);
         referenceId.setText(String.valueOf(referenceNumber));
 
-        // Find the close button
         Button okButton = view.findViewById(R.id.ok_button);
-        okButton.setOnClickListener(v -> {
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.frameLayout, new HomeFragment())
-                    .addToBackStack(null)
-                    .commit();
-        });
+        okButton.setOnClickListener(v -> getParentFragmentManager().beginTransaction()
+                .replace(R.id.frameLayout, new HomeFragment())
+                .addToBackStack(null)
+                .commit());
 
         return view;
     }

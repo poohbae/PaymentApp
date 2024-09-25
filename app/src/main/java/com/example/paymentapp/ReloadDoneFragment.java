@@ -10,6 +10,7 @@ import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -29,37 +30,34 @@ public class ReloadDoneFragment extends Fragment {
         Bundle arguments = getArguments();
         if (arguments != null) {
             String amount = arguments.getString("amount", "0");
-            int bankImageResId = arguments.getInt("bank_image", R.drawable.maybank);
+            int bankImageResId = arguments.getInt("bank_image_res", -1);
             String bankName = arguments.getString("bank_name", "Default Bank");
 
             // Set the amount to the TextViews
             TextView totalAmount = view.findViewById(R.id.total_amount);
             TextView totalAmount2 = view.findViewById(R.id.total_amount2);
+            ImageView bankImageView = view.findViewById(R.id.bank_image);
+            TextView bankNameTextView = view.findViewById(R.id.bank_name);
+
             totalAmount.setText("RM " + amount);
             totalAmount2.setText("RM " + amount);
-
-            // Set the bank name and image to the corresponding views
-            TextView bankNameTextView = view.findViewById(R.id.bank_name);
+            bankImageView.setImageResource(bankImageResId);
             bankNameTextView.setText(bankName);
-
-            ImageView bankImageView = view.findViewById(R.id.bank_image);
-            bankImageView.setImageResource(bankImageResId); // Set the image resource
         }
 
         // Set the current date and time
-        TextView dateTime = view.findViewById(R.id.date_time);
-        String formattedDate = new SimpleDateFormat("dd MMM yyyy, hh:mma")
+        TextView dateTimeTextView = view.findViewById(R.id.date_time);
+        String dateTime = new SimpleDateFormat("dd MMM yyyy, hh:mma")
                 .format(Calendar.getInstance().getTime())
                 .replace("AM", "am").replace("PM", "pm");
-        dateTime.setText(formattedDate);
+        dateTimeTextView.setText(dateTime);
 
         // Generate and set a random reference ID
         TextView referenceId = view.findViewById(R.id.reference_id);
         Random random = new Random();
-        long referenceNumber = 1000000000L + (long)(random.nextDouble() * 9000000000L);
+        long referenceNumber = 1000000000L + (long) (random.nextDouble() * 9000000000L);
         referenceId.setText(String.valueOf(referenceNumber));
 
-        // Set click listener for the OK button
         Button okButton = view.findViewById(R.id.ok_button);
         okButton.setOnClickListener(v -> getParentFragmentManager().beginTransaction()
                 .replace(R.id.frameLayout, new HomeFragment())

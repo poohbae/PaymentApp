@@ -14,10 +14,12 @@ import android.widget.TextView;
 
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.util.TypedValue;
 import android.widget.Toast;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,11 +63,22 @@ public class HomeFragment extends Fragment {
 
         CardView transferButton = view.findViewById(R.id.transfer_button);
 
-        // Set click listener for the reload button
+        // Set click listener for the transfer button
         transferButton.setOnClickListener(v -> {
-            // Navigate to ReloadFragment
+            // Navigate to TransferFragment
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.frameLayout, new TransferFragment())
+                    .addToBackStack(null) // Add the transaction to the back stack
+                    .commit();
+        });
+
+        CardView requestButton = view.findViewById(R.id.request_button);
+
+        // Set click listener for the request button
+        requestButton.setOnClickListener(v -> {
+            // Navigate to RequestFragment
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, new RequestFragment())
                     .addToBackStack(null) // Add the transaction to the back stack
                     .commit();
         });

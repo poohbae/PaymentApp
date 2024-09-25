@@ -19,7 +19,7 @@
     <string name="transaction_history">Transaction History</string>
     <string name="see_all">See All</string>
     <string name="current_balance">Current Balance</string>
-    <string name="enter_amount">Enter your amount</string>
+    <string name="enter_amount">Enter amount</string>
     <string name="payment_method">Payment Method</string>
     <string name="top_up_amount">Top Up Amount</string>
     <string name="total_amount">Total Amount</string>
@@ -37,8 +37,18 @@
     <string name="transfer_note">You can transfer up to RM 10,000</string>
     <string name="transfer_question">What\'s the transfer for?</string>
     <string name="fund_transfer">Fund Transfer</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
     <string name="receiver">Receiver</string>
     <string name="remark">Remark</string>
+    <string name="request_money">Request Money</string>
+    <string name="confirmation">Confirmation</string>
+    <string name="request_note">You\'re requesting</string>
+    <string name="request_note2">money from</string>
+    <string name="notes">Notes</string>
+    <string name="optional">Optional</string>
+    <string name="send_request">Send Request</string>
+    <string name="request_successful">Request Successful</string>
+    <string name="date_and_time">Date &amp; time</string>
+    <string name="name">Name</string>
+    <string name="contact">Contact</string>
+    <string name="done">Done</string>
 </resources>

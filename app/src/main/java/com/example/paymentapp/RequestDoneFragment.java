@@ -14,52 +14,56 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class AddMoneyFragment extends Fragment {
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Random;
+
+public class RequestDoneFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_add_money, container, false);
+        View view = inflater.inflate(R.layout.fragment_request_done, container, false);
 
-        ImageView backButton = view.findViewById(R.id.back_button);
-        backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
+        ImageView closeButton = view.findViewById(R.id.close_button);
+        closeButton.setOnClickListener(v -> {
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, new HomeFragment())
+                    .addToBackStack(null)
+                    .commit();
+        });
 
-        TextView totalAmount = view.findViewById(R.id.total_amount);
-        ImageView bankImageView = view.findViewById(R.id.bank_image);
-        TextView bankNameTextView = view.findViewById(R.id.bank_name);
+        TextView dateTimeTextView = view.findViewById(R.id.date_time);
+        String dateTime = new SimpleDateFormat("dd MMM yyyy, hh:mma")
+                .format(Calendar.getInstance().getTime())
+                .replace("AM", "am").replace("PM", "pm");
+        dateTimeTextView.setText(dateTime);
 
-        // Retrieve the amount from the arguments
+        // Get the passed arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
-            String amount = arguments.getString("amount", "0");
-            int bankImageResId = arguments.getInt("bank_image_res", -1);
-            String bankName = arguments.getString("bank_name");
+            String personName = arguments.getString("person_name");
+            String phoneNumber = arguments.getString("phone_number");
+            String amount = arguments.getString("amount");
+            String note = arguments.getString("note");
 
-            totalAmount.setText("RM " + amount);
-            bankImageView.setImageResource(bankImageResId);
-            bankNameTextView.setText(bankName);
+            TextView personNameTextView = view.findViewById(R.id.person_name);
+            TextView phoneNumberTextView = view.findViewById(R.id.phone_number);
+            TextView amountTextView = view.findViewById(R.id.total_amount);
+            TextView noteTextView = view.findViewById(R.id.note);
 
-            // Set up a click listener for proceeding to ReloadDoneFragment
-            Button payButton = view.findViewById(R.id.pay_button);
-            payButton.setOnClickListener(v -> {
-                // Create a new bundle to pass the data to ReloadDoneFragment
-                Bundle bundle = new Bundle();
-                bundle.putString("amount", amount);
-                bundle.putInt("bank_image_res", bankImageResId);
-                bundle.putString("bank_name", bankName);
-
-                // Create ReloadDoneFragment instance and pass the arguments
-                ReloadDoneFragment reloadDoneFragment = new ReloadDoneFragment();
-                reloadDoneFragment.setArguments(bundle);
-
-                // Replace the current fragment with ReloadDoneFragment
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.frameLayout, reloadDoneFragment)
-                        .addToBackStack(null)
-                        .commit();
-            });
+            personNameTextView.setText(personName);
+            phoneNumberTextView.setText(phoneNumber);
+            amountTextView.setText("RM " + amount);
+            noteTextView.setText(note);
         }
+
+        Button doneButton = view.findViewById(R.id.done_button);
+        doneButton.setOnClickListener(v -> getParentFragmentManager().beginTransaction()
+                .replace(R.id.frameLayout, new HomeFragment())
+                .addToBackStack(null)
+                .commit());
 
         return view;
     }

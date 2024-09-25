@@ -13,14 +13,12 @@
         android:orientation="vertical"
         android:padding="16dp">
 
-        <!-- First row: Balance container and buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
             android:padding="8dp">
 
-            <!-- Balance Container -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -29,7 +27,6 @@
                 android:orientation="vertical"
                 android:padding="16dp">
 
-                <!-- Static Balance Text in the first row -->
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -39,7 +36,6 @@
                     android:textColor="@color/white"
                     android:textSize="24sp" />
 
-                <!-- Dynamic Amount Text in the second row -->
                 <TextView
                     android:id="@+id/balance_amount"
                     android:layout_width="wrap_content"
@@ -58,7 +54,6 @@
                 android:orientation="vertical"
                 android:paddingTop="16dp">
 
-                <!-- First row of buttons: Reload and Request -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -67,7 +62,6 @@
                     android:padding="8dp"
                     android:weightSum="2">
 
-                    <!-- Reload Button -->
                     <androidx.cardview.widget.CardView
                         android:id="@+id/reload_button"
                         android:layout_width="0dp"
@@ -101,7 +95,6 @@
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
 
-                    <!-- Request Button -->
                     <androidx.cardview.widget.CardView
                         android:id="@+id/request_button"
                         android:layout_width="0dp"
@@ -136,7 +129,6 @@
                     </androidx.cardview.widget.CardView>
                 </LinearLayout>
 
-                <!-- Second row of buttons: Invest and Transfer -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -145,7 +137,6 @@
                     android:padding="8dp"
                     android:weightSum="2">
 
-                    <!-- Invest Button -->
                     <androidx.cardview.widget.CardView
                         android:id="@+id/invest_button"
                         android:layout_width="0dp"
@@ -179,7 +170,6 @@
                         </LinearLayout>
                     </androidx.cardview.widget.CardView>
 
-                    <!-- Transfer Button -->
                     <androidx.cardview.widget.CardView
                         android:id="@+id/transfer_button"
                         android:layout_width="0dp"
@@ -216,14 +206,13 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- Second row: Transaction History -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="30dp"
             android:background="@color/white"
             android:orientation="vertical"
-            android:padding="15dp"
-            android:layout_marginBottom="30dp">
+            android:padding="15dp">
 
             <LinearLayout
                 android:layout_width="match_parent"

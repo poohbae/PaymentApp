@@ -1,14 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.drawerlayout.widget.DrawerLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawerLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fitsSystemWindows="true"
-    tools:openDrawer="start"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity"
+    tools:openDrawer="start">
 
     <!-- Main Content -->
     <RelativeLayout
@@ -19,11 +18,11 @@
         <!-- ToolBar -->
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/toolBar"
-            android:title=""
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            android:background="@color/white"
             android:elevation="5dp"
-            android:background="@color/white" />
+            android:title="" />
 
         <!-- Fragment Container -->
         <FrameLayout
@@ -32,7 +31,7 @@
             android:layout_height="match_parent"
             android:layout_below="@id/toolBar"
             android:layout_marginBottom="56dp"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior"/>
+            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
 
         <!-- CoordinatorLayout wrapping BottomAppBar and FAB -->
         <androidx.coordinatorlayout.widget.CoordinatorLayout
@@ -47,19 +46,19 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:backgroundTint="@color/white"
+                app:fabAlignmentMode="center"
                 app:fabCradleMargin="10dp"
-                app:fabCradleRoundedCornerRadius="50dp"
-                app:fabAlignmentMode="center">
+                app:fabCradleRoundedCornerRadius="50dp">
 
                 <com.google.android.material.bottomnavigation.BottomNavigationView
                     android:id="@+id/bottomNavigationView"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:background="@android:color/transparent"
-                    app:labelVisibilityMode="labeled"
                     app:itemIconTint="@drawable/nav_item_color"
                     app:itemTextColor="@drawable/nav_item_color"
-                    app:menu="@menu/bottom_nav_menu"/>
+                    app:labelVisibilityMode="labeled"
+                    app:menu="@menu/bottom_nav_menu" />
             </com.google.android.material.bottomappbar.BottomAppBar>
 
             <!-- Floating Action Button -->
@@ -70,7 +69,7 @@
                 android:contentDescription="@string/scan"
                 android:src="@drawable/scan"
                 app:layout_anchor="@id/bottomAppBar"
-                app:maxImageSize="40dp"/>
+                app:maxImageSize="40dp" />
         </androidx.coordinatorlayout.widget.CoordinatorLayout>
     </RelativeLayout>
 
@@ -82,8 +81,8 @@
         android:layout_gravity="start"
         android:background="@color/white"
         app:headerLayout="@layout/nav_header"
-        app:menu="@menu/side_nav_menu"
         app:itemIconTint="@drawable/nav_item_color"
-        app:itemTextColor="@drawable/nav_item_color"/>
+        app:itemTextColor="@drawable/nav_item_color"
+        app:menu="@menu/side_nav_menu" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

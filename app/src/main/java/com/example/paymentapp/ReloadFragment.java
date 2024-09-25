@@ -13,6 +13,7 @@ import android.widget.Toast;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
+
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -21,7 +22,8 @@ public class ReloadFragment extends Fragment {
     private EditText inputAmount;
     private Button rm100Button, rm200Button, rm300Button, rm500Button, payNowButton;
     private String selectedAmount = "";
-    private TextView topUpAmountTextView, totalAmountTextView;
+    private ImageView bankImageView;
+    private TextView bankNameTextView, topUpAmountTextView, totalAmountTextView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -37,21 +39,18 @@ public class ReloadFragment extends Fragment {
         rm500Button = view.findViewById(R.id.rm500_button);
         payNowButton = view.findViewById(R.id.pay_now_button);
 
-        // Bind top_up_amount and total_amount TextViews
-        topUpAmountTextView = view.findViewById(R.id.top_up_amount);  // Make sure the IDs are correct
+        bankImageView = view.findViewById(R.id.bank_image);
+        bankImageView.setTag(R.drawable.maybank);
+
+        bankNameTextView = view.findViewById(R.id.bank_name);
+        topUpAmountTextView = view.findViewById(R.id.top_up_amount);
         totalAmountTextView = view.findViewById(R.id.total_amount);
 
         // Set default values for top_up_amount and total_amount
         updateAmount("0");
 
-        // Find the back button
         ImageView backButton = view.findViewById(R.id.back_button);
-
-        // Set a click listener on the back button to navigate back to ReloadFragment
-        backButton.setOnClickListener(v -> {
-            // Go back to HomeFragment using popBackStack, which preserves its state
-            getParentFragmentManager().popBackStack();
-        });
+        backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
         // Set button click listeners to update selectedAmount
         rm100Button.setOnClickListener(v -> {
@@ -83,6 +82,8 @@ public class ReloadFragment extends Fragment {
             // Check if the EditText has a manually entered amount
             String manualAmount = inputAmount.getText().toString().trim();
             String amountToSend;
+            String bankName = bankNameTextView.getText().toString();
+            int bankImageResId = (int) bankImageView.getTag();
 
             // Prioritize the manually entered amount if it's not empty
             if (!manualAmount.isEmpty()) {
@@ -100,6 +101,8 @@ public class ReloadFragment extends Fragment {
             // Pass the amount to AddMoneyFragment
             Bundle bundle = new Bundle();
             bundle.putString("amount", amountToSend);
+            bundle.putInt("bank_image_res", bankImageResId);
+            bundle.putString("bank_name", bankName);
 
             AddMoneyFragment addMoneyFragment = new AddMoneyFragment();
             addMoneyFragment.setArguments(bundle);

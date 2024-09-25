@@ -15,13 +15,13 @@ import androidx.fragment.app.FragmentTransaction;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class TransferFragment extends Fragment {
+public class RequestFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_transfer, container, false);
+        View view = inflater.inflate(R.layout.fragment_request, container, false);
 
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
@@ -37,23 +37,24 @@ public class TransferFragment extends Fragment {
 
         // Set click listener for the CardView
         person.setOnClickListener(v -> {
-            int personImageResId = (int) personImageView.getTag();
+            // Get the text from the TextView (e.g., "Testing")
             String personName = personNameTextView.getText().toString();
             String phoneNumber = phoneNumberTextView.getText().toString();
+            int personImageResId = (int) personImageView.getTag();
 
-            // Create a new instance of TransferMoneyFragment
-            TransferMoneyFragment transferMoneyFragment = new TransferMoneyFragment();
+            // Create a new instance of RequestMoneyFragment
+            RequestMoneyFragment requestMoneyFragment = new RequestMoneyFragment();
 
             // Create a bundle to pass the name
             Bundle bundle = new Bundle();
             bundle.putInt("person_image_res", personImageResId);
             bundle.putString("person_name", personName);
             bundle.putString("phone_number", phoneNumber);
-            transferMoneyFragment.setArguments(bundle);
+            requestMoneyFragment.setArguments(bundle);
 
-            // Navigate to TransferMoneyFragment with the bundle
+            // Navigate to RequestMoneyFragment with the bundle
             FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-            transaction.replace(R.id.frameLayout, transferMoneyFragment)
+            transaction.replace(R.id.frameLayout, requestMoneyFragment)
                     .addToBackStack(null)
                     .commit();
         });

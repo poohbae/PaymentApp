@@ -15,13 +15,13 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class TransferMoneyFragment extends Fragment {
+public class RequestConfirmFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        View view = inflater.inflate(R.layout.fragment_transfer_money, container, false);
+        View view = inflater.inflate(R.layout.fragment_request_confirm, container, false);
 
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
@@ -29,53 +29,46 @@ public class TransferMoneyFragment extends Fragment {
         // Retrieve the person name from the arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
+            String amount = arguments.getString("amount");
             int personImageResId = arguments.getInt("person_image_res", -1);
             String personName = arguments.getString("person_name");
             String phoneNumber = arguments.getString("phone_number");
 
-            EditText inputAmountEditText = view.findViewById(R.id.input_amount);
+            TextView amountTextView = view.findViewById(R.id.total_amount);
             ImageView personImageView = view.findViewById(R.id.person_image);
             TextView personNameTextView = view.findViewById(R.id.person_name);
             TextView phoneNumberTextView = view.findViewById(R.id.phone_number);
-            EditText transferPurposeEditText = view.findViewById(R.id.transfer_purpose);
+            EditText noteEditText = view.findViewById(R.id.note);
 
+            amountTextView.setText("RM " + amount);
             personImageView.setImageResource(personImageResId);
             personNameTextView.setText(personName);
             phoneNumberTextView.setText(phoneNumber);
 
-            // Set up a click listener for proceeding to TransferDoneFragment
-            Button transferButton = view.findViewById(R.id.transfer_button);
-            transferButton.setOnClickListener(v -> {
-                // Get the values entered by the user
-                String amount = inputAmountEditText.getText().toString().trim();
-                String transferPurpose = transferPurposeEditText.getText().toString().trim();
+            // Set up a click listener for proceeding to RequestDoneFragment
+            Button requestButton = view.findViewById(R.id.request_button);
+            requestButton.setOnClickListener(v -> {
+                String note = noteEditText.getText().toString().trim();
 
-                // Validation: Check if the amount is empty
-                if (amount.isEmpty()) {
-                    inputAmountEditText.setError("Amount cannot be empty");
-                    inputAmountEditText.requestFocus();
-                    return;
+                // Validation: Check if note is empty
+                if (note.isEmpty()) {
+                    note = "None"; // Set to default value if empty
                 }
 
-                // Validation: Check if transfer purpose is empty
-                if (transferPurpose.isEmpty()) {
-                    transferPurpose = "Fund Transfer"; // Set to default value if empty
-                }
-
-                // Create a new bundle to pass the data to TransferDoneFragment
+                // Create a new bundle to pass the data to RequestDoneFragment
                 Bundle bundle = new Bundle();
                 bundle.putString("amount", amount);
-                bundle.putInt("person_image_res", personImageResId);
                 bundle.putString("person_name", personName);
-                bundle.putString("transfer_purpose", transferPurpose);
+                bundle.putString("phone_number", phoneNumber);
+                bundle.putString("note", note);
 
-                // Create TransferDoneFragment instance and pass the arguments
-                TransferDoneFragment transferDoneFragment = new TransferDoneFragment();
-                transferDoneFragment.setArguments(bundle);
+                // Create RequestDoneFragment instance and pass the arguments
+                RequestDoneFragment requestDoneFragment = new RequestDoneFragment();
+                requestDoneFragment.setArguments(bundle);
 
-                // Replace the current fragment with TransferDoneFragment
+                // Replace the current fragment with RequestDoneFragment
                 getParentFragmentManager().beginTransaction()
-                        .replace(R.id.frameLayout, transferDoneFragment)
+                        .replace(R.id.frameLayout, requestDoneFragment)
                         .addToBackStack(null)
                         .commit();
             });
