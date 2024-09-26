@@ -52,7 +52,7 @@ public class RequestConfirmFragment extends Fragment {
 
                 // Validation: Check if note is empty
                 if (note.isEmpty()) {
-                    note = "None"; // Set to default value if empty
+                    note = "-"; // Set to default value if empty
                 }
 
                 // Create a new bundle to pass the data to RequestDoneFragment
