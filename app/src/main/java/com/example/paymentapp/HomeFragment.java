@@ -61,17 +61,6 @@ public class HomeFragment extends Fragment {
                     .commit();
         });
 
-        CardView transferButton = view.findViewById(R.id.transfer_button);
-
-        // Set click listener for the transfer button
-        transferButton.setOnClickListener(v -> {
-            // Navigate to TransferFragment
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.frameLayout, new TransferFragment())
-                    .addToBackStack(null) // Add the transaction to the back stack
-                    .commit();
-        });
-
         CardView requestButton = view.findViewById(R.id.request_button);
 
         // Set click listener for the request button
@@ -79,6 +68,28 @@ public class HomeFragment extends Fragment {
             // Navigate to RequestFragment
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.frameLayout, new RequestFragment())
+                    .addToBackStack(null) // Add the transaction to the back stack
+                    .commit();
+        });
+
+        CardView investButton = view.findViewById(R.id.invest_button);
+
+        // Set click listener for the request button
+        investButton.setOnClickListener(v -> {
+            // Navigate to InvestFragment
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, new InvestFragment())
+                    .addToBackStack(null) // Add the transaction to the back stack
+                    .commit();
+        });
+
+        CardView transferButton = view.findViewById(R.id.transfer_button);
+
+        // Set click listener for the transfer button
+        transferButton.setOnClickListener(v -> {
+            // Navigate to TransferFragment
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, new TransferFragment())
                     .addToBackStack(null) // Add the transaction to the back stack
                     .commit();
         });
