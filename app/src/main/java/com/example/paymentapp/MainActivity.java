@@ -1,6 +1,7 @@
 package com.example.paymentapp;
 
 import android.app.Dialog;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -23,6 +24,10 @@ import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.FirebaseApp;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -30,7 +35,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FloatingActionButton fab;
     DrawerLayout drawerLayout;
     BottomNavigationView bottomNavigationView;
-    NavigationView sideNavigationView;  // Declare the side navigation view
+    NavigationView sideNavigationView;
+    Toolbar toolbar;
+    DatabaseReference databaseReference; // Firebase Realtime Database reference
+    FirebaseAuth mAuth;  // Firebase Authentication
+    FirebaseUser currentUser;  // Store the current logged-in user
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -39,17 +48,25 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Initialize Firebase
         FirebaseApp.initializeApp(this);
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
+        mAuth = FirebaseAuth.getInstance();
+        currentUser = mAuth.getCurrentUser();
+
+        // Initialize Firebase Realtime Database reference
+        databaseReference = FirebaseDatabase.getInstance("https://paymentapp-1f1bf-default-rtdb.firebaseio.com/").getReference("Users");
 
         // Initialize views
         bottomNavigationView = findViewById(R.id.bottomNavigationView);
         fab = findViewById(R.id.fab);
         drawerLayout = findViewById(R.id.drawerLayout);
-        sideNavigationView = findViewById(R.id.sideNavigationView);  // Initialize the side navigation view
-
-        Toolbar toolbar = findViewById(R.id.toolBar);
+        sideNavigationView = findViewById(R.id.sideNavigationView);
+        toolbar = findViewById(R.id.toolBar);
         setSupportActionBar(toolbar);
-        getSupportActionBar().setTitle(getString(R.string.greeting));
+
+        // Retrieve the user's name from the intent and set it on the toolbar
+        String userName = getIntent().getStringExtra("userName");
+        if (userName != null) {
+            toolbar.setTitle("Good Day, " + userName);
+        }
 
         sideNavigationView.setNavigationItemSelectedListener(this);  // Set listener for side navigation
 
@@ -79,6 +96,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 sideNavigationView.getMenu().getItem(i).setChecked(false);
             }
 
+            // Using if-else statements instead of switch cases
             if (item.getItemId() == R.id.home) {
                 Toast.makeText(MainActivity.this, "Home is clicked", Toast.LENGTH_SHORT).show();
                 getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new HomeFragment()).commit();
@@ -99,29 +117,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         fab.setOnClickListener(view -> showBottomDialog());
     }
 
-    @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        // Uncheck all bottom navigation items when a side nav item is selected
-        bottomNavigationView.getMenu().setGroupCheckable(0, true, false);
-        for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
-            bottomNavigationView.getMenu().getItem(i).setChecked(false);
-        }
-
-        if (item.getItemId() == R.id.dashboard) {
-            Toast.makeText(MainActivity.this, "Dashboard is clicked", Toast.LENGTH_SHORT).show();
-            getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new DashboardFragment()).commit();
-        } else if (item.getItemId() == R.id.audience) {
-            Toast.makeText(MainActivity.this, "Audience is clicked", Toast.LENGTH_SHORT).show();
-            getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new AudienceFragment()).commit();
-        } else if (item.getItemId() == R.id.logout) {
-            Toast.makeText(MainActivity.this, "Logout is clicked", Toast.LENGTH_SHORT).show();
-        }
-
-        drawerLayout.closeDrawer(GravityCompat.START);  // Close the drawer after selection
-        item.setChecked(true);  // Ensure the selected item in the side navigation is checked
-        return true;
-    }
-
     // Method to show a bottom dialog
     private void showBottomDialog() {
         final Dialog dialog = new Dialog(this);
@@ -133,9 +128,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         ImageView closeButton = dialog.findViewById(R.id.closeButton);
 
         // Set up click listener for scan area
-        scanArea.setOnClickListener(v -> {
-            Toast.makeText(MainActivity.this, "Scan Area is clicked", Toast.LENGTH_SHORT).show();
-        });
+        scanArea.setOnClickListener(v -> Toast.makeText(MainActivity.this, "Scan Area is clicked", Toast.LENGTH_SHORT).show());
 
         // Set up click listener for close button
         closeButton.setOnClickListener(view -> dialog.dismiss());
@@ -149,5 +142,38 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             window.getAttributes().windowAnimations = R.style.DialogAnimation;
             window.setGravity(Gravity.BOTTOM);
         }
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        // Uncheck all bottom navigation items when a side nav item is selected
+        bottomNavigationView.getMenu().setGroupCheckable(0, true, false);
+        for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
+            bottomNavigationView.getMenu().getItem(i).setChecked(false);
+        }
+
+        // Using if-else instead of switch case
+        if (item.getItemId() == R.id.dashboard) {
+            Toast.makeText(MainActivity.this, "Dashboard is clicked", Toast.LENGTH_SHORT).show();
+            getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new DashboardFragment()).commit();
+        } else if (item.getItemId() == R.id.audience) {
+            Toast.makeText(MainActivity.this, "Audience is clicked", Toast.LENGTH_SHORT).show();
+            getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new AudienceFragment()).commit();
+        } else if (item.getItemId() == R.id.logout) {
+            // Log out the user using FirebaseAuth signOut method
+            FirebaseAuth.getInstance().signOut();
+
+            // Show a toast message
+            Toast.makeText(MainActivity.this, "Logged out successfully", Toast.LENGTH_SHORT).show();
+
+            // Redirect to the Login activity
+            Intent intent = new Intent(MainActivity.this, Login.class);
+            startActivity(intent);
+            finish(); // Close the current activity so the user can't go back to it
+        }
+
+        drawerLayout.closeDrawer(GravityCompat.START);  // Close the drawer after selection
+        item.setChecked(true);  // Ensure the selected item in the side navigation is checked
+        return true;
     }
 }
