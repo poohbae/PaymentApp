@@ -3,6 +3,7 @@ package com.example.paymentapp;
 import android.app.Dialog;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,6 +20,10 @@ import android.content.Context;
 import android.graphics.Color;
 import android.util.TypedValue;
 import android.widget.Toast;
+
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -41,31 +46,37 @@ class Transaction {
 }
 
 public class HomeFragment extends Fragment {
-
+    private String userId;
+    private Double walletAmt;
     private List<Transaction> transactions;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
-        CardView reloadButton = view.findViewById(R.id.reload_button);
+        Bundle bundle = getArguments();
+        if (bundle != null) {
+            userId = bundle.getString("userId");
+        }
 
-        // Set click listener for the reload button
+        TextView balanceAmount = view.findViewById(R.id.balance_amount);
+        fetchWalletAmount(balanceAmount);
+
+        CardView reloadButton = view.findViewById(R.id.reload_button);
         reloadButton.setOnClickListener(v -> {
-            // Navigate to ReloadFragment
+            Bundle bundle2 = new Bundle();
+            bundle2.putDouble("walletAmt", walletAmt); // Pass the walletAmt
+            ReloadFragment reloadFragment = new ReloadFragment();
+            reloadFragment.setArguments(bundle2);
             getParentFragmentManager().beginTransaction()
-                    .replace(R.id.frameLayout, new ReloadFragment())
-                    .addToBackStack(null) // Add the transaction to the back stack
+                    .replace(R.id.frameLayout, reloadFragment)
+                    .addToBackStack(null)
                     .commit();
         });
 
         CardView requestButton = view.findViewById(R.id.request_button);
-
-        // Set click listener for the request button
         requestButton.setOnClickListener(v -> {
-            // Navigate to RequestFragment
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.frameLayout, new RequestFragment())
                     .addToBackStack(null) // Add the transaction to the back stack
@@ -73,30 +84,26 @@ public class HomeFragment extends Fragment {
         });
 
         CardView investButton = view.findViewById(R.id.invest_button);
-
-        // Set click listener for the request button
         investButton.setOnClickListener(v -> {
-            // Navigate to InvestFragment
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.frameLayout, new InvestFragment())
-                    .addToBackStack(null) // Add the transaction to the back stack
+                    .addToBackStack(null)
                     .commit();
         });
 
         CardView transferButton = view.findViewById(R.id.transfer_button);
-
-        // Set click listener for the transfer button
         transferButton.setOnClickListener(v -> {
-            // Navigate to TransferFragment
+            Bundle bundle3 = new Bundle();
+            bundle3.putDouble("walletAmt", walletAmt);
+            TransferFragment transferFragment = new TransferFragment();
+            transferFragment.setArguments(bundle3);
             getParentFragmentManager().beginTransaction()
-                    .replace(R.id.frameLayout, new TransferFragment())
-                    .addToBackStack(null) // Add the transaction to the back stack
+                    .replace(R.id.frameLayout, transferFragment)
+                    .addToBackStack(null)
                     .commit();
         });
 
         TextView seeAllButton = view.findViewById(R.id.see_all_button);
-
-        // Set a click listener on the "See All" button
         seeAllButton.setOnClickListener(v -> {
             showBottomDialog();
             Toast.makeText(getActivity(), "See All Clicked", Toast.LENGTH_SHORT).show();
@@ -104,16 +111,7 @@ public class HomeFragment extends Fragment {
 
         // Initialize the transactions list
         transactions = new ArrayList<>();
-        transactions.add(new Transaction(R.drawable.add, "1 Aug 2024", "Netflix", "Auto Transfer", "- RM11.00"));
-        transactions.add(new Transaction(R.drawable.add, "2 Aug 2024", "Spotify", "Auto Transfer", "- RM15.00"));
-        transactions.add(new Transaction(R.drawable.add, "3 Aug 2024", "Apple Music", "Auto Transfer", "- RM20.00"));
-        transactions.add(new Transaction(R.drawable.add, "4 Aug 2024", "HBO Max", "Auto Transfer", "- RM25.00"));
-        transactions.add(new Transaction(R.drawable.add, "5 Aug 2024", "Disney+", "Auto Transfer", "- RM30.00"));
-        transactions.add(new Transaction(R.drawable.add, "1 Aug 2024", "Netflix", "Auto Transfer", "- RM11.00"));
-        transactions.add(new Transaction(R.drawable.add, "2 Aug 2024", "Spotify", "Auto Transfer", "- RM15.00"));
-        transactions.add(new Transaction(R.drawable.add, "3 Aug 2024", "Apple Music", "Auto Transfer", "- RM20.00"));
-        transactions.add(new Transaction(R.drawable.add, "4 Aug 2024", "HBO Max", "Auto Transfer", "- RM25.00"));
-        transactions.add(new Transaction(R.drawable.add, "5 Aug 2024", "Disney+", "Auto Transfer", "- RM30.00"));
+        // transactions.add(new Transaction(R.drawable.add, "1 Aug 2024", "Netflix", "Auto Transfer", "- RM11.00"));
 
         // Find the parent LinearLayout where transaction items will be added
         LinearLayout transactionList = view.findViewById(R.id.transaction_list);
@@ -124,6 +122,36 @@ public class HomeFragment extends Fragment {
         }
 
         return view;
+    }
+
+    private void fetchWalletAmount(TextView balanceAmount) {
+        DatabaseReference walletsRef = FirebaseDatabase.getInstance().getReference("Wallets");
+
+        String walletId = "W" + userId;
+
+        // Query to find the wallet by walletId
+        walletsRef.child(walletId).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                // Retrieve walletAmt directly since we are using walletId
+                walletAmt = task.getResult().child("walletAmt").getValue(Double.class);
+
+                // Set wallet amount to the TextView
+                if (walletAmt != null) {
+                    balanceAmount.setText(String.format("RM %.2f", walletAmt));
+                } else {
+                    balanceAmount.setText("-"); // Handle null case
+                    Log.e("HomeFragment", "walletAmt is null for walletId: " + walletId);
+                }
+            } else {
+                // Handle the case where no wallet is found
+                Log.e("HomeFragment", "No wallet found for walletId: " + walletId);
+                balanceAmount.setText("-"); // Default value or error handling
+            }
+        }).addOnFailureListener(e -> {
+            // Handle any errors while retrieving data
+            Toast.makeText(getActivity(), "Failed to retrieve wallet amount.", Toast.LENGTH_SHORT).show();
+            balanceAmount.setText("-"); // Default value on failure
+        });
     }
 
     // Method to show a bottom dialog

@@ -8,9 +8,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -23,15 +21,13 @@ public class ReloadFragment extends Fragment {
     private Button rm100Button, rm200Button, rm300Button, rm500Button, payNowButton;
     private String selectedAmount = "";
     private ImageView bankImageView;
-    private TextView bankNameTextView, topUpAmountTextView, totalAmountTextView;
+    private TextView balanceAmountTextView, bankNameTextView, topUpAmountTextView, totalAmountTextView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_reload, container, false);
 
-        // Initialize views
         inputAmount = view.findViewById(R.id.input_amount);
         rm100Button = view.findViewById(R.id.rm100_button);
         rm200Button = view.findViewById(R.id.rm200_button);
@@ -42,9 +38,15 @@ public class ReloadFragment extends Fragment {
         bankImageView = view.findViewById(R.id.bank_image);
         bankImageView.setTag(R.drawable.maybank);
 
+        balanceAmountTextView = view.findViewById(R.id.balance_amount);
         bankNameTextView = view.findViewById(R.id.bank_name);
         topUpAmountTextView = view.findViewById(R.id.top_up_amount);
         totalAmountTextView = view.findViewById(R.id.total_amount);
+
+        if (getArguments() != null) {
+            double walletAmt = getArguments().getDouble("walletAmt", 0.0);
+            balanceAmountTextView.setText(String.format("RM %.2f", walletAmt));
+        }
 
         // Set default values for top_up_amount and total_amount
         updateAmount("0");

@@ -5,7 +5,6 @@
     <string name="greeting">Good Day</string>
     <string name="register">Register</string>
     <string name="sign_in">Sign In</string>
-    <string name="email_mobile">Email or Mobile Number</string>
     <string name="password">Password</string>
     <string name="sign_up_note">I\'m a new user.</string>
     <string name="sign_up">Sign Up</string>
@@ -15,8 +14,7 @@
     <string name="mobile_number">Mobile Number</string>
     <string name="email">Email</string>
     <string name="confirm_password">Confirm Password</string>
-    <string name="otp">OTP</string>
-    <string name="request_otp">Request OTP</string>
+    <string name="verified">Verified</string>
     <string name="sign_in_note">I\'m an existing user.</string>
     <string name="home">Home</string>
     <string name="portfolio">Portfolio</string>

@@ -31,7 +31,8 @@
         <!-- Main Activity -->
         <activity
             android:name=".MainActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:label=""/>
     </application>
 
 </manifest>

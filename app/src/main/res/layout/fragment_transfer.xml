@@ -50,11 +50,11 @@
             android:textSize="18sp" />
 
         <TextView
+            android:id="@+id/balance_amount"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="15dp"
             android:gravity="center"
-            android:text="RM10,000"
             android:textColor="@color/black"
             android:textSize="30sp"
             android:textStyle="bold" />

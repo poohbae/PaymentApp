@@ -2,7 +2,6 @@ package com.example.paymentapp;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Base64;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -15,138 +14,175 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 
 public class Register extends AppCompatActivity {
 
     EditText editTextName, editTextMobileNumber, editTextEmail, editTextPassword, editTextConfirmPassword;
-    Button registerButton;
+    Button registerButton, verifiedButton;
     TextView signIn;
     FirebaseAuth mAuth;
-    DatabaseReference databaseReference;
+    DatabaseReference databaseReferenceUsers, databaseReferenceWallets;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
+        // Initialize Firebase Auth
         mAuth = FirebaseAuth.getInstance();
-        databaseReference = FirebaseDatabase.getInstance("https://paymentapp-1f1bf-default-rtdb.firebaseio.com/").getReference("Users");
 
+        // Initialize Firebase Database references
+        databaseReferenceUsers = FirebaseDatabase.getInstance().getReference("Users");
+        databaseReferenceWallets = FirebaseDatabase.getInstance().getReference("Wallets");
+
+        // Initialize UI elements
         editTextName = findViewById(R.id.name);
         editTextMobileNumber = findViewById(R.id.mobile_number);
         editTextEmail = findViewById(R.id.email);
         editTextPassword = findViewById(R.id.password);
         editTextConfirmPassword = findViewById(R.id.confirm_password);
         registerButton = findViewById(R.id.register_button);
+        verifiedButton = findViewById(R.id.verified_button);
         signIn = findViewById(R.id.sign_in);
 
+        // Set up registration button click event
         registerButton.setOnClickListener(view -> {
-            String email = editTextEmail.getText().toString();
+            String name = editTextName.getText().toString();
+            String mobileNumber = editTextMobileNumber.getText().toString().trim();
+            String email = editTextEmail.getText().toString().trim().toLowerCase();
             String password = editTextPassword.getText().toString();
             String confirmPassword = editTextConfirmPassword.getText().toString();
 
             if (password.equals(confirmPassword)) {
-                // Encode the password before passing to the registration method
-                String encodedPassword = encodePassword(password);
-                if (encodedPassword != null) {
-                    registerUserWithEmailPassword(email, encodedPassword);  // Register with encoded password
-                } else {
-                    Toast.makeText(Register.this, "Error encoding password", Toast.LENGTH_SHORT).show();
-                }
+                registerUserWithEmailPassword(email, password, name, mobileNumber);  // Pass mobile number during registration
             } else {
                 editTextConfirmPassword.setError("Passwords do not match");
             }
         });
 
+        // Set up sign-in redirect
         signIn.setOnClickListener(view -> {
             Intent intent = new Intent(getApplicationContext(), Login.class);
             startActivity(intent);
             finish();
         });
+
+        // Set up verified button click event
+        verifiedButton.setOnClickListener(view -> {
+            FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+            if (user != null) {
+                // Reload the user to check if their email is verified
+                user.reload().addOnCompleteListener(reloadTask -> {
+                    if (user.isEmailVerified()) {
+                        // Save the user data to the database
+                        storeUserDataAndWallet(user, editTextName.getText().toString(), editTextMobileNumber.getText().toString().trim());
+
+                        // Redirect to the login page
+                        Intent intent = new Intent(Register.this, Login.class);
+                        startActivity(intent);
+                        finish();
+                    } else {
+                        Toast.makeText(Register.this, "Please verify your email before proceeding.", Toast.LENGTH_SHORT).show();
+                    }
+                });
+            } else {
+                Toast.makeText(Register.this, "User not found. Please register again.", Toast.LENGTH_SHORT).show();
+            }
+        });
     }
 
-    // Function to register the user with email and encoded password
-    private void registerUserWithEmailPassword(String email, String encodedPassword) {
-        String name = editTextName.getText().toString(); // Get the name from input field
-        String mobileNumber = editTextMobileNumber.getText().toString().trim(); // Get the mobile number from input field
-
-        mAuth.createUserWithEmailAndPassword(email, encodedPassword).addOnCompleteListener(task -> {
+    // Function to register user with Firebase Authentication
+    private void registerUserWithEmailPassword(String email, String password, String name, String mobileNumber) {
+        mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                // User registered successfully, now send verification email
                 FirebaseUser user = mAuth.getCurrentUser();
                 if (user != null) {
+                    // Send verification email
                     user.sendEmailVerification().addOnCompleteListener(verificationTask -> {
                         if (verificationTask.isSuccessful()) {
-                            Toast.makeText(Register.this, "Verification email sent. Please check your inbox.", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(Register.this, "Verification email sent. Please verify your email.", Toast.LENGTH_SHORT).show();
                         } else {
                             Toast.makeText(Register.this, "Failed to send verification email.", Toast.LENGTH_SHORT).show();
                         }
                     });
-
-                    // Call addUserToDatabase to save user details with the encoded password
-                    addUserToDatabase(name, mobileNumber, email, encodedPassword); // Save the user with encoded password
                 }
-
-                // Optionally, direct the user to the login screen
-                Intent intent = new Intent(Register.this, Login.class);
-                startActivity(intent);
-                finish();
             } else {
                 Toast.makeText(Register.this, "Registration failed: " + task.getException().getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // Function to add user to Firebase Realtime Database with the encoded password
-    private void addUserToDatabase(String name, String mobileNumber, String email, String encodedPassword) {
-        databaseReference.get().addOnCompleteListener(task -> {
+    // Function to store user data and wallet in the Firebase Database after verification
+    private void storeUserDataAndWallet(FirebaseUser firebaseUser, String name, String mobileNumber) {
+        String userId = firebaseUser.getUid();
+        String email = firebaseUser.getEmail();
+
+        // Create a user object
+        User user = new User(name, mobileNumber, email);
+
+        // Create a wallet object for the user, linked to the userId
+        String walletId = "W" + userId; // Wallet ID linked to user
+        Wallet wallet = new Wallet(0.0);
+
+        // Store the user and wallet in the Firebase Database
+        databaseReferenceUsers.child(userId).setValue(user).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
-                long userCount = task.getResult().getChildrenCount(); // Number of users
-                String userId = String.format("U%03d", userCount + 1); // Generate user ID like U001, U002
-
-                // Create a user object with the encoded password
-                User user = new User(userId, name, "+6" + mobileNumber, email, encodedPassword);
-
-                // Add the user data to Firebase Realtime Database
-                databaseReference.child(userId).setValue(user).addOnCompleteListener(task1 -> {
+                // Store the wallet in the separate Wallets table, linked by userId
+                databaseReferenceWallets.child(walletId).setValue(wallet).addOnCompleteListener(task1 -> {
                     if (task1.isSuccessful()) {
-                        Toast.makeText(Register.this, "User registered successfully", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(Register.this, "User and wallet data saved to the database", Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(Register.this, "Failed to register user", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(Register.this, "Failed to save wallet data", Toast.LENGTH_SHORT).show();
                     }
                 });
+            } else {
+                Toast.makeText(Register.this, "Failed to save user data", Toast.LENGTH_SHORT).show();
             }
         });
     }
 
-    // Function to encode the password using SHA-256 (same as in Login.java)
-    private String encodePassword(String password) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(password.getBytes());
-            return Base64.encodeToString(hash, Base64.NO_WRAP); // Encode as Base64 string
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-            return null;
-        }
-    }
-
     // User class to store user details
     public static class User {
-        public String userId;
         public String name;
         public String mobileNumber;
         public String email;
-        public String password; // This will store the encoded password
 
-        public User(String userId, String name, String mobileNumber, String email, String password) {
-            this.userId = userId;
+        public User(String name, String mobileNumber, String email) {
             this.name = name;
             this.mobileNumber = mobileNumber;
             this.email = email;
-            this.password = password; // Store the encoded password
+        }
+    }
+
+    // Wallet class to store wallet details linked with userId
+    public static class Wallet {
+        public double walletAmt;
+        public ArrayList<Transaction> transactionHistory;
+
+        public Wallet(double walletAmt) {
+            this.walletAmt = walletAmt;
+            this.transactionHistory = new ArrayList<>(); // Ensure transactionHistory is initialized
+        }
+    }
+
+    // Transaction class to represent each transaction
+    public static class Transaction {
+        public String transactionId;
+        public int iconResId;
+        public String datetime;
+        public String source;
+        public String note;
+        public double amount;
+
+        public Transaction(String transactionId, int iconResId, String datetime, String source, String note, double amount) {
+            this.transactionId = transactionId;
+            this.iconResId = iconResId;
+            this.datetime = datetime;
+            this.source = source;
+            this.note = note;
+            this.amount = amount;
         }
     }
 }

@@ -26,6 +26,12 @@ public class TransferFragment extends Fragment {
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
+        TextView balanceAmountTextView = view.findViewById(R.id.balance_amount);
+        if (getArguments() != null) {
+            double walletAmt = getArguments().getDouble("walletAmt", 0.0);
+            balanceAmountTextView.setText(String.format("RM %.2f", walletAmt));
+        }
+
         // Find the CardView by ID
         CardView person = view.findViewById(R.id.person);
 

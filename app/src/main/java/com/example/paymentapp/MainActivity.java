@@ -26,7 +26,6 @@ import com.google.android.material.navigation.NavigationView;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
@@ -62,10 +61,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         toolbar = findViewById(R.id.toolBar);
         setSupportActionBar(toolbar);
 
-        // Retrieve the user's name from the intent and set it on the toolbar
         String userName = getIntent().getStringExtra("userName");
-        if (userName != null) {
-            toolbar.setTitle("Good Day, " + userName);
+        if (getSupportActionBar() != null && userName != null) {
+            getSupportActionBar().setTitle("Good Day, " + userName);
         }
 
         sideNavigationView.setNavigationItemSelectedListener(this);  // Set listener for side navigation
@@ -76,7 +74,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Load default fragment if there is no saved instance state
         if (savedInstanceState == null) {
-            getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new HomeFragment()).commit();
+            String userId = getIntent().getStringExtra("userId");
+
+            Bundle bundle = new Bundle();
+            bundle.putString("userId", userId);
+
+            HomeFragment homeFragment = new HomeFragment();
+            homeFragment.setArguments(bundle);
+
+            getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, homeFragment).commit();
         }
 
         // Set up bottom navigation item selection listener
@@ -98,9 +104,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
             // Using if-else statements instead of switch cases
             if (item.getItemId() == R.id.home) {
-                Toast.makeText(MainActivity.this, "Home is clicked", Toast.LENGTH_SHORT).show();
                 getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new HomeFragment()).commit();
-            } else if (item.getItemId() == R.id.portfolio) {
+            }  else if (item.getItemId() == R.id.portfolio) {
                 Toast.makeText(MainActivity.this, "Portfolio is clicked", Toast.LENGTH_SHORT).show();
                 getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new PortfolioFragment()).commit();
             } else if (item.getItemId() == R.id.notifications) {
