@@ -1,9 +1,12 @@
 package com.example.paymentapp;
 
 import android.app.Dialog;
+import android.content.Context;
+import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -12,14 +15,10 @@ import android.view.Window;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
-
-import android.content.Context;
-import android.graphics.Color;
-import android.util.TypedValue;
-import android.widget.Toast;
 
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
@@ -29,18 +28,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 class Transaction {
+    public String transactionId;
     public int iconResId;
-    public String date;
-    public String label;
+    public String datetime;
     public String source;
-    public String amount;
+    public String note;
+    public double amount;
 
-    // Constructor
-    public Transaction(int iconResId, String date, String label, String source, String amount) {
+    public Transaction(String transactionId, int iconResId, String datetime, String source, String note, double amount) {
+        this.transactionId = transactionId;
         this.iconResId = iconResId;
-        this.date = date;
-        this.label = label;
+        this.datetime = datetime;
         this.source = source;
+        this.note = note;
         this.amount = amount;
     }
 }
@@ -104,24 +104,25 @@ public class HomeFragment extends Fragment {
         });
 
         TextView seeAllButton = view.findViewById(R.id.see_all_button);
-        seeAllButton.setOnClickListener(v -> {
-            showBottomDialog();
-            Toast.makeText(getActivity(), "See All Clicked", Toast.LENGTH_SHORT).show();
-        });
+        seeAllButton.setOnClickListener(v -> showBottomDialog());
 
-        // Initialize the transactions list
         transactions = new ArrayList<>();
-        // transactions.add(new Transaction(R.drawable.add, "1 Aug 2024", "Netflix", "Auto Transfer", "- RM11.00"));
-
-        // Find the parent LinearLayout where transaction items will be added
         LinearLayout transactionList = view.findViewById(R.id.transaction_list);
 
-        // Populate transactionList using the transactions list
-        for (Transaction transaction : transactions) {
-            addTransactionItem(transactionList, transaction.iconResId, transaction.date, transaction.label, transaction.source, transaction.amount, getActivity());
-        }
-
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // Fetch and display the wallet balance
+        TextView balanceAmount = getView().findViewById(R.id.balance_amount);
+        fetchWalletAmount(balanceAmount);
+
+        // Fetch and populate transactions
+        LinearLayout transactionList = getView().findViewById(R.id.transaction_list);
+        fetchAndPopulateTransactions(transactionList);
     }
 
     private void fetchWalletAmount(TextView balanceAmount) {
@@ -129,32 +130,103 @@ public class HomeFragment extends Fragment {
 
         String walletId = "W" + userId;
 
-        // Query to find the wallet by walletId
         walletsRef.child(walletId).get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult().exists()) {
-                // Retrieve walletAmt directly since we are using walletId
                 walletAmt = task.getResult().child("walletAmt").getValue(Double.class);
 
-                // Set wallet amount to the TextView
                 if (walletAmt != null) {
                     balanceAmount.setText(String.format("RM %.2f", walletAmt));
                 } else {
-                    balanceAmount.setText("-"); // Handle null case
+                    balanceAmount.setText("-");
                     Log.e("HomeFragment", "walletAmt is null for walletId: " + walletId);
                 }
             } else {
-                // Handle the case where no wallet is found
                 Log.e("HomeFragment", "No wallet found for walletId: " + walletId);
-                balanceAmount.setText("-"); // Default value or error handling
+                balanceAmount.setText("-");
             }
         }).addOnFailureListener(e -> {
-            // Handle any errors while retrieving data
             Toast.makeText(getActivity(), "Failed to retrieve wallet amount.", Toast.LENGTH_SHORT).show();
-            balanceAmount.setText("-"); // Default value on failure
+            balanceAmount.setText("-");
         });
     }
 
-    // Method to show a bottom dialog
+    private void fetchAndPopulateTransactions(LinearLayout transactionList) {
+        DatabaseReference transactionHistoryRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId).child("transactionHistory");
+
+        transactionHistoryRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                transactionList.removeAllViews();  // Clear old views before adding new ones
+                transactions.clear();  // Clear the old transaction list
+
+                for (DataSnapshot snapshot : task.getResult().getChildren()) {
+                    String transactionId = snapshot.child("transactionId").getValue(String.class);
+                    int iconResId = snapshot.child("iconResId").getValue(Integer.class);
+                    String datetime = snapshot.child("datetime").getValue(String.class);
+                    String source = snapshot.child("source").getValue(String.class);
+                    String note = snapshot.child("note").getValue(String.class);
+                    double amount = snapshot.child("amount").getValue(Double.class);
+
+                    Transaction transaction = new Transaction(transactionId, iconResId, datetime, source, note, amount);
+                    transactions.add(transaction);
+
+                    addTransactionItem(transactionList, iconResId, datetime, source, note, String.format("RM %.2f", amount), getActivity());
+                }
+            }
+        }).addOnFailureListener(e -> {
+            Toast.makeText(getActivity(), "Failed to retrieve transactions.", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void addTransactionItem(LinearLayout parent, int iconResId, String date, String label, String source, String amount, Context context) {
+        LinearLayout transactionItem = new LinearLayout(context);
+        transactionItem.setOrientation(LinearLayout.HORIZONTAL);
+        transactionItem.setPadding(8, 8, 8, dpToPx(context, 15));
+        transactionItem.setGravity(android.view.Gravity.CENTER_VERTICAL);
+        transactionItem.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+
+        ImageView icon = new ImageView(context);
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dpToPx(context, 40), dpToPx(context, 40));
+        icon.setLayoutParams(iconParams);
+        icon.setImageResource(iconResId);
+        transactionItem.addView(icon);
+
+        LinearLayout textContainer = new LinearLayout(context);
+        textContainer.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams textContainerParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        textContainer.setLayoutParams(textContainerParams);
+        textContainer.setPadding(dpToPx(context, 8), 0, 0, 0);
+
+        TextView transactionDate = new TextView(context);
+        transactionDate.setText(date);
+        transactionDate.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        textContainer.addView(transactionDate);
+
+        TextView transactionLabel = new TextView(context);
+        transactionLabel.setText(label);
+        transactionLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        transactionLabel.setTypeface(null, android.graphics.Typeface.BOLD);
+        textContainer.addView(transactionLabel);
+
+        TextView transactionSource = new TextView(context);
+        transactionSource.setText(source);
+        transactionSource.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        textContainer.addView(transactionSource);
+
+        transactionItem.addView(textContainer);
+
+        TextView transactionAmount = new TextView(context);
+        transactionAmount.setText(amount);
+        transactionAmount.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        transactionAmount.setTextColor(Color.parseColor("#D32F2F"));
+        transactionItem.addView(transactionAmount);
+
+        parent.addView(transactionItem);
+    }
+
     private void showBottomDialog() {
         final Dialog dialog = new Dialog(getActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -166,7 +238,7 @@ public class HomeFragment extends Fragment {
 
         // Populate transactionHistory using the transactions list
         for (Transaction transaction : transactions) {
-            addTransactionItem(transactionHistory, transaction.iconResId, transaction.date, transaction.label, transaction.source, transaction.amount, getActivity());
+            addTransactionItem(transactionHistory, transaction.iconResId, transaction.datetime, transaction.source, transaction.note, String.format("RM %.2f", transaction.amount), getActivity());
         }
 
         // Set up click listener for close button
@@ -183,70 +255,8 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    // Helper method to add transaction items dynamically
-    private void addTransactionItem(LinearLayout parent, int iconResId, String date, String label, String source, String amount, Context context) {
-        // Same method as before to add transaction items to the parent layout
-        LinearLayout transactionItem = new LinearLayout(context);
-        transactionItem.setOrientation(LinearLayout.HORIZONTAL);
-        transactionItem.setPadding(8, 8, 8, dpToPx(context, 15)); // 8dp padding and 15dp bottom padding
-        transactionItem.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        transactionItem.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
-
-        // Create the ImageView for the transaction icon
-        ImageView icon = new ImageView(context);
-        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dpToPx(context, 40), dpToPx(context, 40)); // Consistent 40dp width and height
-        icon.setLayoutParams(iconParams);
-        icon.setImageResource(iconResId); // Use the passed iconResId
-        transactionItem.addView(icon);
-
-        // Create the LinearLayout for the text content (date, label, source)
-        LinearLayout textContainer = new LinearLayout(context);
-        textContainer.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams textContainerParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1); // Weight of 1
-        textContainer.setLayoutParams(textContainerParams);
-        textContainer.setPadding(dpToPx(context, 8), 0, 0, 0); // 8dp paddingStart
-
-        // Create a TextView for the transaction date
-        TextView transactionDate = new TextView(context);
-        transactionDate.setText(date);
-        transactionDate.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16); // 16sp text size
-        textContainer.addView(transactionDate);
-
-        // Create a TextView for the transaction label
-        TextView transactionLabel = new TextView(context);
-        transactionLabel.setText(label);
-        transactionLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16); // 16sp text size
-        transactionLabel.setTypeface(null, android.graphics.Typeface.BOLD); // Bold
-        textContainer.addView(transactionLabel);
-
-        // Create a TextView for the transaction source
-        TextView transactionSource = new TextView(context);
-        transactionSource.setText(source);
-        transactionSource.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14); // 14sp text size
-        textContainer.addView(transactionSource);
-
-        // Add the text container to the transaction item
-        transactionItem.addView(textContainer);
-
-        // Create a TextView for the transaction amount
-        TextView transactionAmount = new TextView(context);
-        transactionAmount.setText(amount);
-        transactionAmount.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16); // 16sp text size
-        transactionAmount.setTextColor(Color.parseColor("#D32F2F")); // Red color for the amount
-        transactionItem.addView(transactionAmount);
-
-        // Add the entire transaction item to the parent layout
-        parent.addView(transactionItem);
-    }
-
-    // Helper method to convert dp to pixels
     private int dpToPx(Context context, int dp) {
         float density = context.getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
     }
 }
-

@@ -167,22 +167,5 @@ public class Register extends AppCompatActivity {
         }
     }
 
-    // Transaction class to represent each transaction
-    public static class Transaction {
-        public String transactionId;
-        public int iconResId;
-        public String datetime;
-        public String source;
-        public String note;
-        public double amount;
 
-        public Transaction(String transactionId, int iconResId, String datetime, String source, String note, double amount) {
-            this.transactionId = transactionId;
-            this.iconResId = iconResId;
-            this.datetime = datetime;
-            this.source = source;
-            this.note = note;
-            this.amount = amount;
-        }
-    }
 }
