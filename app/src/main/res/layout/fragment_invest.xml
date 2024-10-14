@@ -37,12 +37,12 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="20dp"
             android:gravity="center"
             android:text="@string/investment_question"
             android:textColor="@color/black"
             android:textSize="25sp"
-            android:textStyle="bold"
-            android:layout_marginBottom="20dp"/>
+            android:textStyle="bold" />
 
         <androidx.cardview.widget.CardView
             android:id="@+id/bitcoin"
@@ -89,10 +89,12 @@
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
         <androidx.cardview.widget.CardView
             android:id="@+id/ethereum"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="15dp"
             app:cardBackgroundColor="@android:color/transparent"
             app:cardElevation="0dp">
 
@@ -132,6 +134,7 @@
                 </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
         <androidx.cardview.widget.CardView
             android:id="@+id/gold"
             android:layout_width="match_parent"

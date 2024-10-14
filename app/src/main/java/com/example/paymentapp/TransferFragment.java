@@ -84,7 +84,6 @@ public class TransferFragment extends Fragment {
             }
         });
 
-
         return view;
     }
 
@@ -103,11 +102,11 @@ public class TransferFragment extends Fragment {
                         String userIdFromDB = methodSnapshot.getKey();  // Get the user's ID from Firebase
 
                         // Skip the current user from being populated
-                        // if (!userIdFromDB.equals(userId)) {
+                        if (!userIdFromDB.equals(userId)) {
                             userList.add(user);
                             userNames.add(user.get("name"));
                             userMobileNumbers.add(user.get("mobileNumber"));
-                        // }
+                        }
                     }
                     // Sort the userList by the user name in ascending order
                     userList.sort((user1, user2) -> user1.get("name").compareToIgnoreCase(user2.get("name")));

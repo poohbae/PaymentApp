@@ -12,6 +12,7 @@ import android.widget.TextView;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -29,44 +30,76 @@ public class RequestMoneyFragment extends Fragment {
         // Retrieve the person name from the arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
-            int personImageResId = arguments.getInt("person_image_res", -1);
-            String personName = arguments.getString("person_name");
-            String phoneNumber = arguments.getString("phone_number");
+            String userId = arguments.getString("userId");
+            String personImageUrl = arguments.getString("personImageUrl");
+            String personName = arguments.getString("personName");
+            String mobileNumber = arguments.getString("mobileNumber");
 
             EditText inputAmountEditText = view.findViewById(R.id.input_amount);
             ImageView personImageView = view.findViewById(R.id.person_image);
             TextView personNameTextView = view.findViewById(R.id.person_name);
-            TextView phoneNumberTextView = view.findViewById(R.id.phone_number);
+            TextView mobileNumberTextView = view.findViewById(R.id.mobile_number);
 
-            personImageView.setImageResource(personImageResId);
+            // Load the image using Glide from the URL
+            Glide.with(getContext())
+                    .load(personImageUrl)  // Load the image from Firebase Storage
+                    .placeholder(R.drawable.person)  // Optional placeholder image
+                    .into(personImageView);
             personNameTextView.setText(personName);
-            phoneNumberTextView.setText(phoneNumber);
+            mobileNumberTextView.setText(mobileNumber);
+
+            // Add TextWatcher to restrict input to two decimal places
+            inputAmountEditText.addTextChangedListener(new android.text.TextWatcher() {
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    // No need to do anything before the text is changed
+                }
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    String input = s.toString();
+
+                    // If the input contains a decimal point, check the number of decimal places
+                    if (input.contains(".")) {
+                        int decimalIndex = input.indexOf(".");
+
+                        // If more than two decimal places are entered, truncate the input
+                        if (input.length() - decimalIndex > 3) {
+                            inputAmountEditText.setText(input.substring(0, decimalIndex + 3));
+                            inputAmountEditText.setSelection(inputAmountEditText.getText().length());
+                        }
+                    }
+                }
+
+                @Override
+                public void afterTextChanged(android.text.Editable s) {
+                    // No need to do anything after the text is changed
+                }
+            });
 
             // Set up a click listener for proceeding to RequestConfirmFragment
             Button requestButton = view.findViewById(R.id.request_button);
             requestButton.setOnClickListener(v -> {
                 // Get the values entered by the user
-                String amount = inputAmountEditText.getText().toString().trim();
+                String amountStr = inputAmountEditText.getText().toString().trim();
 
                 // Validation: Check if the amount is empty
-                if (amount.isEmpty()) {
+                if (amountStr.isEmpty()) {
                     inputAmountEditText.setError("Amount cannot be empty");
                     inputAmountEditText.requestFocus();
                     return;
                 }
 
-                // Create a new bundle to pass the data to RequestConfirmFragment
                 Bundle bundle = new Bundle();
-                bundle.putString("amount", amount);
-                bundle.putInt("person_image_res", personImageResId);
-                bundle.putString("person_name", personName);
-                bundle.putString("phone_number", phoneNumber);
+                bundle.putString("userId", userId);
+                bundle.putString("amount", amountStr);
+                bundle.putString("personImageUrl", personImageUrl);
+                bundle.putString("personName", personName);
+                bundle.putString("mobileNumber", mobileNumber);
 
-                // Create RequestConfirmFragment instance and pass the arguments
                 RequestConfirmFragment requestConfirmFragment = new RequestConfirmFragment();
                 requestConfirmFragment.setArguments(bundle);
 
-                // Replace the current fragment with RequestConfirmFragment
                 getParentFragmentManager().beginTransaction()
                         .replace(R.id.frameLayout, requestConfirmFragment)
                         .addToBackStack(null)

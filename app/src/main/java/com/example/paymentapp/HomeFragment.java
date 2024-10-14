@@ -61,8 +61,13 @@ public class HomeFragment extends Fragment {
 
         CardView requestButton = view.findViewById(R.id.request_button);
         requestButton.setOnClickListener(v -> {
+            Bundle bundle3 = new Bundle();
+            bundle3.putString("userId", userId);
+            bundle3.putDouble("walletAmt", walletAmt);
+            RequestFragment requestFragment = new RequestFragment();
+            requestFragment.setArguments(bundle3);
             getParentFragmentManager().beginTransaction()
-                    .replace(R.id.frameLayout, new RequestFragment())
+                    .replace(R.id.frameLayout, requestFragment)
                     .addToBackStack(null) // Add the transaction to the back stack
                     .commit();
         });
@@ -77,11 +82,11 @@ public class HomeFragment extends Fragment {
 
         CardView transferButton = view.findViewById(R.id.transfer_button);
         transferButton.setOnClickListener(v -> {
-            Bundle bundle3 = new Bundle();
-            bundle3.putString("userId", userId);
-            bundle3.putDouble("walletAmt", walletAmt);
+            Bundle bundle4 = new Bundle();
+            bundle4.putString("userId", userId);
+            bundle4.putDouble("walletAmt", walletAmt);
             TransferFragment transferFragment = new TransferFragment();
-            transferFragment.setArguments(bundle3);
+            transferFragment.setArguments(bundle4);
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.frameLayout, transferFragment)
                     .addToBackStack(null)
@@ -166,7 +171,8 @@ public class HomeFragment extends Fragment {
                 for (Register.Transaction transaction : transactions) {
                     if (transaction.source.equals("Reload")) {
                         addTransactionItem(transactionList, transaction.iconResId, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
-                    } else {
+                    }
+                    else {
                         addTransactionItem(transactionList, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
                     }
                 }
@@ -223,7 +229,7 @@ public class HomeFragment extends Fragment {
         transactionItem.addView(textContainer);
 
         TextView transactionAmount = new TextView(context);
-        if (source.equals("Reload")) {
+        if (source.equals("Reload") ||source.equals("Request") ) {
             transactionAmount.setText(String.format("+ %s", amount));  // Display "+" for Reload
             transactionAmount.setTextColor(Color.parseColor("#388E3C"));  // Green color for positive amount
         } else if (source.equals("Transfer")) {

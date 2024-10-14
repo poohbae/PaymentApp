@@ -83,7 +83,7 @@
                 android:textStyle="bold" />
 
             <TextView
-                android:id="@+id/phone_number"
+                android:id="@+id/mobile_number"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="10dp"
