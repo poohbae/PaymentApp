@@ -31,7 +31,7 @@ public class RequestFragment extends Fragment {
 
         // Find the TextView inside the CardView
         ImageView personImageView = view.findViewById(R.id.person_image);
-        personImageView.setTag(R.drawable.poh_zi_jun);
+        personImageView.setTag(R.drawable.maybank);
         TextView personNameTextView = view.findViewById(R.id.person_name);
         TextView phoneNumberTextView = view.findViewById(R.id.phone_number);
 

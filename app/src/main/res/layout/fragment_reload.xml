@@ -73,7 +73,7 @@
                 android:focusableInTouchMode="true"
                 android:gravity="center"
                 android:hint="@string/enter_amount"
-                android:inputType="number"
+                android:inputType="numberDecimal"
                 android:textColor="@color/black"
                 android:textSize="24sp" />
         </LinearLayout>

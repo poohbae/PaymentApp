@@ -81,7 +81,7 @@
                         android:textStyle="bold" />
 
                     <TextView
-                        android:id="@+id/phone_number"
+                        android:id="@+id/mobile_number"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:textColor="@color/black"
@@ -105,7 +105,7 @@
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:hint="@string/amount"
-                android:inputType="number"
+                android:inputType="numberDecimal"
                 android:textColor="@color/black"
                 android:textSize="20sp" />
         </LinearLayout>
@@ -117,10 +117,10 @@
             android:background="@color/black" />
 
         <TextView
+            android:id="@+id/transfer_note"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"
-            android:text="@string/transfer_note"
             android:textColor="@color/black"
             android:textSize="15sp" />
 

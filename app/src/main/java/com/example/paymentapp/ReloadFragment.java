@@ -67,7 +67,7 @@ public class ReloadFragment extends Fragment {
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
-            walletAmt = arguments.getDouble("walletAmt", 0.0);
+            walletAmt = arguments.getDouble("walletAmt");
             balanceAmountTextView.setText(String.format("RM %.2f", walletAmt));
         }
 
@@ -110,8 +110,20 @@ public class ReloadFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Update the top-up and total amounts as the user types
-                if (!s.toString().isEmpty()) {
+                String input = s.toString();
+
+                if (input.contains(".")) {
+                    int decimalIndex = input.indexOf(".");
+
+                    // Check if there are more than 2 digits after the decimal point
+                    if (input.length() - decimalIndex > 3) { // Allow 1 for the decimal point and 2 for decimal places
+                        // If more than 2 digits are entered after the decimal, truncate the input
+                        inputAmount.setText(input.substring(0, decimalIndex + 3));
+                        inputAmount.setSelection(inputAmount.getText().length());  // Move cursor to the end
+                    }
+                }
+
+                if (!input.isEmpty()) {
                     updateAmount(s.toString());
                 } else {
                     updateAmount("0"); // Reset the amount to 0 if the EditText is empty

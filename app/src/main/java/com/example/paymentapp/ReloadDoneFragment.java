@@ -35,9 +35,9 @@ public class ReloadDoneFragment extends Fragment {
         if (arguments != null) {
             String userId = arguments.getString("userId");
             String amount = arguments.getString("amount", "0");
+            String dateTime = getCurrentDateTime();
             int bankImageResId = arguments.getInt("bankImageRes", -1);
             String bankName = arguments.getString("bankName", "Default Bank");
-            String dateTime = getCurrentDateTime();
 
             // Set the amount to the TextViews
             TextView totalAmount = view.findViewById(R.id.total_amount);

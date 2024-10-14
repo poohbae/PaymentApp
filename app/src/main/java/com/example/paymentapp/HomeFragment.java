@@ -20,6 +20,7 @@ import android.widget.Toast;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 
+import com.bumptech.glide.Glide;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -77,6 +78,7 @@ public class HomeFragment extends Fragment {
         CardView transferButton = view.findViewById(R.id.transfer_button);
         transferButton.setOnClickListener(v -> {
             Bundle bundle3 = new Bundle();
+            bundle3.putString("userId", userId);
             bundle3.putDouble("walletAmt", walletAmt);
             TransferFragment transferFragment = new TransferFragment();
             transferFragment.setArguments(bundle3);
@@ -90,8 +92,6 @@ public class HomeFragment extends Fragment {
         seeAllButton.setOnClickListener(v -> showBottomDialog());
 
         transactions = new ArrayList<>();
-        LinearLayout transactionList = view.findViewById(R.id.transaction_list);
-
         return view;
     }
 
@@ -144,15 +144,31 @@ public class HomeFragment extends Fragment {
                 for (DataSnapshot snapshot : task.getResult().getChildren()) {
                     String transactionId = snapshot.child("transactionId").getValue(String.class);
                     int iconResId = snapshot.child("iconResId").getValue(Integer.class);
+                    String imageUrl = snapshot.child("imageUrl").getValue(String.class);
                     String datetime = snapshot.child("datetime").getValue(String.class);
                     String source = snapshot.child("source").getValue(String.class);
+                    String refId = snapshot.child("refId").getValue(String.class);
                     String note = snapshot.child("note").getValue(String.class);
                     double amount = snapshot.child("amount").getValue(Double.class);
 
-                    Register.Transaction transaction = new Register.Transaction(transactionId, iconResId, datetime, source, note, amount);
+                    Register.Transaction transaction;
+                    if (source.equals("Reload")) {
+                        transaction = new Register.Transaction(transactionId, iconResId, datetime, source, refId, amount);
+                    } else {
+                        transaction = new Register.Transaction(transactionId, imageUrl, datetime, source, note, refId, amount);
+                    }
                     transactions.add(transaction);
+                }
+                // Sort transactions in descending order by datetime
+                transactions.sort((t1, t2) -> t2.datetime.compareTo(t1.datetime));
 
-                    addTransactionItem(transactionList, iconResId, datetime, source, note, String.format("RM %.2f", amount), getActivity());
+                // Add transactions to the list
+                for (Register.Transaction transaction : transactions) {
+                    if (transaction.source.equals("Reload")) {
+                        addTransactionItem(transactionList, transaction.iconResId, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
+                    } else {
+                        addTransactionItem(transactionList, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
+                    }
                 }
             }
         }).addOnFailureListener(e -> {
@@ -160,7 +176,7 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private void addTransactionItem(LinearLayout parent, int iconResId, String date, String label, String source, String amount, Context context) {
+    private void addTransactionItem(LinearLayout parent, Object imageSource, String date, String source, String note, String amount, Context context) {
         LinearLayout transactionItem = new LinearLayout(context);
         transactionItem.setOrientation(LinearLayout.HORIZONTAL);
         transactionItem.setPadding(8, 8, 8, dpToPx(context, 15));
@@ -173,7 +189,12 @@ public class HomeFragment extends Fragment {
         ImageView icon = new ImageView(context);
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dpToPx(context, 40), dpToPx(context, 40));
         icon.setLayoutParams(iconParams);
-        icon.setImageResource(iconResId);
+        if (source.equals("Reload")) {
+            icon.setImageResource((int) imageSource);
+        } else {
+            // If it's a transfer transaction (imageUrl is used, load via Glide)
+            Glide.with(context).load((String) imageSource).into(icon);
+        }
         transactionItem.addView(icon);
 
         LinearLayout textContainer = new LinearLayout(context);
@@ -183,28 +204,33 @@ public class HomeFragment extends Fragment {
         textContainer.setLayoutParams(textContainerParams);
         textContainer.setPadding(dpToPx(context, 15), 0, 0, 0);
 
-        TextView transactionDate = new TextView(context);
-        transactionDate.setText(date);
-        transactionDate.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        textContainer.addView(transactionDate);
-
-        TextView transactionLabel = new TextView(context);
-        transactionLabel.setText(label);
-        transactionLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        transactionLabel.setTypeface(null, android.graphics.Typeface.BOLD);
-        textContainer.addView(transactionLabel);
+        TextView transactionDateTime = new TextView(context);
+        transactionDateTime.setText(date);
+        transactionDateTime.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        textContainer.addView(transactionDateTime);
 
         TextView transactionSource = new TextView(context);
         transactionSource.setText(source);
-        transactionSource.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        transactionSource.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        transactionSource.setTypeface(null, android.graphics.Typeface.BOLD);
         textContainer.addView(transactionSource);
+
+        TextView transactionNote = new TextView(context);
+        transactionNote.setText(note);
+        transactionNote.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        textContainer.addView(transactionNote);
 
         transactionItem.addView(textContainer);
 
         TextView transactionAmount = new TextView(context);
-        transactionAmount.setText(amount);
+        if (source.equals("Reload")) {
+            transactionAmount.setText(String.format("+ %s", amount));  // Display "+" for Reload
+            transactionAmount.setTextColor(Color.parseColor("#388E3C"));  // Green color for positive amount
+        } else if (source.equals("Transfer")) {
+            transactionAmount.setText(String.format("- %s", amount));  // Display "-" for Transfer
+            transactionAmount.setTextColor(Color.parseColor("#D32F2F"));  // Red color for negative amount
+        }
         transactionAmount.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        transactionAmount.setTextColor(Color.parseColor("#D32F2F"));
         transactionItem.addView(transactionAmount);
 
         parent.addView(transactionItem);
@@ -215,19 +241,20 @@ public class HomeFragment extends Fragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.see_all);
 
-        // Initialize dialog views
         LinearLayout transactionHistory = dialog.findViewById(R.id.transaction_history);
         ImageView closeButton = dialog.findViewById(R.id.closeButton);
 
         // Populate transactionHistory using the transactions list
         for (Register.Transaction transaction : transactions) {
-            addTransactionItem(transactionHistory, transaction.iconResId, transaction.datetime, transaction.source, transaction.note, String.format("RM %.2f", transaction.amount), getActivity());
+            if (transaction.source.equals("Reload")) {
+                addTransactionItem(transactionHistory, transaction.iconResId, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
+            } else {
+                addTransactionItem(transactionHistory, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
+            }
         }
 
-        // Set up click listener for close button
         closeButton.setOnClickListener(view -> dialog.dismiss());
 
-        // Show the dialog and set its properties
         dialog.show();
         Window window = dialog.getWindow();
         if (window != null) {

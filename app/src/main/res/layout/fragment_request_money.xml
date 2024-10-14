@@ -106,7 +106,7 @@
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:hint="RM 0.00"
-                android:inputType="number"
+                android:inputType="numberDecimal"
                 android:textColor="@color/black"
                 android:textSize="20sp"
                 android:textStyle="bold" />
