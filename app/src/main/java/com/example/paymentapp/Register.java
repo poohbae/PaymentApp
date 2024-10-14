@@ -132,7 +132,14 @@ public class Register extends AppCompatActivity {
                 // Store the wallet in the separate Wallets table, linked by userId
                 databaseReferenceWallets.child(walletId).setValue(wallet).addOnCompleteListener(task1 -> {
                     if (task1.isSuccessful()) {
-                        Toast.makeText(Register.this, "User and wallet data saved to the database", Toast.LENGTH_SHORT).show();
+                        // Ensure the transaction history is saved as an empty list in Firebase
+                        databaseReferenceWallets.child(walletId).child("transactionHistory").setValue(wallet.transactionHistory).addOnCompleteListener(task2 -> {
+                            if (task2.isSuccessful()) {
+                                Toast.makeText(Register.this, "User and wallet data saved to the database", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(Register.this, "Failed to save wallet transaction history", Toast.LENGTH_SHORT).show();
+                            }
+                        });
                     } else {
                         Toast.makeText(Register.this, "Failed to save wallet data", Toast.LENGTH_SHORT).show();
                     }
@@ -167,5 +174,21 @@ public class Register extends AppCompatActivity {
         }
     }
 
+    public static class Transaction {
+        public String transactionId;
+        public int iconResId;
+        public String datetime;
+        public String source;
+        public String note;
+        public double amount;
 
+        public Transaction(String transactionId, int iconResId, String datetime, String source, String note, double amount) {
+            this.transactionId = transactionId;
+            this.iconResId = iconResId;
+            this.datetime = datetime;
+            this.source = source;
+            this.note = note;
+            this.amount = amount;
+        }
+    }
 }

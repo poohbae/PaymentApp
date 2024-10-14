@@ -31,9 +31,10 @@ public class AddMoneyFragment extends Fragment {
         // Retrieve the amount from the arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
+            String userId = arguments.getString("userId");
             String amount = arguments.getString("amount", "0");
-            int bankImageResId = arguments.getInt("bank_image_res", -1);
-            String bankName = arguments.getString("bank_name");
+            int bankImageResId = arguments.getInt("bankImageRes", -1);
+            String bankName = arguments.getString("bankName");
 
             totalAmount.setText("RM " + amount);
             bankImageView.setImageResource(bankImageResId);
@@ -44,9 +45,10 @@ public class AddMoneyFragment extends Fragment {
             payButton.setOnClickListener(v -> {
                 // Create a new bundle to pass the data to ReloadDoneFragment
                 Bundle bundle = new Bundle();
+                bundle.putString("userId", userId);
                 bundle.putString("amount", amount);
-                bundle.putInt("bank_image_res", bankImageResId);
-                bundle.putString("bank_name", bankName);
+                bundle.putInt("bankImageRes", bankImageResId);
+                bundle.putString("bankName", bankName);
 
                 // Create ReloadDoneFragment instance and pass the arguments
                 ReloadDoneFragment reloadDoneFragment = new ReloadDoneFragment();

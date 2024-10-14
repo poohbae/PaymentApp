@@ -33,6 +33,9 @@ public class ReloadFragment extends Fragment {
     private ImageView bankImageView, dropDownArrow;
     private TextView balanceAmountTextView, bankNameTextView, topUpAmountTextView, totalAmountTextView;
 
+    String userId;
+    double walletAmt;
+
     private DatabaseReference paymentMethodsRef;
     private List<HashMap<String, String>> paymentMethodsList = new ArrayList<>();
     private List<String> bankNames = new ArrayList<>();
@@ -61,8 +64,10 @@ public class ReloadFragment extends Fragment {
 
         paymentMethodsRef = FirebaseDatabase.getInstance().getReference("PaymentMethods");
 
-        if (getArguments() != null) {
-            double walletAmt = getArguments().getDouble("walletAmt", 0.0);
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            userId = arguments.getString("userId");
+            walletAmt = arguments.getDouble("walletAmt", 0.0);
             balanceAmountTextView.setText(String.format("RM %.2f", walletAmt));
         }
 
@@ -137,9 +142,10 @@ public class ReloadFragment extends Fragment {
             }
 
             Bundle bundle = new Bundle();
+            bundle.putString("userId", userId);
             bundle.putString("amount", amountToSend);
-            bundle.putInt("bank_image_res", bankImageResId);
-            bundle.putString("bank_name", bankName);
+            bundle.putInt("bankImageRes", bankImageResId);
+            bundle.putString("bankName", bankName);
 
             AddMoneyFragment addMoneyFragment = new AddMoneyFragment();
             addMoneyFragment.setArguments(bundle);

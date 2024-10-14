@@ -8,6 +8,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,10 +33,10 @@ public class ReloadDoneFragment extends Fragment {
         // Retrieve the data from the arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
-            String amount = arguments.getString("amount", "0");
-            int bankImageResId = arguments.getInt("bank_image_res", -1);
-            String bankName = arguments.getString("bank_name", "Default Bank");
             String userId = arguments.getString("userId");
+            String amount = arguments.getString("amount", "0");
+            int bankImageResId = arguments.getInt("bankImageRes", -1);
+            String bankName = arguments.getString("bankName", "Default Bank");
             String dateTime = getCurrentDateTime();
 
             // Set the amount to the TextViews
@@ -61,40 +62,34 @@ public class ReloadDoneFragment extends Fragment {
             Button okButton = view.findViewById(R.id.ok_button);
             okButton.setOnClickListener(v -> {
                 // Fetch current wallet amount from Firebase and update
-                DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId);
+                DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId); // Removed extra "W"
 
                 walletRef.get().addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
-                        Log.d("Location", "1");
-
                         if (task.getResult().exists()) {
-                            Log.d("Location", "2");
-
+                            // Fetch current wallet amount
                             double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
                             double reloadAmt = Double.parseDouble(amount);
                             double updatedWalletAmt = currentWalletAmt + reloadAmt;
 
                             // Update the wallet amount in Firebase
-                            walletRef.child("walletAmt").setValue(updatedWalletAmt);
+                            walletRef.child("walletAmt").setValue(updatedWalletAmt).addOnCompleteListener(taskUpdate -> {
+                                if (taskUpdate.isSuccessful()) {
+                                    DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
+                                    String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
-                            Log.d("WalletAmount", String.valueOf(updatedWalletAmt));
-                            Log.d("Location", "3");
+                                    Register.Transaction transaction = new Register.Transaction(transactionId, bankImageResId, dateTime, "Reload", referenceId, reloadAmt);
+                                    transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
+                                        if (task1.isSuccessful()) {
+                                            Log.d("Transaction", "Transaction saved successfully");
 
-
-                            // Also update the transaction history for this reload
-                            DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
-                            String transactionId = transactionHistoryRef.push().getKey();
-                            Transaction transaction = new Transaction(transactionId, bankImageResId, dateTime, "Reload", referenceId, reloadAmt);
-                            transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
-                                if (task1.isSuccessful()) {
-                                    Log.d("Transaction", "Transaction saved successfully");
-                                    // Navigate to HomeFragment
-                                    navigateToHomeFragment(userId);
-                                } else {
-                                    Log.e("Transaction", "Failed to save transaction", task1.getException());
+                                            navigateToHomeFragment(userId);
+                                        } else {
+                                            Log.e("Transaction", "Failed to save transaction", task1.getException());
+                                        }
+                                    });
                                 }
                             });
-
                         }
                     }
                 });

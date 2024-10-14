@@ -27,28 +27,10 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.util.ArrayList;
 import java.util.List;
 
-class Transaction {
-    public String transactionId;
-    public int iconResId;
-    public String datetime;
-    public String source;
-    public String note;
-    public double amount;
-
-    public Transaction(String transactionId, int iconResId, String datetime, String source, String note, double amount) {
-        this.transactionId = transactionId;
-        this.iconResId = iconResId;
-        this.datetime = datetime;
-        this.source = source;
-        this.note = note;
-        this.amount = amount;
-    }
-}
-
 public class HomeFragment extends Fragment {
     private String userId;
     private Double walletAmt;
-    private List<Transaction> transactions;
+    private List<Register.Transaction> transactions;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -66,7 +48,8 @@ public class HomeFragment extends Fragment {
         CardView reloadButton = view.findViewById(R.id.reload_button);
         reloadButton.setOnClickListener(v -> {
             Bundle bundle2 = new Bundle();
-            bundle2.putDouble("walletAmt", walletAmt); // Pass the walletAmt
+            bundle2.putString("userId", userId);
+            bundle2.putDouble("walletAmt", walletAmt);
             ReloadFragment reloadFragment = new ReloadFragment();
             reloadFragment.setArguments(bundle2);
             getParentFragmentManager().beginTransaction()
@@ -166,7 +149,7 @@ public class HomeFragment extends Fragment {
                     String note = snapshot.child("note").getValue(String.class);
                     double amount = snapshot.child("amount").getValue(Double.class);
 
-                    Transaction transaction = new Transaction(transactionId, iconResId, datetime, source, note, amount);
+                    Register.Transaction transaction = new Register.Transaction(transactionId, iconResId, datetime, source, note, amount);
                     transactions.add(transaction);
 
                     addTransactionItem(transactionList, iconResId, datetime, source, note, String.format("RM %.2f", amount), getActivity());
@@ -198,7 +181,7 @@ public class HomeFragment extends Fragment {
         LinearLayout.LayoutParams textContainerParams = new LinearLayout.LayoutParams(
                 0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
         textContainer.setLayoutParams(textContainerParams);
-        textContainer.setPadding(dpToPx(context, 8), 0, 0, 0);
+        textContainer.setPadding(dpToPx(context, 15), 0, 0, 0);
 
         TextView transactionDate = new TextView(context);
         transactionDate.setText(date);
@@ -237,7 +220,7 @@ public class HomeFragment extends Fragment {
         ImageView closeButton = dialog.findViewById(R.id.closeButton);
 
         // Populate transactionHistory using the transactions list
-        for (Transaction transaction : transactions) {
+        for (Register.Transaction transaction : transactions) {
             addTransactionItem(transactionHistory, transaction.iconResId, transaction.datetime, transaction.source, transaction.note, String.format("RM %.2f", transaction.amount), getActivity());
         }
 
