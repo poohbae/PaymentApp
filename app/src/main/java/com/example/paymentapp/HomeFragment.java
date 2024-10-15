@@ -63,30 +63,33 @@ public class HomeFragment extends Fragment {
         requestButton.setOnClickListener(v -> {
             Bundle bundle3 = new Bundle();
             bundle3.putString("userId", userId);
-            bundle3.putDouble("walletAmt", walletAmt);
             RequestFragment requestFragment = new RequestFragment();
             requestFragment.setArguments(bundle3);
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.frameLayout, requestFragment)
-                    .addToBackStack(null) // Add the transaction to the back stack
+                    .addToBackStack(null)
                     .commit();
         });
 
         CardView investButton = view.findViewById(R.id.invest_button);
         investButton.setOnClickListener(v -> {
+            Bundle bundle4 = new Bundle();
+            bundle4.putString("userId", userId);
+            InvestFragment investFragment = new InvestFragment();
+            investFragment.setArguments(bundle4);
             getParentFragmentManager().beginTransaction()
-                    .replace(R.id.frameLayout, new InvestFragment())
+                    .replace(R.id.frameLayout, investFragment)
                     .addToBackStack(null)
                     .commit();
         });
 
         CardView transferButton = view.findViewById(R.id.transfer_button);
         transferButton.setOnClickListener(v -> {
-            Bundle bundle4 = new Bundle();
-            bundle4.putString("userId", userId);
-            bundle4.putDouble("walletAmt", walletAmt);
+            Bundle bundle5 = new Bundle();
+            bundle5.putString("userId", userId);
+            bundle5.putDouble("walletAmt", walletAmt);
             TransferFragment transferFragment = new TransferFragment();
-            transferFragment.setArguments(bundle4);
+            transferFragment.setArguments(bundle5);
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.frameLayout, transferFragment)
                     .addToBackStack(null)
