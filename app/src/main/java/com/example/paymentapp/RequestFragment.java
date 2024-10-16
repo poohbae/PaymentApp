@@ -2,8 +2,10 @@ package com.example.paymentapp;
 
 import android.app.Dialog;
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -327,8 +329,9 @@ public class RequestFragment extends Fragment {
                     String imageUrl = snapshot.child("imageUrl").getValue(String.class);
                     String datetime = snapshot.child("datetime").getValue(String.class);
                     String source = snapshot.child("source").getValue(String.class);
-                    String refId = snapshot.child("refId").getValue(String.class);
                     String note = snapshot.child("note").getValue(String.class);
+                    String refId = snapshot.child("refId").getValue(String.class);
+                    String mobileNumber = snapshot.child("mobileNumber").getValue(String.class);
                     double amount = snapshot.child("amount").getValue(Double.class);
 
                     // Only include transactions where status == 0 (pending)
@@ -337,7 +340,7 @@ public class RequestFragment extends Fragment {
                     }
 
                     // Create a transaction object specifically for pending requests
-                    Register.Transaction transaction = new Register.Transaction(transactionId, status, imageUrl, datetime, source, note, refId, amount);
+                    Register.Transaction transaction = new Register.Transaction(transactionId, status, imageUrl, datetime, source, note, refId, mobileNumber, amount);
                     pendingRequests.add(transaction);
                 }
 
@@ -347,9 +350,9 @@ public class RequestFragment extends Fragment {
                 // Add pending transactions (status == 0) to the list
                 for (Register.Transaction transaction : pendingRequests) {
                     if (transaction.note.equals("N/A")) {
-                        addPendingTransactionItem(pendingRequestList, transaction.imageUrl, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
+                        addPendingTransactionItem(pendingRequestList, transaction.imageUrl, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, transaction.mobileNumber, String.format("RM %.2f", transaction.amount), getActivity());
                     } else {
-                        addPendingTransactionItem(pendingRequestList, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
+                        addPendingTransactionItem(pendingRequestList, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", transaction.mobileNumber, String.format("RM %.2f", transaction.amount), getActivity());
                     }                }
             }
         }).addOnFailureListener(e -> {
@@ -357,7 +360,7 @@ public class RequestFragment extends Fragment {
         });
     }
 
-    private void addPendingTransactionItem(LinearLayout parent, String imageUrl, String date, String source, String note, String amount, Context context) {
+    private void addPendingTransactionItem(LinearLayout parent, String imageUrl, String date, String source, String note, String mobileNumber, String amount, Context context) {
         LinearLayout transactionItem = new LinearLayout(context);
         transactionItem.setOrientation(LinearLayout.HORIZONTAL);
         transactionItem.setPadding(8, 8, 8, dpToPx(context, 15));
@@ -398,6 +401,23 @@ public class RequestFragment extends Fragment {
 
         transactionItem.addView(textContainer);
 
+        ImageView callIcon = new ImageView(context);
+        LinearLayout.LayoutParams callIconParams = new LinearLayout.LayoutParams(dpToPx(context, 35), dpToPx(context, 35));
+        callIcon.setLayoutParams(callIconParams);
+        callIcon.setImageResource(R.drawable.call);  // Replace with your call icon resource
+        callIcon.setPadding(dpToPx(context, 0), dpToPx(context, 5), dpToPx(context, 15), dpToPx(context, 5));
+        transactionItem.addView(callIcon);
+
+        callIcon.setOnClickListener(v -> {
+            Toast.makeText(context, "Calling: " + mobileNumber, Toast.LENGTH_SHORT).show();
+
+            // Open the dialer with the number
+            Intent intent = new Intent(Intent.ACTION_DIAL);
+            intent.setData(Uri.parse("tel:" + mobileNumber));
+            context.startActivity(intent);
+        });
+
+
         TextView transactionAmount = new TextView(context);
         transactionAmount.setText(String.format(" %s", amount));  // No "+" or "-" for pending
         transactionAmount.setTextColor(Color.parseColor("#FF9800"));  // Orange color for pending request
@@ -418,9 +438,9 @@ public class RequestFragment extends Fragment {
         // Populate transactionHistory using only pending transactions (status == 0)
         for (Register.Transaction transaction : pendingRequests) {
             if (transaction.note.equals("N/A")) {
-                addPendingTransactionItem(requestHistory, transaction.imageUrl, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
+                addPendingTransactionItem(requestHistory, transaction.imageUrl, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, transaction.mobileNumber,  String.format("RM %.2f", transaction.amount), getActivity());
             } else {
-                addPendingTransactionItem(requestHistory, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
+                addPendingTransactionItem(requestHistory, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", transaction.mobileNumber, String.format("RM %.2f", transaction.amount), getActivity());
             }
         }
 

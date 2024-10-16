@@ -70,23 +70,21 @@ public class RequestDoneFragment extends Fragment {
             Button doneButton = view.findViewById(R.id.done_button);
             doneButton.setOnClickListener(v -> {
                 // Fetch current wallet amount from Firebase and update
-                DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId); // Removed extra "W"
+                DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId);
 
                 walletRef.get().addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         if (task.getResult().exists()) {
                             // Fetch current wallet amount
                             double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
-                            double requestAmt = Double.parseDouble(amountStr);
-                            double updatedWalletAmt = currentWalletAmt + requestAmt;
 
                             // Update the wallet amount in Firebase
-                            walletRef.child("walletAmt").setValue(updatedWalletAmt).addOnCompleteListener(taskUpdate -> {
+                            walletRef.child("walletAmt").setValue(currentWalletAmt).addOnCompleteListener(taskUpdate -> {
                                 if (taskUpdate.isSuccessful()) {
                                     DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                     String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
-                                    Register.Transaction transaction = new Register.Transaction(transactionId, 0, personImageUrl, dateTime, "Request", note, referenceId, requestAmt);
+                                    Register.Transaction transaction = new Register.Transaction(transactionId, 0, personImageUrl, dateTime, "Request", note, referenceId, mobileNumber, amount);
                                     transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Log.d("Transaction", "Transaction saved successfully");

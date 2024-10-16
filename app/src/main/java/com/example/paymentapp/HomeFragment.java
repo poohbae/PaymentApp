@@ -156,8 +156,9 @@ public class HomeFragment extends Fragment {
                     String imageUrl = snapshot.child("imageUrl").getValue(String.class);
                     String datetime = snapshot.child("datetime").getValue(String.class);
                     String source = snapshot.child("source").getValue(String.class);
-                    String refId = snapshot.child("refId").getValue(String.class);
                     String note = snapshot.child("note").getValue(String.class);
+                    String refId = snapshot.child("refId").getValue(String.class);
+                    String mobileNumber = snapshot.child("mobileNumber").getValue(String.class);
                     double amount = snapshot.child("amount").getValue(Double.class);
 
                     // Skip this transaction if status == 0
@@ -170,7 +171,7 @@ public class HomeFragment extends Fragment {
                         transaction = new Register.Transaction(transactionId, iconResId, datetime, source, refId, amount);
                     }
                     else if (source.equals("Request")) {
-                        transaction = new Register.Transaction(transactionId, status, imageUrl, datetime, source, note, refId, amount);
+                        transaction = new Register.Transaction(transactionId, status, imageUrl, datetime, source, note, refId, mobileNumber, amount);
                     }
                     else {
                         transaction = new Register.Transaction(transactionId, imageUrl, datetime, source, note, refId, amount);
@@ -247,10 +248,10 @@ public class HomeFragment extends Fragment {
 
         TextView transactionAmount = new TextView(context);
         if (source.equals("Reload") || source.equals("Request")) {
-            transactionAmount.setText(String.format("+ %s", amount));  // Display "+" for Reload
+            transactionAmount.setText(String.format("+ %s", amount));
             transactionAmount.setTextColor(Color.parseColor("#388E3C"));  // Green color for positive amount
         } else if (source.equals("Transfer")) {
-            transactionAmount.setText(String.format("- %s", amount));  // Display "-" for Transfer
+            transactionAmount.setText(String.format("- %s", amount));
             transactionAmount.setTextColor(Color.parseColor("#D32F2F"));  // Red color for negative amount
         }
         transactionAmount.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);

@@ -364,6 +364,7 @@ public class Register extends AppCompatActivity {
         public String source;
         public String note;  // request and transfe
         public String refId;
+        public String mobileNumber;  // request
         public double amount;
 
         // For reload
@@ -377,7 +378,7 @@ public class Register extends AppCompatActivity {
         }
 
         // For request
-        public Transaction(String transactionId, int status, String imageUrl, String datetime, String source, String note, String refId, double amount) {
+        public Transaction(String transactionId, int status, String imageUrl, String datetime, String source, String note, String refId, String mobileNumber, double amount) {
             this.transactionId = transactionId;
             this.status = status;
             this.imageUrl = imageUrl;
@@ -385,6 +386,7 @@ public class Register extends AppCompatActivity {
             this.source = source;
             this.note = note;
             this.refId = refId;
+            this.mobileNumber = mobileNumber;
             this.amount = amount;
         }
 
