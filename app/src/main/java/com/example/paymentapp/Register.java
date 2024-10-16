@@ -1,10 +1,14 @@
 package com.example.paymentapp;
 
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.InputType;
 import android.text.TextWatcher;
+import android.util.TypedValue;
+import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -31,15 +35,16 @@ public class Register extends AppCompatActivity {
     private static final int REQUEST_CODE_READ_MEDIA_IMAGES = 100;
     private static final int PICK_IMAGE_REQUEST = 1;
 
-    EditText editTextName, editTextMobileNumber, editTextEmail, editTextPassword, editTextConfirmPassword;
+    EditText nameEditText, mobileNumberEditText, emailEditText, passwordEditText, confirmPasswordEditText;
+    ImageView togglePasswordVisibility, toggleConfirmPasswordVisibility, userProfileImage;
     Button uploadImageButton, registerButton, verifiedButton;
     TextView signIn;
     FirebaseAuth mAuth;
     DatabaseReference databaseReferenceUsers, databaseReferenceWallets;
-    ImageView userProfileImage;
     Uri imageUri;
     String imageFileName;
     String imageUrl;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,55 +59,92 @@ public class Register extends AppCompatActivity {
         databaseReferenceWallets = FirebaseDatabase.getInstance().getReference("Wallets");
 
         // Initialize UI elements
-        editTextName = findViewById(R.id.name);
-        editTextMobileNumber = findViewById(R.id.mobile_number);
-        editTextEmail = findViewById(R.id.email);
-        editTextPassword = findViewById(R.id.password);
-        editTextConfirmPassword = findViewById(R.id.confirm_password);
+        nameEditText = findViewById(R.id.name);
+        mobileNumberEditText = findViewById(R.id.mobile_number);
+        emailEditText = findViewById(R.id.email);
+        passwordEditText = findViewById(R.id.password);
+        confirmPasswordEditText = findViewById(R.id.confirm_password);
+        togglePasswordVisibility = findViewById(R.id.toggle_password);
+        toggleConfirmPasswordVisibility = findViewById(R.id.toggle_confirm_password);
         userProfileImage = findViewById(R.id.user_profile_image);
         uploadImageButton = findViewById(R.id.upload_image_button);
         registerButton = findViewById(R.id.register_button);
         verifiedButton = findViewById(R.id.verified_button);
         signIn = findViewById(R.id.sign_in);
 
-        uploadImageButton.setEnabled(false);
-
-        // Add TextWatcher to the name field
-        editTextName.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                // No action needed before text is changed
-            }
+        // Password visibility toggle logic
+        togglePasswordVisibility.setOnClickListener(new View.OnClickListener() {
+            boolean isPasswordVisible = false;
 
             @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                // Enable/Disable the upload button based on the name input
-                String nameInput = charSequence.toString().trim();
-                if (nameInput.isEmpty()) {
-                    // Disable upload button if name is empty
-                    uploadImageButton.setEnabled(false);
-                    Toast.makeText(Register.this, "Please enter your name before uploading the image", Toast.LENGTH_SHORT).show();
+            public void onClick(View v) {
+                int cursorPosition = passwordEditText.getSelectionStart();
+                Typeface currentTypeface = passwordEditText.getTypeface();
+                float currentTextSize = passwordEditText.getTextSize();
+
+                if (isPasswordVisible) {
+                    // Hide password
+                    passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    togglePasswordVisibility.setImageResource(R.drawable.visibility_on);
                 } else {
-                    // Enable upload button if name is entered
-                    uploadImageButton.setEnabled(true);
+                    // Show password
+                    passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                    togglePasswordVisibility.setImageResource(R.drawable.visibility_off);
                 }
-            }
 
-            @Override
-            public void afterTextChanged(Editable editable) {
-                // No action needed after text is changed
+                passwordEditText.setTypeface(currentTypeface);
+                passwordEditText.setTextSize(TypedValue.COMPLEX_UNIT_PX, currentTextSize);
+                passwordEditText.setSelection(cursorPosition);
+
+                isPasswordVisible = !isPasswordVisible;
             }
         });
 
-        uploadImageButton.setOnClickListener(v -> openImageChooser());
+        toggleConfirmPasswordVisibility.setOnClickListener(new View.OnClickListener() {
+            boolean isConfirmPasswordVisible = false;
+            @Override
+            public void onClick(View v) {
+                int cursorPosition = passwordEditText.getSelectionStart();
+                Typeface currentTypeface = passwordEditText.getTypeface();
+                float currentTextSize = passwordEditText.getTextSize();
+
+                if (isConfirmPasswordVisible) {
+                    // Hide confirm password
+                    confirmPasswordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    toggleConfirmPasswordVisibility.setImageResource(R.drawable.visibility_on);
+                } else {
+                    // Show confirm password
+                    confirmPasswordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                    toggleConfirmPasswordVisibility.setImageResource(R.drawable.visibility_off);
+                }
+
+                confirmPasswordEditText.setTypeface(currentTypeface);
+                confirmPasswordEditText.setTextSize(TypedValue.COMPLEX_UNIT_PX, currentTextSize);
+                confirmPasswordEditText.setSelection(cursorPosition);
+
+                isConfirmPasswordVisible = !isConfirmPasswordVisible;
+            }
+        });
+
+        uploadImageButton.setOnClickListener(v -> {
+            String nameInput = nameEditText.getText().toString().trim();
+
+            if (nameInput.isEmpty()) {
+                // Show a message if the name field is empty
+                Toast.makeText(Register.this, "Please enter your name before uploading the image", Toast.LENGTH_SHORT).show();
+            } else {
+                // Allow image upload if the name is entered
+                openImageChooser();
+            }
+        });
 
         // Set up registration button click event
         registerButton.setOnClickListener(view -> {
-            String name = editTextName.getText().toString().trim();
-            String mobileNumber = editTextMobileNumber.getText().toString().trim();
-            String email = editTextEmail.getText().toString().trim().toLowerCase();
-            String password = editTextPassword.getText().toString();
-            String confirmPassword = editTextConfirmPassword.getText().toString();
+            String name = nameEditText.getText().toString().trim();
+            String mobileNumber = mobileNumberEditText.getText().toString().trim();
+            String email = emailEditText.getText().toString().trim().toLowerCase();
+            String password = passwordEditText.getText().toString();
+            String confirmPassword = confirmPasswordEditText.getText().toString();
 
             if (validateInput(name, mobileNumber, email, password, confirmPassword)) {
                 registerUserWithEmailPassword(email, password);
@@ -143,33 +185,33 @@ public class Register extends AppCompatActivity {
     // Function to validate inputs
     private boolean validateInput(String name, String mobileNumber, String email, String password, String confirmPassword) {
         if (name.isEmpty()) {
-            editTextName.setError("Name cannot be empty");
-            editTextName.requestFocus();
+            nameEditText.setError("Name cannot be empty");
+            nameEditText.requestFocus();
             return false;
         }
         if (mobileNumber.isEmpty()) {
-            editTextMobileNumber.setError("Mobile number cannot be empty");
-            editTextMobileNumber.requestFocus();
+            mobileNumberEditText.setError("Mobile number cannot be empty");
+            mobileNumberEditText.requestFocus();
             return false;
         }
         if (email.isEmpty()) {
-            editTextEmail.setError("Email cannot be empty");
-            editTextEmail.requestFocus();
+            emailEditText.setError("Email cannot be empty");
+            emailEditText.requestFocus();
             return false;
         }
         if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            editTextEmail.setError("Please enter a valid email address");
-            editTextEmail.requestFocus();
+            emailEditText.setError("Please enter a valid email address");
+            emailEditText.requestFocus();
             return false;
         }
         if (password.isEmpty()) {
-            editTextPassword.setError("Password cannot be empty");
-            editTextPassword.requestFocus();
+            passwordEditText.setError("Password cannot be empty");
+            passwordEditText.requestFocus();
             return false;
         }
         if (!password.equals(confirmPassword)) {
-            editTextConfirmPassword.setError("Passwords do not match");
-            editTextConfirmPassword.requestFocus();
+            confirmPasswordEditText.setError("Passwords do not match");
+            confirmPasswordEditText.requestFocus();
             return false;
         }
         return true;
@@ -208,7 +250,7 @@ public class Register extends AppCompatActivity {
 
     private void uploadImageToFirebase() {
         if (imageUri != null) {
-            imageFileName = editTextName.getText().toString().trim().toLowerCase();
+            imageFileName = nameEditText.getText().toString().trim().toLowerCase();
             StorageReference storageReference = FirebaseStorage.getInstance().getReference("profileImages/" + imageFileName);
 
             storageReference.putFile(imageUri).addOnSuccessListener(taskSnapshot -> {
@@ -252,8 +294,8 @@ public class Register extends AppCompatActivity {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null) {
             String userId = firebaseUser.getUid();
-            String name = editTextName.getText().toString().trim();
-            String mobileNumber = editTextMobileNumber.getText().toString().trim();
+            String name = nameEditText.getText().toString().trim();
+            String mobileNumber = mobileNumberEditText.getText().toString().trim();
             String email = firebaseUser.getEmail();
 
             // Create a user object with the image URL
@@ -315,11 +357,12 @@ public class Register extends AppCompatActivity {
 
     public static class Transaction {
         public String transactionId;
-        public int iconResId;
-        public String imageUrl;
+        public int status;  // request
+        public int iconResId; // reload
+        public String imageUrl;  // request and transfer
         public String datetime;
         public String source;
-        public String note;
+        public String note;  // request and transfe
         public String refId;
         public double amount;
 
@@ -333,7 +376,19 @@ public class Register extends AppCompatActivity {
             this.amount = amount;
         }
 
-        // For request and transfer
+        // For request
+        public Transaction(String transactionId, int status, String imageUrl, String datetime, String source, String note, String refId, double amount) {
+            this.transactionId = transactionId;
+            this.status = status;
+            this.imageUrl = imageUrl;
+            this.datetime = datetime;
+            this.source = source;
+            this.note = note;
+            this.refId = refId;
+            this.amount = amount;
+        }
+
+        // For transfer
         public Transaction(String transactionId, String imageUrl, String datetime, String source, String note, String refId, double amount) {
             this.transactionId = transactionId;
             this.imageUrl = imageUrl;

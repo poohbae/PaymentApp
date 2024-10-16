@@ -151,6 +151,7 @@ public class HomeFragment extends Fragment {
 
                 for (DataSnapshot snapshot : task.getResult().getChildren()) {
                     String transactionId = snapshot.child("transactionId").getValue(String.class);
+                    int status = snapshot.child("status").getValue(Integer.class);
                     int iconResId = snapshot.child("iconResId").getValue(Integer.class);
                     String imageUrl = snapshot.child("imageUrl").getValue(String.class);
                     String datetime = snapshot.child("datetime").getValue(String.class);
@@ -159,10 +160,19 @@ public class HomeFragment extends Fragment {
                     String note = snapshot.child("note").getValue(String.class);
                     double amount = snapshot.child("amount").getValue(Double.class);
 
+                    // Skip this transaction if status == 0
+                    if (status == 0) {
+                        continue;
+                    }
+
                     Register.Transaction transaction;
                     if (source.equals("Reload")) {
                         transaction = new Register.Transaction(transactionId, iconResId, datetime, source, refId, amount);
-                    } else {
+                    }
+                    else if (source.equals("Request")) {
+                        transaction = new Register.Transaction(transactionId, status, imageUrl, datetime, source, note, refId, amount);
+                    }
+                    else {
                         transaction = new Register.Transaction(transactionId, imageUrl, datetime, source, note, refId, amount);
                     }
                     transactions.add(transaction);
@@ -174,8 +184,13 @@ public class HomeFragment extends Fragment {
                 for (Register.Transaction transaction : transactions) {
                     if (transaction.source.equals("Reload")) {
                         addTransactionItem(transactionList, transaction.iconResId, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
-                    }
-                    else {
+                    } else if (transaction.source.equals("Request")) {
+                        if (transaction.note.equals("N/A")) {
+                            addTransactionItem(transactionList, transaction.imageUrl, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
+                        } else {
+                            addTransactionItem(transactionList, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
+                        }
+                    } else {
                         addTransactionItem(transactionList, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
                     }
                 }
@@ -201,7 +216,6 @@ public class HomeFragment extends Fragment {
         if (source.equals("Reload")) {
             icon.setImageResource((int) imageSource);
         } else {
-            // If it's a transfer transaction (imageUrl is used, load via Glide)
             Glide.with(context).load((String) imageSource).into(icon);
         }
         transactionItem.addView(icon);
@@ -232,7 +246,7 @@ public class HomeFragment extends Fragment {
         transactionItem.addView(textContainer);
 
         TextView transactionAmount = new TextView(context);
-        if (source.equals("Reload") ||source.equals("Request") ) {
+        if (source.equals("Reload") || source.equals("Request")) {
             transactionAmount.setText(String.format("+ %s", amount));  // Display "+" for Reload
             transactionAmount.setTextColor(Color.parseColor("#388E3C"));  // Green color for positive amount
         } else if (source.equals("Transfer")) {
@@ -248,15 +262,20 @@ public class HomeFragment extends Fragment {
     private void showBottomDialog() {
         final Dialog dialog = new Dialog(getActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.see_all);
+        dialog.setContentView(R.layout.transaction_see_all);
 
         LinearLayout transactionHistory = dialog.findViewById(R.id.transaction_history);
-        ImageView closeButton = dialog.findViewById(R.id.closeButton);
+        ImageView closeButton = dialog.findViewById(R.id.close_button);
 
-        // Populate transactionHistory using the transactions list
         for (Register.Transaction transaction : transactions) {
             if (transaction.source.equals("Reload")) {
                 addTransactionItem(transactionHistory, transaction.iconResId, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
+            } else if (transaction.source.equals("Request")) {
+                if (transaction.note.equals("N/A")) {
+                    addTransactionItem(transactionHistory, transaction.imageUrl, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
+                } else {
+                    addTransactionItem(transactionHistory, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
+                }
             } else {
                 addTransactionItem(transactionHistory, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
             }

@@ -37,20 +37,29 @@ public class RequestDoneFragment extends Fragment {
             String personImageUrl = arguments.getString("personImageUrl");
             String personName = arguments.getString("personName");
             String mobileNumber = arguments.getString("mobileNumber");
-            String amount = arguments.getString("amount");
+            String amountStr = arguments.getString("amount");
             String note = arguments.getString("note");
 
             TextView dateTimeTextView = view.findViewById(R.id.date_time);
             TextView personNameTextView = view.findViewById(R.id.person_name);
             TextView mobileNumberTextView = view.findViewById(R.id.mobile_number);
             TextView amountTextView = view.findViewById(R.id.total_amount);
+            TextView noteLabelTextView = view.findViewById(R.id.note_label);
             TextView noteTextView = view.findViewById(R.id.note);
 
             dateTimeTextView.setText(dateTime);
             personNameTextView.setText(personName);
             mobileNumberTextView.setText(mobileNumber);
-            amountTextView.setText("RM " + amount);
-            noteTextView.setText(note);
+            double amount = Double.parseDouble(amountStr);
+            amountTextView.setText(String.format("RM %.2f", amount));
+
+            if ("N/A".equals(note)) {
+                noteLabelTextView.setVisibility(View.INVISIBLE);
+                noteTextView.setVisibility(View.INVISIBLE);
+            }
+            else{
+                noteTextView.setText(note);
+            }
 
             TextView referenceIdTextView = view.findViewById(R.id.reference_id);
             Random random = new Random();
@@ -68,7 +77,7 @@ public class RequestDoneFragment extends Fragment {
                         if (task.getResult().exists()) {
                             // Fetch current wallet amount
                             double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
-                            double requestAmt = Double.parseDouble(amount);
+                            double requestAmt = Double.parseDouble(amountStr);
                             double updatedWalletAmt = currentWalletAmt + requestAmt;
 
                             // Update the wallet amount in Firebase
@@ -77,7 +86,7 @@ public class RequestDoneFragment extends Fragment {
                                     DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                     String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
-                                    Register.Transaction transaction = new Register.Transaction(transactionId, personImageUrl, dateTime, "Request", note, referenceId, requestAmt);
+                                    Register.Transaction transaction = new Register.Transaction(transactionId, 0, personImageUrl, dateTime, "Request", note, referenceId, requestAmt);
                                     transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Log.d("Transaction", "Transaction saved successfully");

@@ -29,7 +29,7 @@ public class RequestConfirmFragment extends Fragment {
         Bundle arguments = getArguments();
         if (arguments != null) {
             String userId = arguments.getString("userId");
-            String amount = arguments.getString("amount");
+            String amountStr = arguments.getString("amount");
             String personImageUrl = arguments.getString("personImageUrl");
             String personName = arguments.getString("personName");
             String mobileNumber = arguments.getString("mobileNumber");
@@ -40,11 +40,14 @@ public class RequestConfirmFragment extends Fragment {
             TextView mobileNumberTextView = view.findViewById(R.id.mobile_number);
             EditText noteEditText = view.findViewById(R.id.note);
 
-            amountTextView.setText("RM " + amount);
+            double amount = Double.parseDouble(amountStr);
+            amountTextView.setText(String.format("RM %.2f", amount));
+
             Glide.with(getContext())
                     .load(personImageUrl)  // Load the image from Firebase Storage
                     .placeholder(R.drawable.person)  // Optional placeholder image
-                    .into(personImageView);            personNameTextView.setText(personName);
+                    .into(personImageView);
+            personNameTextView.setText(personName);
             mobileNumberTextView.setText(mobileNumber);
 
             Button requestButton = view.findViewById(R.id.request_button);
@@ -52,13 +55,13 @@ public class RequestConfirmFragment extends Fragment {
                 String note = noteEditText.getText().toString().trim();
 
                 // Validation: Check if note is empty
-                if (note.isEmpty()) {
-                    note = "-";
+                if (note.trim().isEmpty()) {
+                    note = "N/A";
                 }
 
                 Bundle bundle = new Bundle();
                 bundle.putString("userId", userId);
-                bundle.putString("amount", amount);
+                bundle.putString("amount", amountStr);
                 bundle.putString("personImageUrl", personImageUrl);
                 bundle.putString("personName", personName);
                 bundle.putString("mobileNumber", mobileNumber);

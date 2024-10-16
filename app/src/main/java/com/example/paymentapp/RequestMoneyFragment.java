@@ -59,6 +59,14 @@ public class RequestMoneyFragment extends Fragment {
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     String input = s.toString();
 
+                    double inputValue = Double.parseDouble(input);
+
+                    if (inputValue > 10000) {
+                        inputAmountEditText.setText(input.substring(0, start));  // Truncate the input at the last valid point
+                        inputAmountEditText.setSelection(inputAmountEditText.getText().length());  // Move cursor to the end
+                        return;
+                    }
+
                     // If the input contains a decimal point, check the number of decimal places
                     if (input.contains(".")) {
                         int decimalIndex = input.indexOf(".");

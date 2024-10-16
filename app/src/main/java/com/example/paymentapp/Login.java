@@ -2,10 +2,14 @@ package com.example.paymentapp;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Patterns;
+import android.util.TypedValue;
+import android.graphics.Typeface;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -19,11 +23,12 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class Login extends AppCompatActivity {
 
-    EditText loginEmail, loginPassword;
+    EditText emailEditText, passwordEditText;
+    ImageView togglePasswordVisibility;
     Button loginButton;
+    TextView signUp, forgotPassword;
     DatabaseReference databaseReferenceUsers;
     FirebaseAuth mAuth;
-    TextView signUp, forgotPassword;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -35,11 +40,41 @@ public class Login extends AppCompatActivity {
         databaseReferenceUsers = FirebaseDatabase.getInstance().getReference("Users");
 
         // Initialize UI elements
-        loginEmail = findViewById(R.id.login_email);
-        loginPassword = findViewById(R.id.login_password);
+        emailEditText = findViewById(R.id.email);
+        passwordEditText = findViewById(R.id.password);
+        togglePasswordVisibility = findViewById(R.id.toggle_password);
         loginButton = findViewById(R.id.login_button);
         signUp = findViewById(R.id.sign_up);
         forgotPassword = findViewById(R.id.forgot_password);
+
+        // Password visibility toggle logic
+        togglePasswordVisibility.setOnClickListener(new View.OnClickListener() {
+            boolean isPasswordVisible = false;
+
+            @Override
+            public void onClick(View v) {
+                // Store the current typeface and text size
+                int cursorPosition = passwordEditText.getSelectionStart();
+                Typeface currentTypeface = passwordEditText.getTypeface();
+                float currentTextSize = passwordEditText.getTextSize();
+
+                if (isPasswordVisible) {
+                    // Hide password
+                    passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+                    togglePasswordVisibility.setImageResource(R.drawable.visibility_on);
+                } else {
+                    // Show password
+                    passwordEditText.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD);
+                    togglePasswordVisibility.setImageResource(R.drawable.visibility_off);
+                }
+
+                passwordEditText.setTypeface(currentTypeface);
+                passwordEditText.setTextSize(TypedValue.COMPLEX_UNIT_PX, currentTextSize);
+                passwordEditText.setSelection(cursorPosition);
+
+                isPasswordVisible = !isPasswordVisible;
+            }
+        });
 
         // Sign-up redirect
         signUp.setOnClickListener(view -> {
@@ -50,21 +85,21 @@ public class Login extends AppCompatActivity {
 
         // Login button click listener
         loginButton.setOnClickListener(view -> {
-            String email = loginEmail.getText().toString().trim().toLowerCase(); // Convert email to lowercase
-            String password = loginPassword.getText().toString();
+            String email = emailEditText.getText().toString().trim().toLowerCase(); // Convert email to lowercase
+            String password = passwordEditText.getText().toString();
 
             if (email.isEmpty()) {
-                loginEmail.setError("Email cannot be empty");
-                loginEmail.requestFocus();
+                emailEditText.setError("Email cannot be empty");
+                emailEditText.requestFocus();
             } else if (password.isEmpty()) {
-                loginPassword.setError("Password cannot be empty");
-                loginPassword.requestFocus();
+                passwordEditText.setError("Password cannot be empty");
+                passwordEditText.requestFocus();
             } else if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 // Proceed to login if the input is a valid email format
                 checkIfEmailExists(email, password);
             } else {
-                loginEmail.setError("Invalid email format");
-                loginEmail.requestFocus();
+                emailEditText.setError("Invalid email format");
+                emailEditText.requestFocus();
             }
         });
 
@@ -78,8 +113,8 @@ public class Login extends AppCompatActivity {
                 // Email exists, proceed to login
                 loginUserByEmail(email, password);
             } else {
-                loginEmail.setError("Email not found");
-                loginEmail.requestFocus();
+                emailEditText.setError("Email not found");
+                emailEditText.requestFocus();
             }
         });
     }
@@ -113,8 +148,8 @@ public class Login extends AppCompatActivity {
                     }
                 }
             } else {
-                loginPassword.setError("Incorrect password. Please try again.");
-                loginPassword.requestFocus();
+                passwordEditText.setError("Incorrect password. Please try again.");
+                passwordEditText.requestFocus();
             }
         });
     }

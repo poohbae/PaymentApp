@@ -75,7 +75,7 @@
                 android:focusable="true"
                 android:focusableInTouchMode="true"
                 android:gravity="center"
-                android:hint="@string/enter_name_or_phone_number"
+                android:hint="@string/enter_name_mobile"
                 android:inputType="text"
                 android:textColor="@color/black"
                 android:textSize="24sp" />

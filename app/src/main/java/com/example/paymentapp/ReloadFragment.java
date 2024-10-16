@@ -27,7 +27,7 @@ import java.util.List;
 
 public class ReloadFragment extends Fragment {
 
-    private EditText inputAmount;
+    private EditText inputAmountEditText;
     private Button rm100Button, rm200Button, rm300Button, rm500Button, payNowButton;
     private String selectedAmount = "";
     private ImageView bankImageView, dropDownArrow;
@@ -48,7 +48,7 @@ public class ReloadFragment extends Fragment {
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
-        inputAmount = view.findViewById(R.id.input_amount);
+        inputAmountEditText = view.findViewById(R.id.input_amount);
         rm100Button = view.findViewById(R.id.rm100_button);
         rm200Button = view.findViewById(R.id.rm200_button);
         rm300Button = view.findViewById(R.id.rm300_button);
@@ -79,30 +79,30 @@ public class ReloadFragment extends Fragment {
 
         rm100Button.setOnClickListener(v -> {
             selectedAmount = "100";
-            inputAmount.setText("100");
+            inputAmountEditText.setText("100");
             updateAmount("100");
         });
 
         rm200Button.setOnClickListener(v -> {
             selectedAmount = "200";
-            inputAmount.setText("200");
+            inputAmountEditText.setText("200");
             updateAmount("200");
         });
 
         rm300Button.setOnClickListener(v -> {
             selectedAmount = "300";
-            inputAmount.setText("300");
+            inputAmountEditText.setText("300");
             updateAmount("300");
         });
 
         rm500Button.setOnClickListener(v -> {
             selectedAmount = "500";
-            inputAmount.setText("500");
+            inputAmountEditText.setText("500");
             updateAmount("500");
         });
 
         // Set a TextWatcher on the inputAmount EditText to update the top-up and total amounts dynamically
-        inputAmount.addTextChangedListener(new android.text.TextWatcher() {
+        inputAmountEditText.addTextChangedListener(new android.text.TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
                 // No need to do anything before the text is changed
@@ -112,14 +112,22 @@ public class ReloadFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String input = s.toString();
 
+                double inputValue = Double.parseDouble(input);
+
+                if (inputValue > 10000) {
+                    inputAmountEditText.setText(input.substring(0, start));  // Truncate the input at the last valid point
+                    inputAmountEditText.setSelection(inputAmountEditText.getText().length());  // Move cursor to the end
+                    return;
+                }
+
                 if (input.contains(".")) {
                     int decimalIndex = input.indexOf(".");
 
                     // Check if there are more than 2 digits after the decimal point
                     if (input.length() - decimalIndex > 3) { // Allow 1 for the decimal point and 2 for decimal places
                         // If more than 2 digits are entered after the decimal, truncate the input
-                        inputAmount.setText(input.substring(0, decimalIndex + 3));
-                        inputAmount.setSelection(inputAmount.getText().length());  // Move cursor to the end
+                        inputAmountEditText.setText(input.substring(0, decimalIndex + 3));
+                        inputAmountEditText.setSelection(inputAmountEditText.getText().length());  // Move cursor to the end
                     }
                 }
 
@@ -137,7 +145,7 @@ public class ReloadFragment extends Fragment {
         });
 
         payNowButton.setOnClickListener(v -> {
-            String manualAmount = inputAmount.getText().toString().trim();
+            String manualAmount = inputAmountEditText.getText().toString().trim();
             String amountToSend;
             String bankName = bankNameTextView.getText().toString();
             int bankImageResId = (int) bankImageView.getTag();
@@ -148,8 +156,8 @@ public class ReloadFragment extends Fragment {
             } else if (!selectedAmount.isEmpty()) {
                 amountToSend = selectedAmount;
             } else {
-                inputAmount.setError("Please enter or select an amount");
-                inputAmount.requestFocus();
+                inputAmountEditText.setError("Please enter or select an amount");
+                inputAmountEditText.requestFocus();
                 return;
             }
 
@@ -172,8 +180,17 @@ public class ReloadFragment extends Fragment {
     }
 
     private void updateAmount(String amount) {
-        topUpAmountTextView.setText("RM " + amount);
-        totalAmountTextView.setText("RM " + amount);
+        double parsedAmount = 0;
+        try {
+            parsedAmount = Double.parseDouble(amount);
+        } catch (NumberFormatException e) {
+            // Handle exception if the input amount is not valid
+        }
+
+        // Format the parsedAmount to two decimal places and update the TextViews
+        String formattedAmount = String.format("RM %.2f", parsedAmount);
+        topUpAmountTextView.setText(formattedAmount);
+        totalAmountTextView.setText(formattedAmount);
     }
 
     // Method to load Payment Methods from Firebase

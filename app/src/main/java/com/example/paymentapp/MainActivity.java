@@ -132,8 +132,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.scan_dialog);
 
-        LinearLayout scanArea = dialog.findViewById(R.id.scanArea);
-        ImageView closeButton = dialog.findViewById(R.id.closeButton);
+        LinearLayout scanArea = dialog.findViewById(R.id.scan_area);
+        ImageView closeButton = dialog.findViewById(R.id.close_button);
 
         scanArea.setOnClickListener(v -> Toast.makeText(MainActivity.this, "Scan Area is clicked", Toast.LENGTH_SHORT).show());
         closeButton.setOnClickListener(view -> dialog.dismiss());

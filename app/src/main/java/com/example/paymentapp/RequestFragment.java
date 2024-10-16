@@ -1,6 +1,9 @@
 package com.example.paymentapp;
 
+import android.app.Dialog;
 import android.content.Context;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -9,10 +12,12 @@ import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
@@ -42,6 +47,8 @@ public class RequestFragment extends Fragment {
     private List<String> userMobileNumbers = new ArrayList<>();
 
     private LinearLayout cardContainer;
+
+    private List<Register.Transaction> pendingRequests;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -79,6 +86,12 @@ public class RequestFragment extends Fragment {
                 // No action needed after text change
             }
         });
+
+        TextView seeAllButton = view.findViewById(R.id.see_all_button);
+        seeAllButton.setOnClickListener(v -> showBottomDialog());
+
+        pendingRequests = new ArrayList<>();
+        fetchAndPopulatePendingRequests(view.findViewById(R.id.request_list));
 
         return view;
     }
@@ -300,6 +313,129 @@ public class RequestFragment extends Fragment {
         }
     }
 
+    private void fetchAndPopulatePendingRequests(LinearLayout pendingRequestList) {
+        DatabaseReference transactionHistoryRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId).child("transactionHistory");
+
+        transactionHistoryRef.get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                pendingRequestList.removeAllViews();  // Clear old views before adding new ones
+                pendingRequests.clear();  // Clear the old transaction list
+
+                for (DataSnapshot snapshot : task.getResult().getChildren()) {
+                    String transactionId = snapshot.child("transactionId").getValue(String.class);
+                    int status = snapshot.child("status").getValue(Integer.class);
+                    String imageUrl = snapshot.child("imageUrl").getValue(String.class);
+                    String datetime = snapshot.child("datetime").getValue(String.class);
+                    String source = snapshot.child("source").getValue(String.class);
+                    String refId = snapshot.child("refId").getValue(String.class);
+                    String note = snapshot.child("note").getValue(String.class);
+                    double amount = snapshot.child("amount").getValue(Double.class);
+
+                    // Only include transactions where status == 0 (pending)
+                    if (status != 0) {
+                        continue;
+                    }
+
+                    // Create a transaction object specifically for pending requests
+                    Register.Transaction transaction = new Register.Transaction(transactionId, status, imageUrl, datetime, source, note, refId, amount);
+                    pendingRequests.add(transaction);
+                }
+
+                // Sort pending requests in descending order by datetime
+                pendingRequests.sort((t1, t2) -> t2.datetime.compareTo(t1.datetime));
+
+                // Add pending transactions (status == 0) to the list
+                for (Register.Transaction transaction : pendingRequests) {
+                    if (transaction.note.equals("N/A")) {
+                        addPendingTransactionItem(pendingRequestList, transaction.imageUrl, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
+                    } else {
+                        addPendingTransactionItem(pendingRequestList, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
+                    }                }
+            }
+        }).addOnFailureListener(e -> {
+            Toast.makeText(getActivity(), "Failed to retrieve transactions.", Toast.LENGTH_SHORT).show();
+        });
+    }
+
+    private void addPendingTransactionItem(LinearLayout parent, String imageUrl, String date, String source, String note, String amount, Context context) {
+        LinearLayout transactionItem = new LinearLayout(context);
+        transactionItem.setOrientation(LinearLayout.HORIZONTAL);
+        transactionItem.setPadding(8, 8, 8, dpToPx(context, 15));
+        transactionItem.setGravity(Gravity.CENTER_VERTICAL);
+        transactionItem.setLayoutParams(new LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        ));
+
+        ImageView icon = new ImageView(context);
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dpToPx(context, 40), dpToPx(context, 40));
+        icon.setLayoutParams(iconParams);
+        Glide.with(context).load(imageUrl).into(icon);  // Load the image for pending requests
+        transactionItem.addView(icon);
+
+        LinearLayout textContainer = new LinearLayout(context);
+        textContainer.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams textContainerParams = new LinearLayout.LayoutParams(
+                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
+        textContainer.setLayoutParams(textContainerParams);
+        textContainer.setPadding(dpToPx(context, 15), 0, 0, 0);
+
+        TextView transactionDateTime = new TextView(context);
+        transactionDateTime.setText(date);
+        transactionDateTime.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        textContainer.addView(transactionDateTime);
+
+        TextView transactionSource = new TextView(context);
+        transactionSource.setText(source);
+        transactionSource.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        transactionSource.setTypeface(null, android.graphics.Typeface.BOLD);
+        textContainer.addView(transactionSource);
+
+        TextView transactionNote = new TextView(context);
+        transactionNote.setText(note);
+        transactionNote.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
+        textContainer.addView(transactionNote);
+
+        transactionItem.addView(textContainer);
+
+        TextView transactionAmount = new TextView(context);
+        transactionAmount.setText(String.format(" %s", amount));  // No "+" or "-" for pending
+        transactionAmount.setTextColor(Color.parseColor("#FF9800"));  // Orange color for pending request
+        transactionAmount.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
+        transactionItem.addView(transactionAmount);
+
+        parent.addView(transactionItem);
+    }
+
+    private void showBottomDialog() {
+        final Dialog dialog = new Dialog(getActivity());
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
+        dialog.setContentView(R.layout.request_see_all);
+
+        LinearLayout requestHistory = dialog.findViewById(R.id.pending_request);
+        ImageView closeButton = dialog.findViewById(R.id.close_button);
+
+        // Populate transactionHistory using only pending transactions (status == 0)
+        for (Register.Transaction transaction : pendingRequests) {
+            if (transaction.note.equals("N/A")) {
+                addPendingTransactionItem(requestHistory, transaction.imageUrl, transaction.datetime, transaction.source, "Ref ID: " + transaction.refId, String.format("RM %.2f", transaction.amount), getActivity());
+            } else {
+                addPendingTransactionItem(requestHistory, transaction.imageUrl, transaction.datetime, transaction.source, transaction.note + " (Ref ID: " + transaction.refId + ")", String.format("RM %.2f", transaction.amount), getActivity());
+            }
+        }
+
+        closeButton.setOnClickListener(view -> dialog.dismiss());
+
+        dialog.show();
+        Window window = dialog.getWindow();
+        if (window != null) {
+            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+            window.getAttributes().windowAnimations = R.style.DialogAnimation;
+            window.setGravity(Gravity.BOTTOM);
+        }
+    }
+
     private int dpToPx(Context context, int dp) {
         float density = context.getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
@@ -323,6 +459,9 @@ public class RequestFragment extends Fragment {
         if (fab != null) {
             fab.hide();  // Hide FAB using the hide method
         }
+
+        // Re-fetch pending requests when the fragment is resumed
+        fetchAndPopulatePendingRequests(getView().findViewById(R.id.request_list));
     }
 
     @Override

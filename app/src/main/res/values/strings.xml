@@ -45,13 +45,14 @@
     <string name="top_up_from">Top Up From</string>
     <string name="reference">Reference ID</string>
     <string name="ok">OK</string>
-    <string name="enter_name_or_phone_number">Enter name or phone number</string>
+    <string name="enter_name_mobile">Enter name or mobile number</string>
     <string name="transfer_money">Transfer Money</string>
     <string name="transfer_to">Transfer to</string>
     <string name="transfer_question">What\'s the transfer for?</string>
     <string name="fund_transfer">Fund Transfer</string>
     <string name="receiver">Receiver</string>
     <string name="remark">Remark</string>
+    <string name="pending_request">Pending Request</string>
     <string name="request_money">Request Money</string>
     <string name="confirmation">Confirmation</string>
     <string name="request_note">You\'re requesting</string>
