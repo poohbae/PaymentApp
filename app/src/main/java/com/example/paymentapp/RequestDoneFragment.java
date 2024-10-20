@@ -6,7 +6,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.fragment.app.Fragment;
@@ -33,10 +32,11 @@ public class RequestDoneFragment extends Fragment {
         Bundle arguments = getArguments();
         if (arguments != null) {
             String userId = arguments.getString("userId");
+            String userImageUrl = arguments.getString("userImageUrl");
             String dateTime = getCurrentDateTime();
             String personImageUrl = arguments.getString("personImageUrl");
             String personName = arguments.getString("personName");
-            String mobileNumber = arguments.getString("mobileNumber");
+            String personMobileNumber = arguments.getString("personMobileNumber");
             String amountStr = arguments.getString("amount");
             String note = arguments.getString("note");
 
@@ -49,7 +49,7 @@ public class RequestDoneFragment extends Fragment {
 
             dateTimeTextView.setText(dateTime);
             personNameTextView.setText(personName);
-            mobileNumberTextView.setText(mobileNumber);
+            mobileNumberTextView.setText(personMobileNumber);
             double amount = Double.parseDouble(amountStr);
             amountTextView.setText(String.format("RM %.2f", amount));
 
@@ -84,11 +84,10 @@ public class RequestDoneFragment extends Fragment {
                                     DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                     String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
-                                    Register.Transaction transaction = new Register.Transaction(transactionId, 0, personImageUrl, dateTime, "Request", note, referenceId, mobileNumber, amount);
+                                    Register.Transaction transaction = new Register.Transaction(transactionId, userImageUrl, personImageUrl, dateTime, "Request", note, referenceId, 0, personMobileNumber, userId, amount);
                                     transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Log.d("Transaction", "Transaction saved successfully");
-
                                             navigateToHomeFragment(userId);
                                         } else {
                                             Log.e("Transaction", "Failed to save transaction", task1.getException());

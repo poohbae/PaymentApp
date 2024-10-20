@@ -4,9 +4,7 @@ import android.content.Intent;
 import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
-import android.text.Editable;
 import android.text.InputType;
-import android.text.TextWatcher;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
@@ -357,14 +355,16 @@ public class Register extends AppCompatActivity {
 
     public static class Transaction {
         public String transactionId;
-        public int status;  // request
         public int iconResId; // reload
-        public String imageUrl;  // request and transfer
+        public String recipientImageUrl; // request and transfer
+        public String senderImageUrl;  // request and transfer
         public String datetime;
         public String source;
-        public String note;  // request and transfe
+        public String note;  // request and transfer
         public String refId;
-        public String mobileNumber;  // request
+        public int status;  // request
+        public String mobileNumber;
+        public String recipientId; // request and transfer
         public double amount;
 
         // For reload
@@ -374,30 +374,39 @@ public class Register extends AppCompatActivity {
             this.datetime = datetime;
             this.source = source;
             this.refId = refId;
+            this.status = 1;
             this.amount = amount;
         }
 
         // For request
-        public Transaction(String transactionId, int status, String imageUrl, String datetime, String source, String note, String refId, String mobileNumber, double amount) {
+        public Transaction(String transactionId, String recipientImageUrl, String senderImageUrl, String datetime, String source, String note, String refId, int status, String mobileNumber, String recipientId, double amount) {
             this.transactionId = transactionId;
-            this.status = status;
-            this.imageUrl = imageUrl;
+            this.iconResId = 0;
+            this.recipientImageUrl = recipientImageUrl;
+            this.senderImageUrl = senderImageUrl;
             this.datetime = datetime;
             this.source = source;
             this.note = note;
             this.refId = refId;
+            this.status = status;
             this.mobileNumber = mobileNumber;
+            this.recipientId = recipientId;
             this.amount = amount;
         }
 
         // For transfer
-        public Transaction(String transactionId, String imageUrl, String datetime, String source, String note, String refId, double amount) {
+        public Transaction(String transactionId, String recipientImageUrl, String senderImageUrl, String datetime, String source, String note, String refId, String mobileNumber, String recipientId, double amount) {
             this.transactionId = transactionId;
-            this.imageUrl = imageUrl;
+            this.iconResId = 0;
+            this.recipientImageUrl = recipientImageUrl;
+            this.senderImageUrl = senderImageUrl;
             this.datetime = datetime;
             this.source = source;
             this.note = note;
             this.refId = refId;
+            this.status = 1;
+            this.mobileNumber = mobileNumber;
+            this.recipientId = recipientId;
             this.amount = amount;
         }
     }

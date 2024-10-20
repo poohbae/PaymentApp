@@ -122,7 +122,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return true;
         });
 
-
         // Set up Floating Action Button click listener
         fab.setOnClickListener(view -> showBottomDialog());
     }

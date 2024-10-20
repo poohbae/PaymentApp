@@ -31,10 +31,12 @@ public class TransferMoneyFragment extends Fragment {
         Bundle arguments = getArguments();
         if (arguments != null) {
             String userId = arguments.getString("userId");
+            String userImageUrl = arguments.getString("userImageUrl");
             double walletAmt = arguments.getDouble("walletAmt");
             String personImageUrl = arguments.getString("personImageUrl");
             String personName = arguments.getString("personName");
-            String mobileNumber = arguments.getString("mobileNumber");
+            String personMobileNumber = arguments.getString("personMobileNumber");
+            String personId = arguments.getString("personId");
 
             EditText inputAmountEditText = view.findViewById(R.id.input_amount);
             ImageView personImageView = view.findViewById(R.id.person_image);
@@ -49,7 +51,7 @@ public class TransferMoneyFragment extends Fragment {
                     .placeholder(R.drawable.person)  // Optional placeholder image
                     .into(personImageView);
             personNameTextView.setText(personName);
-            mobileNumberTextView.setText(mobileNumber);
+            mobileNumberTextView.setText(personMobileNumber);
             transferNoteTextView.setText(String.format("You can transfer up to RM %.2f", walletAmt));
 
             // Add TextWatcher to restrict input to two decimal places
@@ -113,9 +115,12 @@ public class TransferMoneyFragment extends Fragment {
                 // Create a new bundle to pass the data to TransferDoneFragment
                 Bundle bundle = new Bundle();
                 bundle.putString("userId", userId);
+                bundle.putString("userImageUrl", userImageUrl);
                 bundle.putString("amount", amountStr);
                 bundle.putString("personImageUrl", personImageUrl);
                 bundle.putString("personName", personName);
+                bundle.putString("personMobileNumber", personMobileNumber);
+                bundle.putString("personId", personId);
                 bundle.putString("transferPurpose", transferPurpose);
 
                 // Create TransferDoneFragment instance and pass the arguments

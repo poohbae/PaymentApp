@@ -14,17 +14,17 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class AddMoneyFragment extends Fragment {
+public class ReloadMoneyFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_add_money, container, false);
+        View view = inflater.inflate(R.layout.fragment_reload_money, container, false);
 
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
-        TextView totalAmount = view.findViewById(R.id.total_amount);
+        TextView totalAmountTextView = view.findViewById(R.id.total_amount);
         ImageView bankImageView = view.findViewById(R.id.bank_image);
         TextView bankNameTextView = view.findViewById(R.id.bank_name);
 
@@ -36,7 +36,8 @@ public class AddMoneyFragment extends Fragment {
             int bankImageResId = arguments.getInt("bankImageRes", -1);
             String bankName = arguments.getString("bankName");
 
-            totalAmount.setText("RM " + amount);
+            double amountValue = Double.parseDouble(amount); // Convert String to double
+            totalAmountTextView.setText(String.format("RM %.2f", amountValue));
             bankImageView.setImageResource(bankImageResId);
             bankNameTextView.setText(bankName);
 

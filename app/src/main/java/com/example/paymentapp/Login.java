@@ -83,7 +83,6 @@ public class Login extends AppCompatActivity {
             finish();
         });
 
-        // Login button click listener
         loginButton.setOnClickListener(view -> {
             String email = emailEditText.getText().toString().trim().toLowerCase(); // Convert email to lowercase
             String password = passwordEditText.getText().toString();
@@ -96,7 +95,7 @@ public class Login extends AppCompatActivity {
                 passwordEditText.requestFocus();
             } else if (Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
                 // Proceed to login if the input is a valid email format
-                checkIfEmailExists(email, password);
+                loginUserByEmail(email, password);  // No need to check the email in the Realtime Database
             } else {
                 emailEditText.setError("Invalid email format");
                 emailEditText.requestFocus();
@@ -104,19 +103,6 @@ public class Login extends AppCompatActivity {
         });
 
         forgotPassword.setOnClickListener(view -> showForgotPasswordDialog());
-    }
-
-    // Check if the email exists in Firebase Realtime Database
-    private void checkIfEmailExists(String email, String password) {
-        databaseReferenceUsers.orderByChild("email").equalTo(email).get().addOnCompleteListener(task -> {
-            if (task.isSuccessful() && task.getResult().exists()) {
-                // Email exists, proceed to login
-                loginUserByEmail(email, password);
-            } else {
-                emailEditText.setError("Email not found");
-                emailEditText.requestFocus();
-            }
-        });
     }
 
     // Function to log in user by email and pass the user's name to MainActivity

@@ -34,7 +34,7 @@ import java.util.List;
 
 public class TransferFragment extends Fragment {
 
-    String userId;
+    String userId, userImageUrl;
     double walletAmt;
 
     private DatabaseReference userListRef;
@@ -60,6 +60,7 @@ public class TransferFragment extends Fragment {
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
+            userImageUrl = arguments.getString("userImageUrl");
             walletAmt = arguments.getDouble("walletAmt", 0.0);
             balanceAmountTextView.setText(String.format("RM %.2f", walletAmt));
         }
@@ -97,15 +98,21 @@ public class TransferFragment extends Fragment {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    for (DataSnapshot methodSnapshot : dataSnapshot.getChildren()) {
-                        HashMap<String, String> user = (HashMap<String, String>) methodSnapshot.getValue();
-                        String userIdFromDB = methodSnapshot.getKey();  // Get the user's ID from Firebase
+                    for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                        String userIdFromDB = userSnapshot.getKey();  // Get the user ID (key) from Firebase
 
                         // Skip the current user from being populated
                         if (!userIdFromDB.equals(userId)) {
-                            userList.add(user);
-                            userNames.add(user.get("name"));
-                            userMobileNumbers.add(user.get("mobileNumber"));
+                            HashMap<String, String> user = (HashMap<String, String>) userSnapshot.getValue();
+                            if (user != null) {
+                                // Add userId as a field in the HashMap
+                                user.put("id", userIdFromDB);
+
+                                // Add the user details to the list
+                                userList.add(user);
+                                userNames.add(user.get("name"));
+                                userMobileNumbers.add(user.get("mobileNumber"));
+                            }
                         }
                     }
                     // Sort the userList by the user name in ascending order
@@ -130,7 +137,8 @@ public class TransferFragment extends Fragment {
         // Loop through the userList and create a card for each user
         for (int i = 0; i < userList.size(); i++) {
             HashMap<String, String> user = userList.get(i);
-            String userName = user.get("name");
+            String id = user.get("id");
+            String name = user.get("name");
             String mobileNumber = user.get("mobileNumber");
             String imageUrl = user.get("image");
 
@@ -145,6 +153,8 @@ public class TransferFragment extends Fragment {
             cardView.setRadius(12);
             cardView.setCardElevation(0);
             cardView.setCardBackgroundColor(getResources().getColor(android.R.color.transparent));
+
+            cardView.setTag(id);
 
             LinearLayout cardLayout = new LinearLayout(getContext());
             cardLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -166,7 +176,7 @@ public class TransferFragment extends Fragment {
             textLayout.setPadding(dpToPx(getContext(), 15), 0, 0, 0);
 
             TextView personNameTextView = new TextView(getContext());
-            personNameTextView.setText(userName);
+            personNameTextView.setText(name);
             personNameTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
             personNameTextView.setTextColor(getResources().getColor(R.color.black));
             personNameTextView.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -184,14 +194,17 @@ public class TransferFragment extends Fragment {
             cardContainer.addView(cardView);
 
             cardView.setOnClickListener(v -> {
+                String selectedUserId = (String) v.getTag();  // Retrieve the tag (user ID) from the clicked CardView
                 TransferMoneyFragment transferMoneyFragment = new TransferMoneyFragment();
 
                 Bundle bundle = new Bundle();
                 bundle.putString("userId", userId);
+                bundle.putString("userImageUrl", userImageUrl);
                 bundle.putDouble("walletAmt", walletAmt);
                 bundle.putString("personImageUrl", imageUrl);
-                bundle.putString("personName", userName);
-                bundle.putString("mobileNumber", mobileNumber);
+                bundle.putString("personName", name);
+                bundle.putString("personMobileNumber", mobileNumber);
+                bundle.putString("personId", selectedUserId);
 
                 transferMoneyFragment.setArguments(bundle);
 
@@ -234,7 +247,8 @@ public class TransferFragment extends Fragment {
 
         for (int i = 0; i < filteredList.size(); i++) {
             HashMap<String, String> user = filteredList.get(i);
-            String userName = user.get("name");
+            String id = user.get("id");
+            String name = user.get("name");
             String mobileNumber = user.get("mobileNumber");
             String imageUrl = user.get("image");
 
@@ -249,6 +263,8 @@ public class TransferFragment extends Fragment {
             cardView.setRadius(12);
             cardView.setCardElevation(0);
             cardView.setCardBackgroundColor(getResources().getColor(android.R.color.transparent));
+
+            cardView.setTag(id);
 
             LinearLayout cardLayout = new LinearLayout(getContext());
             cardLayout.setOrientation(LinearLayout.HORIZONTAL);
@@ -270,7 +286,7 @@ public class TransferFragment extends Fragment {
             textLayout.setPadding(dpToPx(getContext(), 15), 0, 0, 0);
 
             TextView personNameTextView = new TextView(getContext());
-            personNameTextView.setText(userName);
+            personNameTextView.setText(name);
             personNameTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
             personNameTextView.setTextColor(getResources().getColor(R.color.black));
             personNameTextView.setTypeface(null, android.graphics.Typeface.BOLD);
@@ -288,12 +304,17 @@ public class TransferFragment extends Fragment {
             cardContainer.addView(cardView);
 
             cardView.setOnClickListener(v -> {
+                String selectedUserId = (String) v.getTag();  // Retrieve the tag (user ID) from the clicked CardView
                 TransferMoneyFragment transferMoneyFragment = new TransferMoneyFragment();
 
                 Bundle bundle = new Bundle();
+                bundle.putString("userId", userId);
+                bundle.putString("userImageUrl", userImageUrl);
+                bundle.putDouble("walletAmt", walletAmt);
                 bundle.putString("personImageUrl", imageUrl);
-                bundle.putString("personName", userName);
-                bundle.putString("mobileNumber", mobileNumber);
+                bundle.putString("personName", name);
+                bundle.putString("personMobileNumber", mobileNumber);
+                bundle.putString("personId", selectedUserId);
 
                 transferMoneyFragment.setArguments(bundle);
 

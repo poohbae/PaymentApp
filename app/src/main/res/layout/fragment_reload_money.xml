@@ -6,7 +6,7 @@
     android:background="@color/gray"
     android:orientation="vertical"
     android:padding="10dp"
-    tools:context=".AddMoneyFragment">
+    tools:context=".ReloadMoneyFragment">
 
     <RelativeLayout
         android:layout_width="match_parent"

@@ -112,27 +112,36 @@ public class ReloadFragment extends Fragment {
             public void onTextChanged(CharSequence s, int start, int before, int count) {
                 String input = s.toString();
 
-                double inputValue = Double.parseDouble(input);
-
-                if (inputValue > 10000) {
-                    inputAmountEditText.setText(input.substring(0, start));  // Truncate the input at the last valid point
-                    inputAmountEditText.setSelection(inputAmountEditText.getText().length());  // Move cursor to the end
-                    return;
-                }
-
-                if (input.contains(".")) {
-                    int decimalIndex = input.indexOf(".");
-
-                    // Check if there are more than 2 digits after the decimal point
-                    if (input.length() - decimalIndex > 3) { // Allow 1 for the decimal point and 2 for decimal places
-                        // If more than 2 digits are entered after the decimal, truncate the input
-                        inputAmountEditText.setText(input.substring(0, decimalIndex + 3));
-                        inputAmountEditText.setSelection(inputAmountEditText.getText().length());  // Move cursor to the end
-                    }
-                }
-
                 if (!input.isEmpty()) {
-                    updateAmount(s.toString());
+                    try {
+                        double inputValue = Double.parseDouble(input);
+
+                        // Check if input value exceeds the maximum allowed amount
+                        if (inputValue > 10000) {
+                            inputAmountEditText.setText(input.substring(0, start));  // Truncate the input at the last valid point
+                            inputAmountEditText.setSelection(inputAmountEditText.getText().length());  // Move cursor to the end
+                            return;
+                        }
+
+                        if (input.contains(".")) {
+                            int decimalIndex = input.indexOf(".");
+
+                            // Check if there are more than 2 digits after the decimal point
+                            if (input.length() - decimalIndex > 3) { // Allow 1 for the decimal point and 2 for decimal places
+                                // If more than 2 digits are entered after the decimal, truncate the input
+                                input = input.substring(0, decimalIndex + 3);
+                                inputAmountEditText.setText(input);
+                                inputAmountEditText.setSelection(input.length());  // Move cursor to the end
+                            }
+                        }
+
+                        // Update the amount to display in other TextViews without rounding
+                        updateAmount(input);
+
+                    } catch (NumberFormatException e) {
+                        // Handle exception if the input amount is not valid
+                        updateAmount("0");
+                    }
                 } else {
                     updateAmount("0"); // Reset the amount to 0 if the EditText is empty
                 }
@@ -167,7 +176,7 @@ public class ReloadFragment extends Fragment {
             bundle.putInt("bankImageRes", bankImageResId);
             bundle.putString("bankName", bankName);
 
-            AddMoneyFragment addMoneyFragment = new AddMoneyFragment();
+            ReloadMoneyFragment addMoneyFragment = new ReloadMoneyFragment();
             addMoneyFragment.setArguments(bundle);
 
             getParentFragmentManager().beginTransaction()
@@ -187,8 +196,8 @@ public class ReloadFragment extends Fragment {
             // Handle exception if the input amount is not valid
         }
 
-        // Format the parsedAmount to two decimal places and update the TextViews
-        String formattedAmount = String.format("RM %.2f", parsedAmount);
+        // Truncate the amount to two decimal places without rounding
+        String formattedAmount = String.format("RM %.2f", Math.floor(parsedAmount * 100) / 100);
         topUpAmountTextView.setText(formattedAmount);
         totalAmountTextView.setText(formattedAmount);
     }

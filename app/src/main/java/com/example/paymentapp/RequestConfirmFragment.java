@@ -1,6 +1,7 @@
 package com.example.paymentapp;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,10 +30,11 @@ public class RequestConfirmFragment extends Fragment {
         Bundle arguments = getArguments();
         if (arguments != null) {
             String userId = arguments.getString("userId");
+            String userImageUrl = arguments.getString("userImageUrl");
             String amountStr = arguments.getString("amount");
             String personImageUrl = arguments.getString("personImageUrl");
             String personName = arguments.getString("personName");
-            String mobileNumber = arguments.getString("mobileNumber");
+            String personMobileNumber = arguments.getString("personMobileNumber");
 
             TextView amountTextView = view.findViewById(R.id.total_amount);
             ImageView personImageView = view.findViewById(R.id.person_image);
@@ -48,7 +50,7 @@ public class RequestConfirmFragment extends Fragment {
                     .placeholder(R.drawable.person)  // Optional placeholder image
                     .into(personImageView);
             personNameTextView.setText(personName);
-            mobileNumberTextView.setText(mobileNumber);
+            mobileNumberTextView.setText(personMobileNumber);
 
             Button requestButton = view.findViewById(R.id.request_button);
             requestButton.setOnClickListener(v -> {
@@ -61,10 +63,11 @@ public class RequestConfirmFragment extends Fragment {
 
                 Bundle bundle = new Bundle();
                 bundle.putString("userId", userId);
+                bundle.putString("userImageUrl", userImageUrl);
                 bundle.putString("amount", amountStr);
                 bundle.putString("personImageUrl", personImageUrl);
                 bundle.putString("personName", personName);
-                bundle.putString("mobileNumber", mobileNumber);
+                bundle.putString("personMobileNumber", personMobileNumber);
                 bundle.putString("note", note);
 
                 RequestDoneFragment requestDoneFragment = new RequestDoneFragment();

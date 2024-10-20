@@ -40,14 +40,15 @@ public class ReloadDoneFragment extends Fragment {
             String bankName = arguments.getString("bankName", "Default Bank");
 
             // Set the amount to the TextViews
-            TextView totalAmount = view.findViewById(R.id.total_amount);
-            TextView totalAmount2 = view.findViewById(R.id.total_amount2);
+            TextView totalAmountTextView = view.findViewById(R.id.total_amount);
+            TextView totalAmount2TextView = view.findViewById(R.id.total_amount2);
             TextView dateTimeTextView = view.findViewById(R.id.date_time);
             ImageView bankImageView = view.findViewById(R.id.bank_image);
             TextView bankNameTextView = view.findViewById(R.id.bank_name);
 
-            totalAmount.setText("RM " + amount);
-            totalAmount2.setText("RM " + amount);
+            double amountValue = Double.parseDouble(amount); // Convert String to double
+            totalAmountTextView.setText(String.format("RM %.2f", amountValue));
+            totalAmount2TextView.setText(String.format("RM %.2f", amountValue));
             dateTimeTextView.setText(dateTime);
             bankImageView.setImageResource(bankImageResId);
             bankNameTextView.setText(bankName);

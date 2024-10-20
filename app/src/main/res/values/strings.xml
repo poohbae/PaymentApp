@@ -53,6 +53,10 @@
     <string name="receiver">Receiver</string>
     <string name="remark">Remark</string>
     <string name="pending_request">Pending Request</string>
+    <string name="cancel_request">Cancel Request</string>
+    <string name="confirm_cancel_request">Are you sure you want to cancel the request?</string>
+    <string name="confirm">Confirm</string>
+    <string name="back">Back</string>
     <string name="request_money">Request Money</string>
     <string name="confirmation">Confirmation</string>
     <string name="request_note">You\'re requesting</string>
