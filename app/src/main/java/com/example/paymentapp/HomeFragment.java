@@ -17,8 +17,11 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.firebase.database.DataSnapshot;
@@ -32,7 +35,10 @@ public class HomeFragment extends Fragment {
     private String userId, userMobileNumber, userImageUrl;
     private Double walletAmt;
     private List<Register.Transaction> transactions;
+    private TransactionAdapter transactionAdapter;
+    private RecyclerView transactionRecyclerView;
 
+    @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
@@ -43,11 +49,21 @@ public class HomeFragment extends Fragment {
             userId = bundle.getString("userId");
         }
 
+        // Initialize UI components
         TextView balanceAmount = view.findViewById(R.id.balance_amount);
-        fetchWalletAmount(balanceAmount);
+        transactionRecyclerView = view.findViewById(R.id.transaction_list);
+        transactionRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
+        // Initialize transactions list and adapter
+        transactions = new ArrayList<>();
+        transactionAdapter = new TransactionAdapter(transactions, getContext(), userId);
+        transactionRecyclerView.setAdapter(transactionAdapter);
+
+        // Fetch data
+        fetchWalletAmount(balanceAmount);
         fetchMobileNumber();
         fetchImageUrl();
+        fetchAndPopulateTransactions();
 
         CardView reloadButton = view.findViewById(R.id.reload_button);
         reloadButton.setOnClickListener(v -> {
@@ -105,7 +121,6 @@ public class HomeFragment extends Fragment {
         TextView seeAllButton = view.findViewById(R.id.see_all_button);
         seeAllButton.setOnClickListener(v -> showBottomDialog());
 
-        transactions = new ArrayList<>();
         return view;
     }
 
@@ -120,9 +135,7 @@ public class HomeFragment extends Fragment {
         fetchMobileNumber();
         fetchImageUrl();
 
-        // Fetch and populate transactions
-        LinearLayout transactionList = getView().findViewById(R.id.transaction_list);
-        fetchAndPopulateTransactions(transactionList);
+        fetchAndPopulateTransactions();
     }
 
     private void fetchWalletAmount(TextView balanceAmount) {
@@ -178,155 +191,30 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private void fetchAndPopulateTransactions(LinearLayout transactionList) {
-        DatabaseReference transactionHistoryRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId).child("transactionHistory");
+    private void fetchAndPopulateTransactions() {
+        DatabaseReference transactionHistoryRef = FirebaseDatabase.getInstance()
+                .getReference("Wallets").child("W" + userId).child("transactionHistory");
 
         transactionHistoryRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult().exists()) {
-                transactionList.removeAllViews();  // Clear old views before adding new ones
-                transactions.clear();  // Clear the old transaction list
+                transactions.clear();
 
                 for (DataSnapshot snapshot : task.getResult().getChildren()) {
-                    String transactionId = snapshot.child("transactionId").getValue(String.class);
-                    int iconResId = snapshot.child("iconResId").getValue(Integer.class);
-                    String recipientImageUrl = snapshot.child("recipientImageUrl").getValue(String.class);
-                    String senderImageUrl = snapshot.child("senderImageUrl").getValue(String.class);
-                    String datetime = snapshot.child("datetime").getValue(String.class);
-                    String source = snapshot.child("source").getValue(String.class);
-                    String note = snapshot.child("note").getValue(String.class);
-                    String refId = snapshot.child("refId").getValue(String.class);
-                    int status = snapshot.child("status").getValue(Integer.class);
-                    String mobileNumber = snapshot.child("mobileNumber").getValue(String.class);
-                    String recipientId = snapshot.child("recipientId").getValue(String.class);
-                    double amount = snapshot.child("amount").getValue(Double.class);
+                    Register.Transaction transaction = snapshot.getValue(Register.Transaction.class);
 
-                    // Skip this transaction if status == 0
-                    if (status == 0) {
-                        continue;
+                    // Add transaction only if status is not 0
+                    if (transaction != null && transaction.status != 0) {
+                        transactions.add(transaction);
                     }
-
-                    Register.Transaction transaction;
-                    if (source.equals("Reload")) {
-                        transaction = new Register.Transaction(transactionId, iconResId, datetime, source, refId, amount);
-                    }
-                    else if (source.equals("Request")) {
-                        transaction = new Register.Transaction(transactionId, recipientImageUrl, senderImageUrl, datetime, source, note, refId, status, mobileNumber, recipientId, amount);
-                    }
-                    else {
-                        transaction = new Register.Transaction(transactionId, recipientImageUrl, senderImageUrl, datetime, source, note, refId, mobileNumber, recipientId ,amount);
-                    }
-                    transactions.add(transaction);
                 }
-                // Sort transactions in descending order by datetime
+
+                // Sort transactions in descending order by datetime and notify adapter
                 transactions.sort((t1, t2) -> t2.datetime.compareTo(t1.datetime));
-
-                // Add transactions to the list
-                for (Register.Transaction transaction : transactions) {
-                    int iconResId = (transaction.source != null && transaction.source.equals("Reload")) ? transaction.iconResId : -1;
-                    String senderImageUrl = null;
-                    String recipientImageUrl = null;
-
-                    if (transaction.source != null) {
-                        if (transaction.source.equals("Request") || transaction.source.equals("Transfer")) {
-                            // Determine which image URL to use based on recipient and user for "Request"
-                            if (userId != null && userId.equals(transaction.recipientId)) {
-                                senderImageUrl = transaction.senderImageUrl;
-                            } else {
-                                recipientImageUrl = transaction.recipientImageUrl;
-                            }
-                        } else {
-                            // For all other cases, set the image URLs normally
-                            senderImageUrl = transaction.senderImageUrl;
-                            recipientImageUrl = transaction.recipientImageUrl;
-                        }
-                    }
-
-                    // Create the note string based on conditions
-                    String note;
-                    if (transaction.note == null || transaction.note.equals("N/A") || transaction.note.equals("Fund Transfer")) {
-                        note = "Ref ID: " + (transaction.refId != null ? transaction.refId : "");
-                    } else {
-                        note = transaction.note + " (Ref ID: " + (transaction.refId != null ? transaction.refId : "") + ")";
-                    }
-
-                    // Call addTransactionItem based on the extracted values
-                    addTransactionItem(transactionList, iconResId, recipientImageUrl, senderImageUrl, transaction.datetime,
-                            transaction.source, note, transaction.recipientId,
-                            String.format("RM %.2f", transaction.amount), getActivity());
-                }
+                transactionAdapter.notifyDataSetChanged();
+            } else {
+                Toast.makeText(getActivity(), "Failed to retrieve transactions.", Toast.LENGTH_SHORT).show();
             }
-        }).addOnFailureListener(e -> {
-            Toast.makeText(getActivity(), "Failed to retrieve transactions.", Toast.LENGTH_SHORT).show();
         });
-    }
-
-    private void addTransactionItem(LinearLayout parent, int iconResId, String recipientImageUrl, String senderImageUrl, String date, String source, String note, String recipientId, String amount, Context context) {
-        LinearLayout transactionItem = new LinearLayout(context);
-        transactionItem.setOrientation(LinearLayout.HORIZONTAL);
-        transactionItem.setPadding(8, 8, 8, dpToPx(context, 15));
-        transactionItem.setGravity(android.view.Gravity.CENTER_VERTICAL);
-        transactionItem.setLayoutParams(new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
-
-        ImageView icon = new ImageView(context);
-        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dpToPx(context, 40), dpToPx(context, 40));
-        icon.setLayoutParams(iconParams);
-        if (iconResId != -1) {
-            icon.setImageResource(iconResId);
-        } else if (recipientImageUrl != null && !recipientImageUrl.isEmpty()) {
-            Glide.with(context).load(recipientImageUrl).into(icon);
-        } else if (senderImageUrl != null && !senderImageUrl.isEmpty()) {
-            Glide.with(context).load(senderImageUrl).into(icon);
-        } else {
-            icon.setImageResource(R.drawable.person);
-        }
-        transactionItem.addView(icon);
-
-        LinearLayout textContainer = new LinearLayout(context);
-        textContainer.setOrientation(LinearLayout.VERTICAL);
-        LinearLayout.LayoutParams textContainerParams = new LinearLayout.LayoutParams(
-                0, LinearLayout.LayoutParams.WRAP_CONTENT, 1);
-        textContainer.setLayoutParams(textContainerParams);
-        textContainer.setPadding(dpToPx(context, 15), 0, 0, 0);
-
-        TextView transactionDateTime = new TextView(context);
-        transactionDateTime.setText(date);
-        transactionDateTime.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        textContainer.addView(transactionDateTime);
-
-        TextView transactionSource = new TextView(context);
-        transactionSource.setText(source);
-        transactionSource.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        transactionSource.setTypeface(null, android.graphics.Typeface.BOLD);
-        textContainer.addView(transactionSource);
-
-        TextView transactionNote = new TextView(context);
-        transactionNote.setText(note);
-        transactionNote.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14);
-        textContainer.addView(transactionNote);
-
-        transactionItem.addView(textContainer);
-
-        TextView transactionAmount = new TextView(context);
-        if (source.equals("Reload")) {
-            transactionAmount.setText(String.format("+ %s", amount));
-            transactionAmount.setTextColor(Color.parseColor("#388E3C"));  // Green color for positive amount
-        } else if (source.equals("Request") || source.equals("Transfer")) {
-            if (userId.equals(recipientId)){
-                transactionAmount.setText(String.format("+ %s", amount));
-                transactionAmount.setTextColor(Color.parseColor("#388E3C"));  // Green color for positive amount
-            }
-            else{
-                transactionAmount.setText(String.format("- %s", amount));
-                transactionAmount.setTextColor(Color.parseColor("#D32F2F"));
-            }
-        }
-        transactionAmount.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-        transactionItem.addView(transactionAmount);
-
-        parent.addView(transactionItem);
     }
 
     private void showBottomDialog() {
@@ -334,46 +222,18 @@ public class HomeFragment extends Fragment {
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
         dialog.setContentView(R.layout.transaction_see_all);
 
-        LinearLayout transactionHistory = dialog.findViewById(R.id.transaction_history);
         ImageView closeButton = dialog.findViewById(R.id.close_button);
+        RecyclerView transactionHistoryRecyclerView = dialog.findViewById(R.id.transaction_history_recycler_view);
 
-        // Add transactions to the list
-        for (Register.Transaction transaction : transactions) {
-            int iconResId = (transaction.source != null && transaction.source.equals("Reload")) ? transaction.iconResId : -1;
-            String senderImageUrl = null;
-            String recipientImageUrl = null;
+        // Initialize RecyclerView
+        transactionHistoryRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        TransactionAdapter transactionDialogAdapter = new TransactionAdapter(transactions, getActivity(), userId);
+        transactionHistoryRecyclerView.setAdapter(transactionDialogAdapter);
 
-            if (transaction.source != null) {
-                if (transaction.source.equals("Request") || transaction.source.equals("Transfer")) {
-                    // Determine which image URL to use based on recipient and user for "Request"
-                    if (userId != null && userId.equals(transaction.recipientId)) {
-                        senderImageUrl = transaction.senderImageUrl;
-                    } else {
-                        recipientImageUrl = transaction.recipientImageUrl;
-                    }
-                } else {
-                    // For all other cases, set the image URLs normally
-                    senderImageUrl = transaction.senderImageUrl;
-                    recipientImageUrl = transaction.recipientImageUrl;
-                }
-            }
-
-            // Create the note string based on conditions
-            String note;
-            if (transaction.note == null || transaction.note.equals("N/A") || transaction.note.equals("Fund Transfer")) {
-                note = "Ref ID: " + (transaction.refId != null ? transaction.refId : "");
-            } else {
-                note = transaction.note + " (Ref ID: " + (transaction.refId != null ? transaction.refId : "") + ")";
-            }
-
-            // Call addTransactionItem based on the extracted values
-            addTransactionItem(transactionHistory, iconResId, recipientImageUrl, senderImageUrl, transaction.datetime,
-                    transaction.source, note, transaction.recipientId,
-                    String.format("RM %.2f", transaction.amount), getActivity());
-        }
-
+        // Close dialog when close button is clicked
         closeButton.setOnClickListener(view -> dialog.dismiss());
 
+        // Show the dialog
         dialog.show();
         Window window = dialog.getWindow();
         if (window != null) {
@@ -384,8 +244,4 @@ public class HomeFragment extends Fragment {
         }
     }
 
-    private int dpToPx(Context context, int dp) {
-        float density = context.getResources().getDisplayMetrics().density;
-        return Math.round(dp * density);
-    }
 }

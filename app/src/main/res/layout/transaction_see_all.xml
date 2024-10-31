@@ -31,20 +31,10 @@
 
     </LinearLayout>
 
-    <ScrollView
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/transaction_history_recycler_view"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:fillViewport="true">
-
-        <LinearLayout
-            android:id="@+id/transaction_history"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-        </LinearLayout>
-    </ScrollView>
+        android:paddingTop="10dp" />
 </LinearLayout>

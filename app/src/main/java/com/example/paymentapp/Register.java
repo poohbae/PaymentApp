@@ -367,6 +367,10 @@ public class Register extends AppCompatActivity {
         public String recipientId; // request and transfer
         public double amount;
 
+        // No-argument constructor required for Firebase
+        public Transaction() {
+        }
+
         // For reload
         public Transaction(String transactionId, int iconResId, String datetime, String source, String refId, double amount) {
             this.transactionId = transactionId;
