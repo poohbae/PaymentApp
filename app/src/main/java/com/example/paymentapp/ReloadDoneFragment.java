@@ -1,5 +1,9 @@
 package com.example.paymentapp;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -8,8 +12,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -24,6 +30,9 @@ import java.util.Locale;
 import java.util.Random;
 
 public class ReloadDoneFragment extends Fragment {
+
+    private static final String CHANNEL_ID = "reload_notification_channel";
+    private static final int REQUEST_NOTIFICATION_PERMISSION = 101;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -83,7 +92,7 @@ public class ReloadDoneFragment extends Fragment {
                                     transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Log.d("Transaction", "Transaction saved successfully");
-
+                                            showReloadNotification(amount, bankName, dateTime);
                                             navigateToHomeFragment(userId);
                                         } else {
                                             Log.e("Transaction", "Failed to save transaction", task1.getException());
@@ -97,6 +106,43 @@ public class ReloadDoneFragment extends Fragment {
             });
         }
         return view;
+    }
+
+    private void showReloadNotification(String amount, String bankName, String dateTime) {
+        createNotificationChannel();  // Create notification channel for Android 8.0+
+
+        // Build the notification with expanded content
+        String notificationContent = String.format("You have successfully reloaded RM %s from %s at %s", amount, bankName, dateTime);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
+                .setSmallIcon(R.drawable.notifications)
+                .setContentTitle("Reload Successful")
+                .setContentText(notificationContent)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))  // Expanded text style
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+
+        // Display the notification
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
+        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, REQUEST_NOTIFICATION_PERMISSION);
+            return;
+        }
+        notificationManager.notify(1, builder.build());
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Reload Notification";
+            String description = "Notification after wallet reload";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = requireContext().getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
     }
 
     private void navigateToHomeFragment(String userId) {

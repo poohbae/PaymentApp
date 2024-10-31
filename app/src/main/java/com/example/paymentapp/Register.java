@@ -43,7 +43,6 @@ public class Register extends AppCompatActivity {
     String imageFileName;
     String imageUrl;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +99,7 @@ public class Register extends AppCompatActivity {
 
         toggleConfirmPasswordVisibility.setOnClickListener(new View.OnClickListener() {
             boolean isConfirmPasswordVisible = false;
+
             @Override
             public void onClick(View v) {
                 int cursorPosition = passwordEditText.getSelectionStart();
