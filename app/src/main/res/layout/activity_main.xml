@@ -31,46 +31,48 @@
             android:layout_height="match_parent"
             android:layout_below="@id/toolBar"
             android:layout_marginBottom="56dp"
-            app:layout_behavior="@string/appbar_scrolling_view_behavior" />
+            app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <!-- CoordinatorLayout wrapping BottomAppBar and FAB -->
-        <androidx.coordinatorlayout.widget.CoordinatorLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fitsSystemWindows="true">
-
-            <!-- Bottom App Bar -->
-            <com.google.android.material.bottomappbar.BottomAppBar
-                android:id="@+id/bottomAppBar"
+            <androidx.coordinatorlayout.widget.CoordinatorLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:backgroundTint="@color/white"
-                app:fabAlignmentMode="center"
-                app:fabCradleMargin="10dp"
-                app:fabCradleRoundedCornerRadius="50dp">
+                android:layout_height="match_parent"
+                android:fitsSystemWindows="true">
 
-                <com.google.android.material.bottomnavigation.BottomNavigationView
-                    android:id="@+id/bottomNavigationView"
+                <!-- Bottom App Bar -->
+                <com.google.android.material.bottomappbar.BottomAppBar
+                    android:id="@+id/bottomAppBar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom"
+                    android:backgroundTint="@color/white"
+                    app:fabAlignmentMode="center"
+                    app:fabCradleMargin="10dp"
+                    app:fabCradleRoundedCornerRadius="50dp">
+
+                    <com.google.android.material.bottomnavigation.BottomNavigationView
+                        android:id="@+id/bottomNavigationView"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@android:color/transparent"
+                        app:itemIconTint="@drawable/nav_item_color"
+                        app:itemTextColor="@drawable/nav_item_color"
+                        app:labelVisibilityMode="labeled"
+                        app:menu="@menu/bottom_nav_menu" />
+                </com.google.android.material.bottomappbar.BottomAppBar>
+
+                <!-- Floating Action Button -->
+                <com.google.android.material.floatingactionbutton.FloatingActionButton
+                    android:id="@+id/fab"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:background="@android:color/transparent"
-                    app:itemIconTint="@drawable/nav_item_color"
-                    app:itemTextColor="@drawable/nav_item_color"
-                    app:labelVisibilityMode="labeled"
-                    app:menu="@menu/bottom_nav_menu" />
-            </com.google.android.material.bottomappbar.BottomAppBar>
+                    android:contentDescription="@string/scan"
+                    android:src="@drawable/scan"
+                    app:layout_anchor="@id/bottomAppBar"
+                    app:maxImageSize="40dp" />
+            </androidx.coordinatorlayout.widget.CoordinatorLayout>
+        </FrameLayout>
 
-            <!-- Floating Action Button -->
-            <com.google.android.material.floatingactionbutton.FloatingActionButton
-                android:id="@+id/fab"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:contentDescription="@string/scan"
-                android:src="@drawable/scan"
-                app:layout_anchor="@id/bottomAppBar"
-                app:maxImageSize="40dp" />
-        </androidx.coordinatorlayout.widget.CoordinatorLayout>
+        <!-- CoordinatorLayout wrapping BottomAppBar and FAB -->
     </RelativeLayout>
 
 </androidx.drawerlayout.widget.DrawerLayout>

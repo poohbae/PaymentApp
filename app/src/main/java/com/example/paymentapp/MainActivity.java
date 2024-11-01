@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         String userName = getIntent().getStringExtra("userName");
         if (getSupportActionBar() != null && userName != null) {
-            getSupportActionBar().setTitle("Good Day, " + userName);
+            getSupportActionBar().setTitle("  Good Day, " + userName);
         }
 
         // Load default fragment if there is no saved instance state
@@ -109,12 +109,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 homeFragment.setArguments(bundle);
 
                 getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, homeFragment).commit();
-            } else if (item.getItemId() == R.id.portfolio) {
-                Toast.makeText(MainActivity.this, "Portfolio is clicked", Toast.LENGTH_SHORT).show();
-                getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new PortfolioFragment()).commit();
-            } else if (item.getItemId() == R.id.notifications) {
-                Toast.makeText(MainActivity.this, "Notifications is clicked", Toast.LENGTH_SHORT).show();
-                getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new NotificationsFragment()).commit();
             } else if (item.getItemId() == R.id.settings) {
                 getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new SettingsFragment()).commit();
             }
