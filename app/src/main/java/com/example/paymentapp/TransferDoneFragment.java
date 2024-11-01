@@ -104,7 +104,7 @@ public class TransferDoneFragment extends Fragment {
                                 DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                 String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
-                                Register.Transaction transaction = new Register.Transaction(transactionId, personImageUrl, userImageUrl, dateTime, "Transfer", transferPurpose, referenceId, personMobileNumber, personId, transferAmt);
+                                Transaction transaction = new Transaction(transactionId, personImageUrl, userImageUrl, dateTime, "Transfer", transferPurpose, referenceId, personMobileNumber, personId, transferAmt);
                                 transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
                                         // Now, update the recipient's wallet amount and add transaction to recipient's history

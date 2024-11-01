@@ -24,13 +24,17 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 public class HomeFragment extends Fragment {
     private String userId, userMobileNumber, userImageUrl;
     private Double walletAmt;
-    private List<Register.Transaction> transactions;
+    private List<Transaction> transactions;
     private RecyclerView transactionRecyclerView;
     private TransactionAdapter transactionAdapter;
 
@@ -183,18 +187,27 @@ public class HomeFragment extends Fragment {
         transactionHistoryRef.get().addOnCompleteListener(task -> {
             if (task.isSuccessful() && task.getResult().exists()) {
                 transactions.clear();
+                SimpleDateFormat dateFormat = new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault());
 
                 for (DataSnapshot snapshot : task.getResult().getChildren()) {
-                    Register.Transaction transaction = snapshot.getValue(Register.Transaction.class);
+                    Transaction transaction = snapshot.getValue(Transaction.class);
 
                     // Add transaction only if status is not 0
                     if (transaction != null && transaction.status != 0) {
+                        try {
+                            // Parse the datetime string to a Date object
+                            Date transactionDate = dateFormat.parse(transaction.datetime);
+                            transaction.setParsedDate(transactionDate);  // Assume you add a parsedDate field in Transaction class
+                        } catch (ParseException e) {
+                            e.printStackTrace();
+                            continue;  // Skip this transaction if parsing fails
+                        }
                         transactions.add(transaction);
                     }
                 }
 
                 // Sort transactions in descending order by datetime and notify adapter
-                transactions.sort((t1, t2) -> t2.datetime.compareTo(t1.datetime));
+                transactions.sort((t1, t2) -> t2.getParsedDate().compareTo(t1.getParsedDate()));
                 transactionAdapter.notifyDataSetChanged();
             }
         });
@@ -226,5 +239,4 @@ public class HomeFragment extends Fragment {
             window.setGravity(Gravity.BOTTOM);
         }
     }
-
 }

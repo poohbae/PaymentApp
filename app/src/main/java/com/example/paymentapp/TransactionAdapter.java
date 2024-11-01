@@ -16,11 +16,11 @@ import com.bumptech.glide.Glide;
 import java.util.List;
 
 public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder> {
-    private List<Register.Transaction> transactions;
+    private List<Transaction> transactions;
     private Context context;
     private String userId;
 
-    public TransactionAdapter(List<Register.Transaction> transactions, Context context, String userId) {
+    public TransactionAdapter(List<Transaction> transactions, Context context, String userId) {
         this.transactions = transactions;
         this.context = context;
         this.userId = userId;
@@ -35,7 +35,7 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
 
     @Override
     public void onBindViewHolder(@NonNull TransactionViewHolder holder, int position) {
-        Register.Transaction transaction = transactions.get(position);
+        Transaction transaction = transactions.get(position);
 
         // Set date, source, and note
         holder.transactionDate.setText(transaction.datetime);

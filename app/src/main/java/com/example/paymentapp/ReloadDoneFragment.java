@@ -89,7 +89,7 @@ public class ReloadDoneFragment extends Fragment {
                                     DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                     String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
-                                    Register.Transaction transaction = new Register.Transaction(transactionId, bankImageResId, dateTime, "Reload", referenceId, reloadAmt);
+                                    Transaction transaction = new Transaction(transactionId, bankImageResId, dateTime, "Reload", referenceId, reloadAmt);
                                     transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Log.d("Transaction", "Transaction saved successfully");

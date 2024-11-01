@@ -84,7 +84,7 @@ public class RequestDoneFragment extends Fragment {
                                     DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                     String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
-                                    Register.Transaction transaction = new Register.Transaction(transactionId, userImageUrl, personImageUrl, dateTime, "Request", note, referenceId, 0, personMobileNumber, userId, amount);
+                                    Transaction transaction = new Transaction(transactionId, userImageUrl, personImageUrl, dateTime, "Request", note, referenceId, 0, personMobileNumber, userId, amount);
                                     transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Log.d("Transaction", "Transaction saved successfully");

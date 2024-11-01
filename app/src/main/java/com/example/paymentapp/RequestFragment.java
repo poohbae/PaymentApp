@@ -67,7 +67,7 @@ public class RequestFragment extends Fragment {
     private RecyclerView cardRecyclerView;
     private UserAdapter userAdapter;
 
-    private List<Register.Transaction> pendingRequests;
+    private List<Transaction> pendingRequests;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -215,21 +215,21 @@ public class RequestFragment extends Fragment {
                         // Scenario 1: Someone is requesting money from the logged-in user
                         if (mobileNumber.equals(userMobileNumber)) {
                             // Show "Accept" icon
-                            Register.Transaction transaction = new Register.Transaction(transactionId, recipientImageUrl, null, datetime, source, note, refId, status, mobileNumber, recipientId, amount);
+                            Transaction transaction = new Transaction(transactionId, recipientImageUrl, null, datetime, source, note, refId, status, mobileNumber, recipientId, amount);
                             pendingRequests.add(transaction);
                         }
 
                         // Scenario 2: Logged-in user is requesting money from others
                         if (walletOwnerId.equals("W" + userId)) {
                             // Show "Call" icon because the logged-in user is the requester
-                            Register.Transaction transaction = new Register.Transaction(transactionId, null, senderImageUrl, datetime, source, note, refId, status, mobileNumber, recipientId, amount);
+                            Transaction transaction = new Transaction(transactionId, null, senderImageUrl, datetime, source, note, refId, status, mobileNumber, recipientId, amount);
                             pendingRequests.add(transaction);
                         }
                     }
                 }
 
                 // Populate the pending requests list
-                for (Register.Transaction transaction : pendingRequests) {
+                for (Transaction transaction : pendingRequests) {
                     String note = transaction.note.equals("N/A") ? "Ref ID: " + transaction.refId : transaction.note + " (Ref ID: " + transaction.refId + ")";
 
                     // Show "Accept" icon if the logged-in user is the recipient
@@ -363,7 +363,7 @@ public class RequestFragment extends Fragment {
         LinearLayout requestHistory = dialog.findViewById(R.id.pending_request);
         ImageView closeButton = dialog.findViewById(R.id.close_button);
 
-        for (Register.Transaction transaction : pendingRequests) {
+        for (Transaction transaction : pendingRequests) {
             String note = transaction.note.equals("N/A") ? "Ref ID: " + transaction.refId : transaction.note + " (Ref ID: " + transaction.refId + ")";
 
             // Show "Accept" icon if the logged-in user is the recipient
