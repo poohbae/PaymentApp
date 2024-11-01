@@ -99,10 +99,10 @@ public class RequestFragment extends Fragment {
         cardRecyclerView = view.findViewById(R.id.card_recycler_view);
         cardRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        userAdapter = new UserAdapter(userList, getContext(), this);
+        userAdapter = new UserAdapter(userList, getContext(), this, UserAdapter.FragmentType.REQUEST, 0.0);
         cardRecyclerView.setAdapter(userAdapter);
 
-        userAdapter = new UserAdapter(filteredUserList, getContext(), this);
+        userAdapter = new UserAdapter(filteredUserList, getContext(), this, UserAdapter.FragmentType.REQUEST, 0.0);
         cardRecyclerView.setAdapter(userAdapter);
 
         TextView seeAllButton = view.findViewById(R.id.see_all_button);

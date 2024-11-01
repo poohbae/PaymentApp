@@ -16,20 +16,29 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.HashMap;
 
+
 public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder> {
+
+    public enum FragmentType {
+        TRANSFER,
+        REQUEST
+    }
 
     private List<HashMap<String, String>> userList;
     private final Context context;
     private final Fragment fragment;
+    private final FragmentType fragmentType;
+    private final double walletAmt;
 
-    public UserAdapter(List<HashMap<String, String>> userList, Context context, Fragment fragment) {
+    public UserAdapter(List<HashMap<String, String>> userList, Context context, Fragment fragment, FragmentType fragmentType, double walletAmt) {
         this.userList = userList;
         this.context = context;
         this.fragment = fragment;
+        this.fragmentType = fragmentType;
+        this.walletAmt = walletAmt;
     }
 
     @NonNull
@@ -63,14 +72,23 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
             bundle.putString("personName", name);
             bundle.putString("personMobileNumber", mobileNumber);
             bundle.putString("personImageUrl", imageUrl);
-
-            TransferMoneyFragment transferMoneyFragment = new TransferMoneyFragment();
-            transferMoneyFragment.setArguments(bundle);
+            if (fragmentType == FragmentType.TRANSFER) {
+                bundle.putDouble("walletAmt", walletAmt);
+            }
 
             FragmentTransaction transaction = fragment.getParentFragmentManager().beginTransaction();
-            transaction.replace(R.id.frameLayout, transferMoneyFragment)
-                    .addToBackStack(null)
-                    .commit();
+
+            if (fragmentType == FragmentType.TRANSFER) {
+                TransferMoneyFragment transferMoneyFragment = new TransferMoneyFragment();
+                transferMoneyFragment.setArguments(bundle);
+                transaction.replace(R.id.frameLayout, transferMoneyFragment);
+            } else if (fragmentType == FragmentType.REQUEST) {
+                RequestMoneyFragment requestMoneyFragment = new RequestMoneyFragment();
+                requestMoneyFragment.setArguments(bundle);
+                transaction.replace(R.id.frameLayout, requestMoneyFragment);
+            }
+
+            transaction.addToBackStack(null).commit();
         });
     }
 
