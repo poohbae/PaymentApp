@@ -23,10 +23,10 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.fragment.app.FragmentTransaction;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.google.android.material.bottomappbar.BottomAppBar;
@@ -35,8 +35,6 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.Transaction;
-import com.google.firebase.database.MutableData;
 
 import com.google.firebase.database.ValueEventListener;
 
@@ -53,10 +51,10 @@ public class RequestFragment extends Fragment {
 
     private DatabaseReference userListRef;
     private List<HashMap<String, String>> userList = new ArrayList<>();
-    private List<String> userNames = new ArrayList<>();
-    private List<String> userMobileNumbers = new ArrayList<>();
+    private List<HashMap<String, String>> filteredUserList = new ArrayList<>();
 
-    private LinearLayout cardContainer;
+    private RecyclerView cardRecyclerView;
+    private UserAdapter userAdapter;
 
     private List<Register.Transaction> pendingRequests;
 
@@ -69,7 +67,6 @@ public class RequestFragment extends Fragment {
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
-        cardContainer = view.findViewById(R.id.card_container);
         EditText searchInput = view.findViewById(R.id.search);
 
         Bundle arguments = getArguments();
@@ -99,6 +96,15 @@ public class RequestFragment extends Fragment {
             }
         });
 
+        cardRecyclerView = view.findViewById(R.id.card_recycler_view);
+        cardRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        userAdapter = new UserAdapter(userList, getContext(), this);
+        cardRecyclerView.setAdapter(userAdapter);
+
+        userAdapter = new UserAdapter(filteredUserList, getContext(), this);
+        cardRecyclerView.setAdapter(userAdapter);
+
         TextView seeAllButton = view.findViewById(R.id.see_all_button);
         seeAllButton.setOnClickListener(v -> showBottomDialog());
 
@@ -109,30 +115,30 @@ public class RequestFragment extends Fragment {
     }
 
     private void loadUsers() {
-        // Clear the lists before loading to avoid duplicates
         userList.clear();
-        userNames.clear();
-        userMobileNumbers.clear();
 
         userListRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 if (dataSnapshot.exists()) {
-                    for (DataSnapshot methodSnapshot : dataSnapshot.getChildren()) {
-                        HashMap<String, String> user = (HashMap<String, String>) methodSnapshot.getValue();
-                        String userIdFromDB = methodSnapshot.getKey();  // Get the user's ID from Firebase
+                    for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
+                        String userIdFromDB = userSnapshot.getKey();
 
-                        // Skip the current user from being populated
                         if (!userIdFromDB.equals(userId)) {
-                            userList.add(user);
-                            userNames.add(user.get("name"));
-                            userMobileNumbers.add(user.get("mobileNumber"));
+                            HashMap<String, String> user = (HashMap<String, String>) userSnapshot.getValue();
+                            if (user != null) {
+                                user.put("id", userIdFromDB);
+                                userList.add(user);
+                            }
                         }
                     }
-                    // Sort the userList by the user name in ascending order
+
                     userList.sort((user1, user2) -> user1.get("name").compareToIgnoreCase(user2.get("name")));
 
-                    populateUserCards();
+                    // Initialize filteredUserList with all users initially
+                    filteredUserList.clear();
+                    filteredUserList.addAll(userList);
+                    userAdapter.notifyDataSetChanged();
                 }
             }
 
@@ -143,193 +149,28 @@ public class RequestFragment extends Fragment {
         });
     }
 
-    private void populateUserCards() {
-        if (userList.isEmpty()) {
-            return;
-        }
-
-        // Loop through the userList and create a card for each user
-        for (int i = 0; i < userList.size(); i++) {
-            HashMap<String, String> user = userList.get(i);
-            String id = user.get("userId");
-            String name = user.get("name");
-            String mobileNumber = user.get("mobileNumber");
-            String imageUrl = user.get("image");
-
-            // Create a new CardView
-            CardView cardView = new CardView(getContext());
-            LinearLayout.LayoutParams cardLayoutParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            cardLayoutParams.setMargins(dpToPx(getContext(), 0), dpToPx(getContext(), 0), dpToPx(getContext(), 0), dpToPx(getContext(), 5));
-            cardView.setLayoutParams(cardLayoutParams);
-            cardView.setRadius(12);
-            cardView.setCardElevation(0);
-            cardView.setCardBackgroundColor(getResources().getColor(android.R.color.transparent));
-
-            cardView.setTag(id);
-
-            LinearLayout cardLayout = new LinearLayout(getContext());
-            cardLayout.setOrientation(LinearLayout.HORIZONTAL);
-            cardLayout.setPadding(dpToPx(getContext(), 8), dpToPx(getContext(), 15), dpToPx(getContext(), 8), dpToPx(getContext(), 15));
-            cardLayout.setGravity(Gravity.CENTER_VERTICAL);
-
-            ImageView personImageView = new ImageView(getContext());
-            LinearLayout.LayoutParams imageLayoutParams = new LinearLayout.LayoutParams(dpToPx(getContext(), 50), dpToPx(getContext(), 50));
-            personImageView.setLayoutParams(imageLayoutParams);
-
-            // Load the image using Glide from the Firebase URL
-            Glide.with(getContext())
-                    .load(imageUrl)  // Load the image from Firebase Storage
-                    .placeholder(R.drawable.person)  // Optional placeholder image
-                    .into(personImageView);
-
-            LinearLayout textLayout = new LinearLayout(getContext());
-            textLayout.setOrientation(LinearLayout.VERTICAL);
-            textLayout.setPadding(dpToPx(getContext(), 15), 0, 0, 0);
-
-            TextView personNameTextView = new TextView(getContext());
-            personNameTextView.setText(name);
-            personNameTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-            personNameTextView.setTextColor(getResources().getColor(R.color.black));
-            personNameTextView.setTypeface(null, android.graphics.Typeface.BOLD);
-
-            TextView mobileNumberTextView = new TextView(getContext());
-            mobileNumberTextView.setText(mobileNumber);
-            mobileNumberTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-            mobileNumberTextView.setTextColor(getResources().getColor(R.color.black));
-
-            textLayout.addView(personNameTextView);
-            textLayout.addView(mobileNumberTextView);
-            cardLayout.addView(personImageView);
-            cardLayout.addView(textLayout);
-            cardView.addView(cardLayout);
-            cardContainer.addView(cardView);
-
-            cardView.setOnClickListener(v -> {
-                RequestMoneyFragment requestMoneyFragment = new RequestMoneyFragment();
-
-                Bundle bundle = new Bundle();
-                bundle.putString("userId", userId);
-                bundle.putString("userImageUrl", userImageUrl);
-                bundle.putString("personImageUrl", imageUrl);
-                bundle.putString("personName", name);
-                bundle.putString("personMobileNumber", mobileNumber);
-
-                requestMoneyFragment.setArguments(bundle);
-
-                FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-                transaction.replace(R.id.frameLayout, requestMoneyFragment)
-                        .addToBackStack(null)
-                        .commit();
-            });
-        }
-    }
-
     // Filter users based on the search query
     private void filterUsers(String query) {
-        cardContainer.removeAllViews();  // Clear the card container before repopulating it
+        filteredUserList.clear();
 
         if (query.isEmpty()) {
-            populateUserCards();  // If no query, show all users
-            return;
-        }
-
-        // Filter the userList based on the search query
-        List<HashMap<String, String>> filteredList = new ArrayList<>();
-        for (HashMap<String, String> user : userList) {
-            String userName = user.get("name").toLowerCase();
-            String mobileNumber = user.get("mobileNumber").toLowerCase();
-            if (userName.contains(query.toLowerCase()) || mobileNumber.contains(query.toLowerCase())) {
-                filteredList.add(user);
+            // If search query is empty, restore the full user list
+            filteredUserList.addAll(userList);
+        } else {
+            // Otherwise, filter the list based on the query
+            for (HashMap<String, String> user : userList) {
+                String userName = user.get("name").toLowerCase();
+                String mobileNumber = user.get("mobileNumber").toLowerCase();
+                if (userName.contains(query.toLowerCase()) || mobileNumber.contains(query.toLowerCase())) {
+                    filteredUserList.add(user);
+                }
             }
         }
 
-        // Populate the filtered user list
-        populateFilteredUserCards(filteredList);
+        // Notify adapter of the updated filtered list
+        userAdapter.notifyDataSetChanged();
     }
 
-    // Populate the filtered user cards
-    private void populateFilteredUserCards(List<HashMap<String, String>> filteredList) {
-        if (filteredList.isEmpty()) {
-            return;
-        }
-
-        for (int i = 0; i < filteredList.size(); i++) {
-            HashMap<String, String> user = filteredList.get(i);
-            String name = user.get("name");
-            String mobileNumber = user.get("mobileNumber");
-            String imageUrl = user.get("image");
-
-            // Create a new CardView
-            CardView cardView = new CardView(getContext());
-            LinearLayout.LayoutParams cardLayoutParams = new LinearLayout.LayoutParams(
-                    LinearLayout.LayoutParams.MATCH_PARENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT
-            );
-            cardLayoutParams.setMargins(dpToPx(getContext(), 0), dpToPx(getContext(), 0), dpToPx(getContext(), 0), dpToPx(getContext(), 5));
-            cardView.setLayoutParams(cardLayoutParams);
-            cardView.setRadius(12);
-            cardView.setCardElevation(0);
-            cardView.setCardBackgroundColor(getResources().getColor(android.R.color.transparent));
-
-            LinearLayout cardLayout = new LinearLayout(getContext());
-            cardLayout.setOrientation(LinearLayout.HORIZONTAL);
-            cardLayout.setPadding(dpToPx(getContext(), 8), dpToPx(getContext(), 15), dpToPx(getContext(), 8), dpToPx(getContext(), 15));
-            cardLayout.setGravity(Gravity.CENTER_VERTICAL);
-
-            ImageView personImageView = new ImageView(getContext());
-            LinearLayout.LayoutParams imageLayoutParams = new LinearLayout.LayoutParams(dpToPx(getContext(), 50), dpToPx(getContext(), 50));
-            personImageView.setLayoutParams(imageLayoutParams);
-
-            // Load the image using Glide from the Firebase URL
-            Glide.with(getContext())
-                    .load(imageUrl)  // Load the image from Firebase Storage
-                    .placeholder(R.drawable.person)  // Optional placeholder image
-                    .into(personImageView);
-
-            LinearLayout textLayout = new LinearLayout(getContext());
-            textLayout.setOrientation(LinearLayout.VERTICAL);
-            textLayout.setPadding(dpToPx(getContext(), 15), 0, 0, 0);
-
-            TextView personNameTextView = new TextView(getContext());
-            personNameTextView.setText(name);
-            personNameTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
-            personNameTextView.setTextColor(getResources().getColor(R.color.black));
-            personNameTextView.setTypeface(null, android.graphics.Typeface.BOLD);
-
-            TextView mobileNumberTextView = new TextView(getContext());
-            mobileNumberTextView.setText(mobileNumber);
-            mobileNumberTextView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
-            mobileNumberTextView.setTextColor(getResources().getColor(R.color.black));
-
-            textLayout.addView(personNameTextView);
-            textLayout.addView(mobileNumberTextView);
-            cardLayout.addView(personImageView);
-            cardLayout.addView(textLayout);
-            cardView.addView(cardLayout);
-            cardContainer.addView(cardView);
-
-            cardView.setOnClickListener(v -> {
-                RequestMoneyFragment requestMoneyFragment = new RequestMoneyFragment();
-
-                Bundle bundle = new Bundle();
-                bundle.putString("userId", userId);
-                bundle.putString("userImageUrl", userImageUrl);
-                bundle.putString("personImageUrl", imageUrl);
-                bundle.putString("personName", name);
-                bundle.putString("personMobileNumber", mobileNumber);
-
-                requestMoneyFragment.setArguments(bundle);
-
-                FragmentTransaction transaction = getParentFragmentManager().beginTransaction();
-                transaction.replace(R.id.frameLayout, requestMoneyFragment)
-                        .addToBackStack(null)
-                        .commit();
-            });
-        }
-    }
 
     private void fetchAndPopulatePendingRequests(LinearLayout pendingRequestList) {
         DatabaseReference walletsRef = FirebaseDatabase.getInstance().getReference("Wallets");

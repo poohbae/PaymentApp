@@ -1,19 +1,16 @@
 package com.example.paymentapp;
 
 import android.app.Dialog;
-import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.util.Log;
-import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.Window;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -23,7 +20,6 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.bumptech.glide.Glide;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
@@ -35,8 +31,8 @@ public class HomeFragment extends Fragment {
     private String userId, userMobileNumber, userImageUrl;
     private Double walletAmt;
     private List<Register.Transaction> transactions;
-    private TransactionAdapter transactionAdapter;
     private RecyclerView transactionRecyclerView;
+    private TransactionAdapter transactionAdapter;
 
     @Nullable
     @Override
@@ -49,21 +45,12 @@ public class HomeFragment extends Fragment {
             userId = bundle.getString("userId");
         }
 
-        // Initialize UI components
         TextView balanceAmount = view.findViewById(R.id.balance_amount);
-        transactionRecyclerView = view.findViewById(R.id.transaction_list);
-        transactionRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-
-        // Initialize transactions list and adapter
-        transactions = new ArrayList<>();
-        transactionAdapter = new TransactionAdapter(transactions, getContext(), userId);
-        transactionRecyclerView.setAdapter(transactionAdapter);
 
         // Fetch data
         fetchWalletAmount(balanceAmount);
         fetchMobileNumber();
         fetchImageUrl();
-        fetchAndPopulateTransactions();
 
         CardView reloadButton = view.findViewById(R.id.reload_button);
         reloadButton.setOnClickListener(v -> {
@@ -117,6 +104,16 @@ public class HomeFragment extends Fragment {
                     .addToBackStack(null)
                     .commit();
         });
+
+        transactionRecyclerView = view.findViewById(R.id.transaction_list);
+        transactionRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        // Initialize transactions list and adapter
+        transactions = new ArrayList<>();
+        transactionAdapter = new TransactionAdapter(transactions, getContext(), userId);
+        transactionRecyclerView.setAdapter(transactionAdapter);
+
+        fetchAndPopulateTransactions();
 
         TextView seeAllButton = view.findViewById(R.id.see_all_button);
         seeAllButton.setOnClickListener(v -> showBottomDialog());
@@ -211,8 +208,6 @@ public class HomeFragment extends Fragment {
                 // Sort transactions in descending order by datetime and notify adapter
                 transactions.sort((t1, t2) -> t2.datetime.compareTo(t1.datetime));
                 transactionAdapter.notifyDataSetChanged();
-            } else {
-                Toast.makeText(getActivity(), "Failed to retrieve transactions.", Toast.LENGTH_SHORT).show();
             }
         });
     }
