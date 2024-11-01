@@ -31,13 +31,17 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     private final Context context;
     private final Fragment fragment;
     private final FragmentType fragmentType;
+    private final String userId;
+    private final String userImageUrl;
     private final double walletAmt;
 
-    public UserAdapter(List<HashMap<String, String>> userList, Context context, Fragment fragment, FragmentType fragmentType, double walletAmt) {
+    public UserAdapter(List<HashMap<String, String>> userList, Context context, Fragment fragment, FragmentType fragmentType, String userId, String userImageUrl, double walletAmt) {
         this.userList = userList;
         this.context = context;
         this.fragment = fragment;
         this.fragmentType = fragmentType;
+        this.userId = userId;
+        this.userImageUrl = userImageUrl;
         this.walletAmt = walletAmt;
     }
 
@@ -68,11 +72,13 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
         // Handle card click
         holder.cardView.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
-            bundle.putString("personId", id);
+            bundle.putString("userId", userId);
+            bundle.putString("userImageUrl", userImageUrl);
             bundle.putString("personName", name);
             bundle.putString("personMobileNumber", mobileNumber);
             bundle.putString("personImageUrl", imageUrl);
             if (fragmentType == FragmentType.TRANSFER) {
+                bundle.putString("personId", id);
                 bundle.putDouble("walletAmt", walletAmt);
             }
 

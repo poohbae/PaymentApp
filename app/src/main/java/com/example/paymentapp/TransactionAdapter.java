@@ -40,26 +40,25 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         // Set date, source, and note
         holder.transactionDate.setText(transaction.datetime);
         holder.transactionSource.setText(transaction.source);
-        holder.transactionNote.setText(transaction.note != null ? transaction.note : "Ref ID: " + transaction.refId);
+        holder.transactionNote.setText((transaction.note == null || "N/A".equals(transaction.note))
+                ? "Ref ID: " + transaction.refId
+                : transaction.note);
 
         // Set amount and color based on source
-        if ("Reload".equals(transaction.source) || (userId.equals(transaction.recipientId) && transaction.source.equals("Request"))) {
+        if ("Reload".equals(transaction.source) ||
+                (transaction.source.equals("Transfer") && userId.equals(transaction.recipientId)) ||
+                (transaction.source.equals("Request") && userId.equals(transaction.recipientId))) {
             holder.transactionAmount.setText(String.format("+ RM %.2f", transaction.amount));
             holder.transactionAmount.setTextColor(Color.parseColor("#388E3C"));
+            if (transaction.iconResId != 0) {
+                holder.icon.setImageResource(transaction.iconResId);
+            } else if (transaction.senderImageUrl != null) {
+                Glide.with(context).load(transaction.senderImageUrl).into(holder.icon);
+            }
         } else {
             holder.transactionAmount.setText(String.format("- RM %.2f", transaction.amount));
             holder.transactionAmount.setTextColor(Color.parseColor("#D32F2F"));
-        }
-
-        // Load icon or image
-        if (transaction.iconResId != 0) {
-            holder.icon.setImageResource(transaction.iconResId);
-        } else if (transaction.recipientImageUrl != null) {
             Glide.with(context).load(transaction.recipientImageUrl).into(holder.icon);
-        } else if (transaction.senderImageUrl != null) {
-            Glide.with(context).load(transaction.senderImageUrl).into(holder.icon);
-        } else {
-            holder.icon.setImageResource(R.drawable.person); // Default icon
         }
     }
 

@@ -1,12 +1,17 @@
 package com.example.paymentapp;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -23,6 +28,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -46,6 +54,9 @@ import java.util.List;
 import java.util.Locale;
 
 public class RequestFragment extends Fragment {
+
+    private static final String CHANNEL_ID = "request_notification_channel";
+    private static final int REQUEST_NOTIFICATION_PERMISSION = 101;
 
     String userId, userMobileNumber, userImageUrl;
 
@@ -99,10 +110,10 @@ public class RequestFragment extends Fragment {
         cardRecyclerView = view.findViewById(R.id.card_recycler_view);
         cardRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        userAdapter = new UserAdapter(userList, getContext(), this, UserAdapter.FragmentType.REQUEST, 0.0);
+        userAdapter = new UserAdapter(userList, getContext(), this, UserAdapter.FragmentType.REQUEST, userId, userImageUrl, 0.0);
         cardRecyclerView.setAdapter(userAdapter);
 
-        userAdapter = new UserAdapter(filteredUserList, getContext(), this, UserAdapter.FragmentType.REQUEST, 0.0);
+        userAdapter = new UserAdapter(filteredUserList, getContext(), this, UserAdapter.FragmentType.REQUEST, userId, userImageUrl, 0.0);
         cardRecyclerView.setAdapter(userAdapter);
 
         TextView seeAllButton = view.findViewById(R.id.see_all_button);
@@ -170,7 +181,6 @@ public class RequestFragment extends Fragment {
         // Notify adapter of the updated filtered list
         userAdapter.notifyDataSetChanged();
     }
-
 
     private void fetchAndPopulatePendingRequests(LinearLayout pendingRequestList) {
         DatabaseReference walletsRef = FirebaseDatabase.getInstance().getReference("Wallets");
@@ -418,7 +428,6 @@ public class RequestFragment extends Fragment {
             public void onDataChange(DataSnapshot currentUserSnapshot) {
                 if (currentUserSnapshot.exists() && currentUserSnapshot.getValue() != null) {
                     try {
-                        // Fetch current wallet amount
                         Double currentUserWalletAmt = currentUserSnapshot.getValue(Double.class);
                         double amountValue = Double.parseDouble(amount.replace("RM", "").trim());
 
@@ -463,8 +472,26 @@ public class RequestFragment extends Fragment {
                                                                                         // Copy the transaction details to user's transaction history
                                                                                         userTransactionHistoryRef.setValue(recipientTransactionSnapshot.getValue())
                                                                                                 .addOnSuccessListener(aVoid3 -> {
-                                                                                                    Toast.makeText(context, "Request accepted. Wallets and transaction updated successfully.", Toast.LENGTH_SHORT).show();
-                                                                                                    fetchAndPopulatePendingRequests(parent);  // Refresh pending requests
+                                                                                                    // Fetch recipient's name from Users node
+                                                                                                    DatabaseReference recipientUserRef = FirebaseDatabase.getInstance().getReference("Users").child(recipientId).child("name");
+                                                                                                    recipientUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
+                                                                                                        @Override
+                                                                                                        public void onDataChange(DataSnapshot nameSnapshot) {
+                                                                                                            String personName = nameSnapshot.getValue(String.class);
+                                                                                                            if (personName != null) {
+                                                                                                                Toast.makeText(context, "Request accepted. Wallets and transaction updated successfully.", Toast.LENGTH_SHORT).show();
+                                                                                                                showRequestNotification(amountValue, personName, currentDatetime);
+                                                                                                                fetchAndPopulatePendingRequests(parent);  // Refresh pending requests
+                                                                                                            } else {
+                                                                                                                Toast.makeText(context, "Failed to retrieve recipient's name.", Toast.LENGTH_SHORT).show();
+                                                                                                            }
+                                                                                                        }
+
+                                                                                                        @Override
+                                                                                                        public void onCancelled(DatabaseError error) {
+                                                                                                            Toast.makeText(context, "Failed to retrieve recipient's name.", Toast.LENGTH_SHORT).show();
+                                                                                                        }
+                                                                                                    });
                                                                                                 })
                                                                                                 .addOnFailureListener(e -> {
                                                                                                     Toast.makeText(context, "Failed to copy transaction to user's history.", Toast.LENGTH_SHORT).show();
@@ -517,6 +544,43 @@ public class RequestFragment extends Fragment {
                 Toast.makeText(context, "Failed to retrieve current user's wallet amount.", Toast.LENGTH_SHORT).show();
             }
         });
+    }
+
+    private void showRequestNotification(double amount, String name, String dateTime) {
+        createNotificationChannel();  // Create notification channel for Android 8.0+
+
+        // Build the notification with expanded content
+        @SuppressLint("DefaultLocale") String notificationContent = String.format("You have successfully approved the request for RM %.2f from %s on %s", amount, name, dateTime);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
+                .setSmallIcon(R.drawable.notifications)
+                .setContentTitle("Request Approved Successfully")
+                .setContentText(notificationContent)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))  // Expanded text style
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+
+        // Display the notification
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
+        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, REQUEST_NOTIFICATION_PERMISSION);
+            return;
+        }
+        notificationManager.notify(1, builder.build());
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Request Notification";
+            String description = "Notification triggered upon completion of an approval request.";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = requireContext().getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
     }
 
     private int dpToPx(Context context, int dp) {

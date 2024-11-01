@@ -1,5 +1,6 @@
 package com.example.paymentapp;
 
+import android.annotation.SuppressLint;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.pm.PackageManager;
@@ -92,7 +93,7 @@ public class ReloadDoneFragment extends Fragment {
                                     transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Log.d("Transaction", "Transaction saved successfully");
-                                            showReloadNotification(amount, bankName, dateTime);
+                                            showReloadNotification(reloadAmt, bankName, dateTime);
                                             navigateToHomeFragment(userId);
                                         } else {
                                             Log.e("Transaction", "Failed to save transaction", task1.getException());
@@ -108,14 +109,14 @@ public class ReloadDoneFragment extends Fragment {
         return view;
     }
 
-    private void showReloadNotification(String amount, String bankName, String dateTime) {
+    private void showReloadNotification(double amount, String bankName, String dateTime) {
         createNotificationChannel();  // Create notification channel for Android 8.0+
 
         // Build the notification with expanded content
-        String notificationContent = String.format("You have successfully reloaded RM %s from %s at %s", amount, bankName, dateTime);
+        @SuppressLint("DefaultLocale") String notificationContent = String.format("You have successfully reloaded RM %.2f via %s on %s", amount, bankName, dateTime);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
                 .setSmallIcon(R.drawable.notifications)
-                .setContentTitle("Reload Successful")
+                .setContentTitle("Reload Completed Successfully")
                 .setContentText(notificationContent)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))  // Expanded text style
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -133,7 +134,7 @@ public class ReloadDoneFragment extends Fragment {
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Reload Notification";
-            String description = "Notification after wallet reload";
+            String description = "Notification sent after a reload action has been completed";
             int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
