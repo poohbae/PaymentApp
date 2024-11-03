@@ -2,23 +2,17 @@ package com.example.paymentapp;
 
 import android.Manifest;
 import android.app.AlertDialog;
-import android.app.Dialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.MenuItem;
-import android.view.ViewGroup;
-import android.view.Window;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.ActivityCompat;
@@ -34,12 +28,15 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    FloatingActionButton fab;
+    String userId, userName;
+
     BottomNavigationView bottomNavigationView;
+    FloatingActionButton fab;
     Toolbar toolbar;
     DatabaseReference databaseReference;
     FirebaseAuth mAuth;
     FirebaseUser currentUser;
+    private Scan scan;
 
     // Declare permission launcher
     private final ActivityResultLauncher<String> requestNotificationPermissionLauncher =
@@ -56,7 +53,11 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        checkAndRequestNotificationPermission();
+        // Initialize views
+        bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        fab = findViewById(R.id.fab);
+        toolbar = findViewById(R.id.toolBar);
+        setSupportActionBar(toolbar);
 
         // Initialize Firebase
         FirebaseApp.initializeApp(this);
@@ -66,21 +67,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Initialize Firebase Realtime Database reference
         databaseReference = FirebaseDatabase.getInstance("https://paymentapp-1f1bf-default-rtdb.firebaseio.com/").getReference("Users");
 
-        // Initialize views
-        bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        fab = findViewById(R.id.fab);
-        toolbar = findViewById(R.id.toolBar);
-        setSupportActionBar(toolbar);
+        scan = new Scan(this);
 
-        String userName = getIntent().getStringExtra("userName");
+        userId = getIntent().getStringExtra("userId");
+        userName = getIntent().getStringExtra("userName");
         if (getSupportActionBar() != null && userName != null) {
             getSupportActionBar().setTitle("  Good Day, " + userName);
         }
 
+        // Check and request notifications permission
+        checkAndRequestNotificationPermission();
+
         // Load default fragment if there is no saved instance state
         if (savedInstanceState == null) {
-            String userId = getIntent().getStringExtra("userId");
-
             Bundle bundle = new Bundle();
             bundle.putString("userId", userId);
 
@@ -100,8 +99,6 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             item.setChecked(true);
 
             if (item.getItemId() == R.id.home) {
-                String userId = getIntent().getStringExtra("userId");
-
                 Bundle bundle = new Bundle();
                 bundle.putString("userId", userId);
 
@@ -116,28 +113,17 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         // Set up Floating Action Button click listener
-        fab.setOnClickListener(view -> showBottomDialog());
-    }
+        fab.setOnClickListener(view -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("userId", userId);
 
-    private void showBottomDialog() {
-        final Dialog dialog = new Dialog(this);
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-        dialog.setContentView(R.layout.scan_dialog);
+            SelectPaymentMethodFragment selectPaymentMethodFragment = new SelectPaymentMethodFragment();
+            selectPaymentMethodFragment.setArguments(bundle);
 
-        LinearLayout scanArea = dialog.findViewById(R.id.scan_area);
-        ImageView closeButton = dialog.findViewById(R.id.close_button);
+            getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, selectPaymentMethodFragment).commit();
 
-        scanArea.setOnClickListener(v -> Toast.makeText(MainActivity.this, "Scan Area is clicked", Toast.LENGTH_SHORT).show());
-        closeButton.setOnClickListener(view -> dialog.dismiss());
-
-        dialog.show();
-        Window window = dialog.getWindow();
-        if (window != null) {
-            window.setLayout(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-            window.setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
-            window.getAttributes().windowAnimations = R.style.DialogAnimation;
-            window.setGravity(Gravity.BOTTOM);
-        }
+        });
+        // fab.setOnClickListener(view -> scan.startScan());
     }
 
     @Override
@@ -149,6 +135,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         item.setChecked(true);
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        scan.handleActivityResult(requestCode, resultCode, data);
     }
 
     private void checkAndRequestNotificationPermission() {

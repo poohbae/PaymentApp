@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -22,8 +22,8 @@ public class SettingsFragment extends Fragment {
                              @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        TextView logoutButton = view.findViewById(R.id.logout);
-        logoutButton.setOnClickListener(v -> {
+        LinearLayout logout = view.findViewById(R.id.logout);
+        logout.setOnClickListener(v -> {
             FirebaseAuth.getInstance().signOut();
             Toast.makeText(getActivity(), "Logged out successfully", Toast.LENGTH_SHORT).show();
 

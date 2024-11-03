@@ -85,12 +85,12 @@ public class HomeFragment extends Fragment {
 
         CardView transferButton = view.findViewById(R.id.transfer_button);
         transferButton.setOnClickListener(v -> {
-            Bundle bundle5 = new Bundle();
-            bundle5.putString("userId", userId);
-            bundle5.putString("userImageUrl", userImageUrl);
-            bundle5.putDouble("walletAmt", walletAmt);
+            Bundle bundle4 = new Bundle();
+            bundle4.putString("userId", userId);
+            bundle4.putString("userImageUrl", userImageUrl);
+            bundle4.putDouble("walletAmt", walletAmt);
             TransferFragment transferFragment = new TransferFragment();
-            transferFragment.setArguments(bundle5);
+            transferFragment.setArguments(bundle4);
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.frameLayout, transferFragment)
                     .addToBackStack(null)
