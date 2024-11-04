@@ -8,8 +8,6 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.cardview.widget.CardView;
 import androidx.fragment.app.Fragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -24,7 +22,6 @@ import android.widget.ImageView;
 
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-
 
 public class SelectPaymentMethodFragment extends Fragment {
 
@@ -42,7 +39,18 @@ public class SelectPaymentMethodFragment extends Fragment {
         }
 
         ImageView backButton = view.findViewById(R.id.back_button);
-        backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
+        backButton.setOnClickListener(v -> {
+            Bundle bundle = new Bundle();
+            bundle.putString("userId", userId);
+
+            HomeFragment homeFragment = new HomeFragment();
+            homeFragment.setArguments(bundle);
+
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, homeFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
 
         CardView splitBillButton = view.findViewById(R.id.split_bill);
         splitBillButton.setOnClickListener(v -> showBottomDialog());
@@ -57,6 +65,7 @@ public class SelectPaymentMethodFragment extends Fragment {
 
             getParentFragmentManager().beginTransaction()
                     .replace(R.id.frameLayout, selectPayFragment)
+                    .addToBackStack(null)
                     .commit();
         });
 
@@ -74,12 +83,12 @@ public class SelectPaymentMethodFragment extends Fragment {
         EditText quantityEditText = dialog.findViewById(R.id.quantity);
 
         // Set default value to avoid empty EditText issues
-        quantityEditText.setText("1");
+        quantityEditText.setText("2");
 
         minusButton.setOnClickListener(v -> {
             String quantityText = quantityEditText.getText().toString();
-            int quantity = quantityText.isEmpty() ? 1 : Integer.parseInt(quantityText); // Default to 1 if empty
-            if (quantity > 0) { // Decrease only if quantity is greater than zero
+            int quantity = quantityText.isEmpty() ? 2 : Integer.parseInt(quantityText);
+            if (quantity > 2) {
                 quantity--;
                 quantityEditText.setText(String.valueOf(quantity));
             }
@@ -100,21 +109,23 @@ public class SelectPaymentMethodFragment extends Fragment {
             public void afterTextChanged(Editable s) {
                 // Ensure the EditText does not become empty
                 if (s.toString().isEmpty()) {
-                    quantityEditText.setText("1"); // Set a default value if empty
+                    quantityEditText.setText("2"); // Set a default value if empty
                 }
             }
         });
 
         plusButton.setOnClickListener(v -> {
             String quantityText = quantityEditText.getText().toString();
-            int quantity = quantityText.isEmpty() ? 1 : Integer.parseInt(quantityText); // Default to 1 if empty
-            quantity++;
-            quantityEditText.setText(String.valueOf(quantity));
+            int quantity = quantityText.isEmpty() ? 2 : Integer.parseInt(quantityText);
+            if (quantity < 20) {
+                quantity++;
+                quantityEditText.setText(String.valueOf(quantity));
+            }
         });
 
         confirmButton.setOnClickListener(v -> {
             String quantityText = quantityEditText.getText().toString();
-            int quantity = quantityText.isEmpty() ? 1 : Integer.parseInt(quantityText); // Default to 1 if empty
+            int quantity = quantityText.isEmpty() ? 2 : Integer.parseInt(quantityText);
 
             dialog.dismiss();
 

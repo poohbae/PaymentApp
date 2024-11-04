@@ -4,40 +4,69 @@ import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 public class SplitBillFragment extends Fragment {
 
     String userId;
+    double totalPrice;
+    int quantity;
+
+    private RecyclerView ordersRecyclerView;
+    private OrderAdapter orderAdapter;
+    private List<HashMap<String, String>> ordersList = new ArrayList<>();
+    private DatabaseReference ordersRef;
+
+    private TextView totalAmountTextView, splitIntoTextView, splitAmountTextView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_split_bill, container, false);
 
+        ImageView backButton = view.findViewById(R.id.back_button);
+        backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
+
+        totalAmountTextView = view.findViewById(R.id.total_amount);
+        splitIntoTextView = view.findViewById(R.id.split_into);
+        splitAmountTextView = view.findViewById(R.id.split_amount);
 
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
-            int quantity = arguments.getInt("quantity", 1); // Retrieve quantity, default to 1 if not found
-
-            TextView splitIntoTextView = view.findViewById(R.id.split_into);
-            String splitText = getString(R.string.split_into) + " 1/" + quantity;
-            splitIntoTextView.setText(splitText);
+            quantity = arguments.getInt("quantity", 1);
+            splitIntoTextView.setText(getString(R.string.split_into) + " 1/" + quantity);
         }
 
-        TextView uncheckTextView = view.findViewById(R.id.uncheck);
-        uncheckTextView.setOnClickListener(v -> uncheckAllCheckboxes(view));
+        ordersRecyclerView = view.findViewById(R.id.orders_recycler_view);
+        ordersRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+
+        orderAdapter = new OrderAdapter(ordersList, true, false);
+        ordersRecyclerView.setAdapter(orderAdapter);
+
+        ordersRef = FirebaseDatabase.getInstance().getReference("Orders");
+        loadOrders();
+
 
         Button payButton = view.findViewById(R.id.pay_button);
         payButton.setOnClickListener(v -> {
@@ -54,31 +83,55 @@ public class SplitBillFragment extends Fragment {
         return view;
     }
 
-    private void uncheckAllCheckboxes(View view) {
-        // Find the LinearLayout containing the CheckBoxes
-        LinearLayout layout = view.findViewById(R.id.checkbox_layout);
+    private void loadOrders() {
+        ordersRef.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                if (dataSnapshot.exists()) {
+                    ordersList.clear();
 
-        if (layout != null) {
-            // Loop through all views within the layout
-            for (int i = 0; i < layout.getChildCount(); i++) {
-                View child = layout.getChildAt(i);
+                    // Get the total count from the database
+                    if (dataSnapshot.child("total").getValue() != null) {
+                        totalPrice = dataSnapshot.child("total").getValue(Double.class);
+                    }
 
-                // Check if this view is a CheckBox and uncheck it if true
-                if (child instanceof CheckBox) {
-                    ((CheckBox) child).setChecked(false);
-                }
-                // If the CheckBox is nested within another layout, we need to search within that layout
-                else if (child instanceof LinearLayout) {
-                    LinearLayout innerLayout = (LinearLayout) child;
-                    for (int j = 0; j < innerLayout.getChildCount(); j++) {
-                        View innerChild = innerLayout.getChildAt(j);
-                        if (innerChild instanceof CheckBox) {
-                            ((CheckBox) innerChild).setChecked(false);
+                    totalAmountTextView.setText(String.format("RM %.2f", totalPrice));
+                    splitAmountTextView.setText(String.format("RM %.2f", totalPrice / quantity));
+
+                    // Iterate through each order item
+                    for (DataSnapshot orderSnapshot : dataSnapshot.getChildren()) {
+                        if (!orderSnapshot.getKey().equals("total")) { // Skip the "total" field
+                            HashMap<String, String> order = new HashMap<>();
+
+                            // Extract each field
+                            String name = orderSnapshot.child("name").getValue(String.class);
+                            String image = orderSnapshot.child("image").getValue(String.class);
+                            Double price = orderSnapshot.child("price").getValue(Double.class);  // Use Double for decimal
+                            Long status = orderSnapshot.child("status").getValue(Long.class);  // Use Long for integer
+
+                            // Add the retrieved values to the order HashMap
+                            order.put("name", name);
+                            order.put("image", image);
+
+                            String formattedPrice = price != null ? String.format("%.2f", price) : "0.00";  // Format to 2 decimal places
+                            order.put("price", formattedPrice);  // Store formatted price as a String
+
+                            order.put("status", status != null ? status.toString() : "0");
+
+                            // Add each order to the list
+                            ordersList.add(order);
                         }
                     }
+                    orderAdapter.initializeCheckedStates(ordersList.size());
+                    orderAdapter.notifyDataSetChanged();
                 }
             }
-        }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                // Handle error
+            }
+        });
     }
 
     // Hide Toolbar and BottomAppBar when this fragment is visible
