@@ -17,25 +17,40 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="20dp"
+            android:layout_marginBottom="30dp"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_marginEnd="10dp"
-                android:src="@drawable/account" />
+                android:id="@+id/user_image"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
+                android:layout_marginEnd="10dp" />
 
-            <TextView
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/account_settings"
-                android:textSize="20sp"
-                android:textStyle="bold" />
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/user_name"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:textSize="24sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:id="@+id/mobile_number"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="5dp"
+                    android:textSize="20sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/about"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"
@@ -45,18 +60,21 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:layout_marginEnd="10dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:src="@drawable/about" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
                 android:text="@string/about"
                 android:textSize="20sp"
                 android:textStyle="bold" />
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/help_and_support"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="20dp"
@@ -66,12 +84,14 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:layout_marginEnd="10dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:src="@drawable/help_and_support" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
                 android:text="@string/help_and_support"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -86,12 +106,14 @@
             <ImageView
                 android:layout_width="24dp"
                 android:layout_height="24dp"
-                android:layout_marginEnd="10dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
                 android:src="@drawable/version" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
                 android:text="@string/version"
                 android:textSize="20sp"
                 android:textStyle="bold" />
@@ -112,12 +134,14 @@
         <ImageView
             android:layout_width="24dp"
             android:layout_height="24dp"
-            android:layout_marginEnd="10dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
             android:src="@drawable/logout" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
             android:text="@string/logout"
             android:textSize="20sp"
             android:textStyle="bold" />

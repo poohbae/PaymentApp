@@ -118,12 +118,16 @@ public class Login extends AppCompatActivity {
                         // Retrieve the user name from the database
                         databaseReferenceUsers.child(user.getUid()).get().addOnCompleteListener(userTask -> {
                             if (userTask.isSuccessful() && userTask.getResult().exists()) {
+                                String userImageUrl = userTask.getResult().child("image").getValue(String.class);
                                 String userName = userTask.getResult().child("name").getValue(String.class);
+                                String userMobileNumber = userTask.getResult().child("mobileNumber").getValue(String.class);
 
                                 // Pass the user name to MainActivity
                                 Intent intent = new Intent(getApplicationContext(), MainActivity.class);
                                 intent.putExtra("userId", userId);
+                                intent.putExtra("userImageUrl", userImageUrl);
                                 intent.putExtra("userName", userName);
+                                intent.putExtra("userMobileNumber", userMobileNumber);
                                 startActivity(intent);
                                 finish();
                             }

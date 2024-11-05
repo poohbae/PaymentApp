@@ -29,7 +29,7 @@ import java.util.List;
 public class SplitBillFragment extends Fragment {
 
     String userId;
-    double totalPrice;
+    double totalPrice, unitPrice;
     int quantity;
 
     private RecyclerView ordersRecyclerView;
@@ -67,11 +67,12 @@ public class SplitBillFragment extends Fragment {
         ordersRef = FirebaseDatabase.getInstance().getReference("Orders");
         loadOrders();
 
-
         Button payButton = view.findViewById(R.id.pay_button);
         payButton.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
             bundle.putString("userId", userId);
+            bundle.putInt("quantity", quantity);
+            bundle.putDouble("unitPrice", unitPrice);
             SplitBillDoneFragment splitBillDoneFragment = new SplitBillDoneFragment();
             splitBillDoneFragment.setArguments(bundle);
             getParentFragmentManager().beginTransaction()
@@ -95,8 +96,10 @@ public class SplitBillFragment extends Fragment {
                         totalPrice = dataSnapshot.child("total").getValue(Double.class);
                     }
 
+                    unitPrice = totalPrice / quantity;
+
                     totalAmountTextView.setText(String.format("RM %.2f", totalPrice));
-                    splitAmountTextView.setText(String.format("RM %.2f", totalPrice / quantity));
+                    splitAmountTextView.setText(String.format("RM %.2f", unitPrice));
 
                     // Iterate through each order item
                     for (DataSnapshot orderSnapshot : dataSnapshot.getChildren()) {

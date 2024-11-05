@@ -11,10 +11,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -25,10 +24,8 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-
 
 public class SelectPayFragment extends Fragment {
 
@@ -77,18 +74,24 @@ public class SelectPayFragment extends Fragment {
         Button payButton = view.findViewById(R.id.pay_button);
         payButton.setOnClickListener(v -> {
             List<String> checkedItemKeys = orderAdapter.getCheckedItemKeys();
-            for (String key : checkedItemKeys) {
-                ordersRef.child(key).child("status").setValue(1);
-            }
 
-            Bundle bundle = new Bundle();
-            bundle.putString("userId", userId);
-            SelectPayDoneFragment selectPayDoneFragment = new SelectPayDoneFragment();
-            selectPayDoneFragment.setArguments(bundle);
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.frameLayout, selectPayDoneFragment)
-                    .addToBackStack(null)
-                    .commit();
+            if (checkedItemKeys.isEmpty()) {
+                Toast.makeText(getContext(), "Please select at least one item to proceed.", Toast.LENGTH_SHORT).show();
+            } else {
+                for (String key : checkedItemKeys) {
+                    ordersRef.child(key).child("status").setValue(1);
+                }
+
+                Bundle bundle = new Bundle();
+                bundle.putString("userId", userId);
+
+                SelectPayDoneFragment selectPayDoneFragment = new SelectPayDoneFragment();
+                selectPayDoneFragment.setArguments(bundle);
+                getParentFragmentManager().beginTransaction()
+                        .replace(R.id.frameLayout, selectPayDoneFragment)
+                        .addToBackStack(null)
+                        .commit();
+            }
         });
 
         return view;

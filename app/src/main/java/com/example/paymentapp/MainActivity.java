@@ -28,7 +28,7 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
 
-    String userId, userName;
+    String userId, userImageUrl, userName, userMobileNumber;
 
     BottomNavigationView bottomNavigationView;
     FloatingActionButton fab;
@@ -67,10 +67,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         // Initialize Firebase Realtime Database reference
         databaseReference = FirebaseDatabase.getInstance("https://paymentapp-1f1bf-default-rtdb.firebaseio.com/").getReference("Users");
 
-        scan = new Scan(this);
-
         userId = getIntent().getStringExtra("userId");
+        userImageUrl = getIntent().getStringExtra("userImageUrl");
         userName = getIntent().getStringExtra("userName");
+        userMobileNumber = getIntent().getStringExtra("userMobileNumber");
+
+        scan = new Scan(this, userId);
+
         if (getSupportActionBar() != null && userName != null) {
             getSupportActionBar().setTitle("  Good Day, " + userName);
         }
@@ -107,23 +110,22 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
                 getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, homeFragment).commit();
             } else if (item.getItemId() == R.id.settings) {
-                getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, new SettingsFragment()).commit();
-            }
+                Bundle bundle = new Bundle();
+                bundle.putString("userImageUrl", userImageUrl);
+                bundle.putString("userName", userName);
+                bundle.putString("userMobileNumber", userMobileNumber);
+
+                SettingsFragment settingsFragment = new SettingsFragment();
+                settingsFragment.setArguments(bundle);
+
+                getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, settingsFragment).commit();}
             return true;
         });
 
         // Set up Floating Action Button click listener
         fab.setOnClickListener(view -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("userId", userId);
-
-            SelectPaymentMethodFragment selectPaymentMethodFragment = new SelectPaymentMethodFragment();
-            selectPaymentMethodFragment.setArguments(bundle);
-
-            getSupportFragmentManager().beginTransaction().replace(R.id.frameLayout, selectPaymentMethodFragment).commit();
-
+            scan.startScan();
         });
-        // fab.setOnClickListener(view -> scan.startScan());
     }
 
     @Override
@@ -140,7 +142,9 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        scan.handleActivityResult(requestCode, resultCode, data);
+        if (scan != null) {
+            scan.handleActivityResult(requestCode, resultCode, data);
+        }
     }
 
     private void checkAndRequestNotificationPermission() {
