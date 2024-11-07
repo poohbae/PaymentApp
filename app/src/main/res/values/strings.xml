@@ -68,7 +68,7 @@
     <string name="minus">-</string>
     <string name="plus">+</string>
     <string name="select_item">Select Item</string>
-    <string name="uncheck_all">Uncheck All</string>
+    <string name="check_uncheck">Check / Uncheck All</string>
     <string name="total">Total</string>
     <string name="split_into">Split Into</string>
     <string name="split_done_note1">Thank you</string>

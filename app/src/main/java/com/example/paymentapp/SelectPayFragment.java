@@ -47,8 +47,8 @@ public class SelectPayFragment extends Fragment {
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
-        TextView uncheckTextView = view.findViewById(R.id.uncheck);
-        uncheckTextView.setOnClickListener(v -> orderAdapter.uncheckAll());
+        TextView checkUncheckTextView = view.findViewById(R.id.uncheck);
+        checkUncheckTextView.setOnClickListener(v -> orderAdapter.checkUncheckAll());
 
         totalTextView = view.findViewById(R.id.total_amount);
         totalTextView.setText("RM 0.00");

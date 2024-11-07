@@ -21,6 +21,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     private List<Boolean> checkedStates;  // Track the checked state for each item
     private boolean initialCheckedState; // Determines if checkboxes are checked initially
     private boolean checkBoxEnabled; // Determines if checkboxes are enabled
+    private boolean isAllChecked = false; // Track if all items are checked or not
 
     public interface OnItemCheckedChangeListener {
         void onItemCheckedChange(double totalCheckedPrice);
@@ -33,6 +34,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         this.initialCheckedState = initialCheckedState;
         this.checkBoxEnabled = checkBoxEnabled;
         this.checkedStates = new ArrayList<>();
+        initializeCheckedStates(ordersList.size());
     }
 
     public void setOnItemCheckedChangeListener(OnItemCheckedChangeListener listener) {
@@ -100,12 +102,15 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         return ordersList.size();
     }
 
-    // Method to uncheck all CheckBoxes
-    public void uncheckAll() {
+    // Method to toggle check/uncheck all CheckBoxes
+    public void checkUncheckAll() {
+        isAllChecked = !isAllChecked;
+
         for (int i = 0; i < checkedStates.size(); i++) {
-            checkedStates.set(i, false);
+            checkedStates.set(i, isAllChecked);
         }
-        notifyDataSetChanged();  // Notify adapter to refresh views
+
+        notifyDataSetChanged();
     }
 
     public static class OrderViewHolder extends RecyclerView.ViewHolder {
@@ -120,4 +125,5 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             foodPriceTextView = itemView.findViewById(R.id.food_price);
             checkBox = itemView.findViewById(R.id.check);  // Make sure your CheckBox id is correct
         }
-    }}
+    }
+}

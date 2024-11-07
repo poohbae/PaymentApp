@@ -53,14 +53,13 @@ public class Scan {
                         .addToBackStack(null)
                         .commit();
             }
-        }, 3000); // 3-second delay
+        }, 8000); // 8-second delay
     }
 
-    // Handle scan results if needed
+    // Handle scan results
     public void handleActivityResult(int requestCode, int resultCode, Intent data) {
         IntentResult result = IntentIntegrator.parseActivityResult(requestCode, resultCode, data);
         if (result != null) {
-            // Ignore the actual result to focus on the delayed navigation
             navigateToFragment();
         }
     }
