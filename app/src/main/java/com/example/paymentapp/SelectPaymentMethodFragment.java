@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment;
 
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,13 +20,18 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 public class SelectPaymentMethodFragment extends Fragment {
 
     String userId;
+    Double walletAmt;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -37,6 +43,8 @@ public class SelectPaymentMethodFragment extends Fragment {
         if (arguments != null) {
             userId = arguments.getString("userId");
         }
+
+        fetchWalletAmount();
 
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> {
@@ -59,6 +67,7 @@ public class SelectPaymentMethodFragment extends Fragment {
         selectAndPayButton.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
             bundle.putString("userId", userId);
+            bundle.putDouble("walletAmt", walletAmt);
 
             SelectPayFragment selectPayFragment = new SelectPayFragment();
             selectPayFragment.setArguments(bundle);
@@ -70,6 +79,22 @@ public class SelectPaymentMethodFragment extends Fragment {
         });
 
         return view;
+    }
+
+    private void fetchWalletAmount() {
+        DatabaseReference walletsRef = FirebaseDatabase.getInstance().getReference("Wallets");
+
+        String walletId = "W" + userId;
+
+        walletsRef.child(walletId).get().addOnCompleteListener(task -> {
+            if (task.isSuccessful() && task.getResult().exists()) {
+                walletAmt = task.getResult().child("walletAmt").getValue(Double.class);
+            } else {
+                Log.e("SelectPaymentMethodFragment", "No wallet found for walletId: " + walletId);
+            }
+        }).addOnFailureListener(e -> {
+            Toast.makeText(getActivity(), "Failed to retrieve wallet amount.", Toast.LENGTH_SHORT).show();
+        });
     }
 
     private void showBottomDialog() {
@@ -131,6 +156,7 @@ public class SelectPaymentMethodFragment extends Fragment {
 
             Bundle bundle = new Bundle();
             bundle.putString("userId", userId);
+            bundle.putDouble("walletAmt", walletAmt);
             bundle.putInt("quantity", quantity);
 
             SplitBillFragment splitBillFragment = new SplitBillFragment();

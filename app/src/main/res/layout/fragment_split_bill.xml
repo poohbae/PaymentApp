@@ -38,6 +38,16 @@
         android:orientation="vertical"
         android:padding="10dp">
 
+        <TextView
+            android:id="@+id/bill_no"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="5dp"
+            android:layout_marginBottom="5dp"
+            android:textColor="@color/black"
+            android:textSize="18sp"
+            android:textStyle="bold" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/orders_recycler_view"
             android:layout_width="match_parent"
@@ -51,6 +61,28 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:padding="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:padding="5dp">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/tax"
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+
+            <TextView
+                android:id="@+id/tax_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/black"
+                android:textSize="15sp" />
+        </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"

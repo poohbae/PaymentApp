@@ -24,7 +24,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
     private boolean isAllChecked = false; // Track if all items are checked or not
 
     public interface OnItemCheckedChangeListener {
-        void onItemCheckedChange(double totalCheckedPrice);
+        void onItemCheckedChange(double totalCheckedTax, double totalCheckedPrice);
     }
 
     private OnItemCheckedChangeListener itemCheckedChangeListener;
@@ -81,9 +81,21 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
         holder.checkBox.setOnCheckedChangeListener((buttonView, isChecked) -> {
             checkedStates.set(position, isChecked);
             if (itemCheckedChangeListener != null) {
-                itemCheckedChangeListener.onItemCheckedChange(getTotalCheckedPrice());
+                itemCheckedChangeListener.onItemCheckedChange(getTotalCheckedTax(), getTotalCheckedPrice());
             }
         });
+    }
+
+    public double getTotalCheckedTax() {
+        double totalTax = 0.0;
+        for (int i = 0; i < ordersList.size(); i++) {
+            if (checkedStates.get(i)) {
+                String priceStr = ordersList.get(i).get("price");
+                double price = Double.parseDouble(priceStr);
+                totalTax += price * 0.1;
+            }
+        }
+        return totalTax;
     }
 
     public double getTotalCheckedPrice() {
@@ -123,7 +135,7 @@ public class OrderAdapter extends RecyclerView.Adapter<OrderAdapter.OrderViewHol
             foodImageView = itemView.findViewById(R.id.food_image);
             foodNameTextView = itemView.findViewById(R.id.food_name);
             foodPriceTextView = itemView.findViewById(R.id.food_price);
-            checkBox = itemView.findViewById(R.id.check);  // Make sure your CheckBox id is correct
+            checkBox = itemView.findViewById(R.id.check);
         }
     }
 }

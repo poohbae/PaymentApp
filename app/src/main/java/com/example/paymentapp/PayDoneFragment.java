@@ -30,15 +30,15 @@ import java.util.Calendar;
 import java.util.Locale;
 import java.util.Random;
 
-public class ReloadDoneFragment extends Fragment {
+public class PayDoneFragment extends Fragment {
 
-    private static final String CHANNEL_ID = "reload_notification_channel";
-    private static final int RELOAD_NOTIFICATION_PERMISSION = 101;
+    private static final String CHANNEL_ID = "pay_notification_channel";
+    private static final int PAY_NOTIFICATION_PERMISSION = 101;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_reload_done, container, false);
+        View view = inflater.inflate(R.layout.fragment_pay_done, container, false);
 
         // Retrieve the data from the arguments
         Bundle arguments = getArguments();
@@ -46,22 +46,22 @@ public class ReloadDoneFragment extends Fragment {
             String userId = arguments.getString("userId");
             String amount = arguments.getString("amount", "0");
             String dateTime = getCurrentDateTime();
-            int bankImageResId = arguments.getInt("bankImageRes", -1);
-            String bankName = arguments.getString("bankName", "Default Bank");
+            int platformImageResId = arguments.getInt("platformImageRes", -1);
+            String platformName = arguments.getString("platformName", "Default Platform");
 
             // Set the amount to the TextViews
             TextView totalAmountTextView = view.findViewById(R.id.total_amount);
             TextView totalAmount2TextView = view.findViewById(R.id.total_amount2);
             TextView dateTimeTextView = view.findViewById(R.id.date_time);
-            ImageView bankImageView = view.findViewById(R.id.bank_image);
-            TextView bankNameTextView = view.findViewById(R.id.bank_name);
+            ImageView platformImageView = view.findViewById(R.id.platform_image);
+            TextView platformNameTextView = view.findViewById(R.id.platform_name);
 
             double amountValue = Double.parseDouble(amount); // Convert String to double
             totalAmountTextView.setText(String.format("RM %.2f", amountValue));
             totalAmount2TextView.setText(String.format("RM %.2f", amountValue));
             dateTimeTextView.setText(dateTime);
-            bankImageView.setImageResource(bankImageResId);
-            bankNameTextView.setText(bankName);
+            platformImageView.setImageResource(platformImageResId);
+            platformNameTextView.setText(platformName);
 
             // Generate a random reference ID
             TextView referenceIdTextView = view.findViewById(R.id.reference_id);
@@ -80,8 +80,8 @@ public class ReloadDoneFragment extends Fragment {
                         if (task.getResult().exists()) {
                             // Fetch current wallet amount
                             double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
-                            double reloadAmt = Double.parseDouble(amount);
-                            double updatedWalletAmt = currentWalletAmt + reloadAmt;
+                            double payAmt = Double.parseDouble(amount);
+                            double updatedWalletAmt = currentWalletAmt + payAmt;
 
                             // Update the wallet amount in Firebase
                             walletRef.child("walletAmt").setValue(updatedWalletAmt).addOnCompleteListener(taskUpdate -> {
@@ -89,11 +89,11 @@ public class ReloadDoneFragment extends Fragment {
                                     DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                     String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
-                                    Transaction transaction = new Transaction(transactionId, bankImageResId, dateTime, "Reload", referenceId, reloadAmt);
+                                    Transaction transaction = new Transaction(transactionId, platformImageResId, dateTime, "Pay", referenceId, payAmt);
                                     transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Log.d("Transaction", "Transaction saved successfully");
-                                            showReloadNotification(reloadAmt, bankName, dateTime);
+                                            showPayNotification(payAmt, platformName, dateTime);
                                             navigateToHomeFragment(userId);
                                         } else {
                                             Log.e("Transaction", "Failed to save transaction", task1.getException());
@@ -109,14 +109,14 @@ public class ReloadDoneFragment extends Fragment {
         return view;
     }
 
-    private void showReloadNotification(double amount, String bankName, String dateTime) {
+    private void showPayNotification(double amount, String platformName, String dateTime) {
         createNotificationChannel();  // Create notification channel for Android 8.0+
 
         // Build the notification with expanded content
-        @SuppressLint("DefaultLocale") String notificationContent = String.format("You have successfully reloaded RM %.2f via %s on %s", amount, bankName, dateTime);
+        @SuppressLint("DefaultLocale") String notificationContent = String.format("You have successfully paid RM %.2f for %s on %s", amount, platformName, dateTime);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
                 .setSmallIcon(R.drawable.notifications)
-                .setContentTitle("Reload Completed Successfully")
+                .setContentTitle("Pay Completed Successfully")
                 .setContentText(notificationContent)
                 .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))  // Expanded text style
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
@@ -125,7 +125,7 @@ public class ReloadDoneFragment extends Fragment {
         // Display the notification
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(requireActivity(), new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, RELOAD_NOTIFICATION_PERMISSION);
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, PAY_NOTIFICATION_PERMISSION);
             return;
         }
         notificationManager.notify(1, builder.build());
@@ -133,8 +133,8 @@ public class ReloadDoneFragment extends Fragment {
 
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            CharSequence name = "Reload Notification";
-            String description = "Notification sent after a reload action has been completed";
+            CharSequence name = "Pay Notification";
+            String description = "Notification sent after a pay action has been completed";
             int importance = NotificationManager.IMPORTANCE_HIGH;
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);

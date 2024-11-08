@@ -44,8 +44,12 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 ? "Ref ID: " + transaction.refId
                 : transaction.note);
 
+        if (transaction.source.equals("Split Bill") || transaction.source.equals("Select & Pay")){
+            holder.transactionNote.setText("Bill No: #" + transaction.refId);
+        }
+
         // Set amount and color based on source
-        if ("Reload".equals(transaction.source) ||
+        if (transaction.source.equals("Reload") ||
                 (transaction.source.equals("Transfer") && userId.equals(transaction.recipientId)) ||
                 (transaction.source.equals("Request") && userId.equals(transaction.recipientId))) {
             holder.transactionAmount.setText(String.format("+ RM %.2f", transaction.amount));
@@ -58,7 +62,11 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
         } else {
             holder.transactionAmount.setText(String.format("- RM %.2f", transaction.amount));
             holder.transactionAmount.setTextColor(Color.parseColor("#D32F2F"));
-            Glide.with(context).load(transaction.recipientImageUrl).into(holder.icon);
+            if (transaction.iconResId != 0) {
+                holder.icon.setImageResource(transaction.iconResId);
+            } else if (transaction.senderImageUrl != null) {
+                Glide.with(context).load(transaction.recipientImageUrl).into(holder.icon);
+            }
         }
     }
 

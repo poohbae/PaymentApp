@@ -5,10 +5,13 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.zxing.integration.android.IntentIntegrator;
 import com.google.zxing.integration.android.IntentResult;
 
@@ -34,26 +37,10 @@ public class Scan {
         integrator.setOrientationLocked(true);  // Lock orientation to avoid restarting
         integrator.initiateScan();
 
-        // Set a delay to navigate to SelectPaymentMethodFragment after 3 seconds
         new Handler(Looper.getMainLooper()).postDelayed(() -> {
             Toast.makeText(activity, "Scan completed", Toast.LENGTH_LONG).show();
-
-            // Prepare data for the fragment
-            Bundle bundle = new Bundle();
-            bundle.putString("userId", userId);
-
-            SelectPaymentMethodFragment selectPaymentMethodFragment = new SelectPaymentMethodFragment();
-            selectPaymentMethodFragment.setArguments(bundle);
-
-            // Navigate to the fragment
-            if (activity instanceof AppCompatActivity) {
-                ((AppCompatActivity) activity).getSupportFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.frameLayout, selectPaymentMethodFragment)
-                        .addToBackStack(null)
-                        .commit();
-            }
-        }, 8000); // 8-second delay
+            navigateToFragment();
+        }, 5000); // 5-second delay
     }
 
     // Handle scan results

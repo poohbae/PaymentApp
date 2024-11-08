@@ -7,12 +7,14 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -22,14 +24,17 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class SplitBillFragment extends Fragment {
 
-    String userId;
-    double totalPrice, unitPrice;
+    String userId, billNo;
+    double walletAmt, taxAmount, totalPrice, splitPrice;
     int quantity;
 
     private RecyclerView ordersRecyclerView;
@@ -37,7 +42,7 @@ public class SplitBillFragment extends Fragment {
     private List<HashMap<String, String>> ordersList = new ArrayList<>();
     private DatabaseReference ordersRef;
 
-    private TextView totalAmountTextView, splitIntoTextView, splitAmountTextView;
+    private TextView billNoTextView, taxAmountTextView, totalAmountTextView, splitIntoTextView, splitAmountTextView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -47,6 +52,8 @@ public class SplitBillFragment extends Fragment {
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
+        billNoTextView = view.findViewById(R.id.bill_no);
+        taxAmountTextView = view.findViewById(R.id.tax_amount);
         totalAmountTextView = view.findViewById(R.id.total_amount);
         splitIntoTextView = view.findViewById(R.id.split_into);
         splitAmountTextView = view.findViewById(R.id.split_amount);
@@ -54,6 +61,7 @@ public class SplitBillFragment extends Fragment {
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
+            walletAmt = arguments.getDouble("walletAmt");
             quantity = arguments.getInt("quantity", 1);
             splitIntoTextView.setText(getString(R.string.split_into) + " 1/" + quantity);
         }
@@ -69,16 +77,59 @@ public class SplitBillFragment extends Fragment {
 
         Button payButton = view.findViewById(R.id.pay_button);
         payButton.setOnClickListener(v -> {
-            Bundle bundle = new Bundle();
-            bundle.putString("userId", userId);
-            bundle.putInt("quantity", quantity);
-            bundle.putDouble("unitPrice", unitPrice);
-            SplitBillDoneFragment splitBillDoneFragment = new SplitBillDoneFragment();
-            splitBillDoneFragment.setArguments(bundle);
-            getParentFragmentManager().beginTransaction()
-                    .replace(R.id.frameLayout, splitBillDoneFragment)
-                    .addToBackStack(null)
-                    .commit();
+            // Validation: Check if the amount exceeds wallet balance
+            if (splitPrice > walletAmt) {
+                Toast.makeText(getContext(), "Amount exceeds wallet balance.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            // Reference to the user's wallet balance in the database
+            DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId);
+
+            // Fetch the current wallet balance
+            walletRef.get().addOnCompleteListener(task -> {
+                if (task.isSuccessful() && task.getResult().exists()) {
+                    double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
+                    double updatedWalletAmt = currentWalletAmt - splitPrice;
+                    String dateTime = getCurrentDateTime();
+
+                    // Update the new wallet balance in the database
+                    walletRef.child("walletAmt").setValue(updatedWalletAmt).addOnCompleteListener(taskUpdate -> {
+                        if (taskUpdate.isSuccessful()) {
+                            DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
+                            String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
+
+                            Transaction transaction = new Transaction(transactionId, R.drawable.split_bill, dateTime, "Split Bill", billNo, splitPrice);
+                            transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
+                                if (task1.isSuccessful()) {
+                                    Log.d("Transaction", "Transaction saved successfully");
+
+                                    // Navigate to SplitBillDoneFragment
+                                    Bundle bundle = new Bundle();
+                                    bundle.putString("userId", userId);
+                                    bundle.putString("billNo", billNo);
+                                    bundle.putInt("quantity", quantity);
+                                    bundle.putDouble("splitPrice", splitPrice);
+
+                                    SplitBillDoneFragment splitBillDoneFragment = new SplitBillDoneFragment();
+                                    splitBillDoneFragment.setArguments(bundle);
+
+                                    getParentFragmentManager().beginTransaction()
+                                            .replace(R.id.frameLayout, splitBillDoneFragment)
+                                            .addToBackStack(null)
+                                            .commit();
+                                } else {
+                                    Log.e("Transaction", "Failed to save transaction", task1.getException());
+                                }
+                            });
+                        } else {
+                            Toast.makeText(getContext(), "Failed to update wallet balance.", Toast.LENGTH_SHORT).show();
+                        }
+                    });
+                } else {
+                    Toast.makeText(getContext(), "Failed to retrieve wallet balance.", Toast.LENGTH_SHORT).show();
+                }
+            });
         });
 
         return view;
@@ -91,19 +142,14 @@ public class SplitBillFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     ordersList.clear();
 
-                    // Get the total count from the database
-                    if (dataSnapshot.child("total").getValue() != null) {
-                        totalPrice = dataSnapshot.child("total").getValue(Double.class);
+                    if (dataSnapshot.child("billNo").getValue() != null) {
+                        billNo = dataSnapshot.child("billNo").getValue(String.class);
+                        billNoTextView.setText(getString(R.string.bill_no) + billNo);
                     }
-
-                    unitPrice = totalPrice / quantity;
-
-                    totalAmountTextView.setText(String.format("RM %.2f", totalPrice));
-                    splitAmountTextView.setText(String.format("RM %.2f", unitPrice));
 
                     // Iterate through each order item
                     for (DataSnapshot orderSnapshot : dataSnapshot.getChildren()) {
-                        if (!orderSnapshot.getKey().equals("total")) { // Skip the "total" field
+                        if (!orderSnapshot.getKey().equals("billNo")) {
                             HashMap<String, String> order = new HashMap<>();
 
                             // Extract each field
@@ -115,6 +161,7 @@ public class SplitBillFragment extends Fragment {
                             // Add the retrieved values to the order HashMap
                             order.put("name", name);
                             order.put("image", image);
+                            totalPrice += price;
 
                             String formattedPrice = price != null ? String.format("%.2f", price) : "0.00";  // Format to 2 decimal places
                             order.put("price", formattedPrice);  // Store formatted price as a String
@@ -125,6 +172,14 @@ public class SplitBillFragment extends Fragment {
                             ordersList.add(order);
                         }
                     }
+                    taxAmount = totalPrice * 0.1;
+                    totalPrice += taxAmount;
+                    splitPrice = totalPrice / quantity;
+
+                    taxAmountTextView.setText(String.format("RM %.2f", taxAmount));
+                    totalAmountTextView.setText(String.format("RM %.2f", totalPrice));
+                    splitAmountTextView.setText(String.format("RM %.2f", splitPrice));
+
                     orderAdapter.initializeCheckedStates(ordersList.size());
                     orderAdapter.notifyDataSetChanged();
                 }
@@ -135,6 +190,10 @@ public class SplitBillFragment extends Fragment {
                 // Handle error
             }
         });
+    }
+
+    private String getCurrentDateTime() {
+        return new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault()).format(Calendar.getInstance().getTime());
     }
 
     // Hide Toolbar and BottomAppBar when this fragment is visible

@@ -5,7 +5,7 @@
     android:background="@color/gray"
     android:orientation="vertical"
     android:padding="10dp"
-    tools:context=".ReloadDoneFragment">
+    tools:context=".PayDoneFragment">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -64,7 +64,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="10dp"
                     android:gravity="center_vertical"
-                    android:text="@string/topped_up_from"
+                    android:text="@string/paid_for"
                     android:textColor="@color/black"
                     android:textSize="16sp" />
 
@@ -75,7 +75,7 @@
                     android:orientation="horizontal">
 
                     <ImageView
-                        android:id="@+id/bank_image"
+                        android:id="@+id/platform_image"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_marginEnd="15dp" />
@@ -87,7 +87,7 @@
                         android:orientation="vertical">
 
                         <TextView
-                            android:id="@+id/bank_name"
+                            android:id="@+id/platform_name"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginBottom="5dp"

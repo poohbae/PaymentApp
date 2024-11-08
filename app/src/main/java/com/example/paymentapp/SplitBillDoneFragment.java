@@ -1,9 +1,17 @@
 package com.example.paymentapp;
 
+import android.annotation.SuppressLint;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 
 import android.view.LayoutInflater;
@@ -17,10 +25,17 @@ import android.widget.TextView;
 import com.google.android.material.bottomappbar.BottomAppBar;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Locale;
+
 public class SplitBillDoneFragment extends Fragment {
 
+    private static final String CHANNEL_ID = "split_bill_notification_channel";
+    private static final int SPLIT_BILL_NOTIFICATION_PERMISSION = 101;
+
     String userId;
-    double unitPrice;
+    double splitPrice;
     int quantity;
 
     @Override
@@ -31,20 +46,24 @@ public class SplitBillDoneFragment extends Fragment {
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
+            String billNo = arguments.getString("billNo");
             quantity = arguments.getInt("quantity", 1);
-            unitPrice = arguments.getDouble("unitPrice", 0.0);
+            splitPrice = arguments.getDouble("splitPrice", 0.0);
+
+            Button backToHomeButton = view.findViewById(R.id.back_button);
+            backToHomeButton.setOnClickListener(v -> {
+                showSplitBillNotification(splitPrice, billNo, getCurrentDateTime());
+                navigateToHomeFragment(userId);
+            });
         }
 
         LinearLayout guestContainer = view.findViewById(R.id.guest_container);
         for (int i = 0; i < quantity - 1; i++) {
             String guestName = "Guest " + (i + 1);
 
-            View guestView = createGuestView(guestName, "guest", unitPrice);
+            View guestView = createGuestView(guestName, "guest", splitPrice);
             guestContainer.addView(guestView);
         }
-
-        Button backToHomeButton = view.findViewById(R.id.back_button);
-        backToHomeButton.setOnClickListener(v -> navigateToHomeFragment(userId));
 
         return view;
     }
@@ -95,6 +114,43 @@ public class SplitBillDoneFragment extends Fragment {
         return itemLayout;
     }
 
+    private void showSplitBillNotification(double amount, String billNo, String dateTime) {
+        createNotificationChannel();  // Create notification channel for Android 8.0+
+
+        // Build the notification with expanded content
+        @SuppressLint("DefaultLocale") String notificationContent = String.format("You have successfully paid RM %.2f for Bill No: #%s on %s", amount, billNo, dateTime);
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
+                .setSmallIcon(R.drawable.notifications)
+                .setContentTitle("Split Bill Completed Successfully")
+                .setContentText(notificationContent)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))  // Expanded text style
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true);
+
+        // Display the notification
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
+        if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(requireActivity(), new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, SPLIT_BILL_NOTIFICATION_PERMISSION);
+            return;
+        }
+        notificationManager.notify(1, builder.build());
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "Split Bill Notification";
+            String description = "Notifications for completed split bill action";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = requireContext().getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+    }
+
     private void navigateToHomeFragment(String userId) {
         HomeFragment homeFragment = new HomeFragment();
         Bundle bundle = new Bundle();
@@ -105,6 +161,10 @@ public class SplitBillDoneFragment extends Fragment {
                 .replace(R.id.frameLayout, homeFragment)
                 .addToBackStack(null)
                 .commit();
+    }
+
+    private String getCurrentDateTime() {
+        return new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault()).format(Calendar.getInstance().getTime());
     }
 
     private int dpToPx(Context context, int dp) {

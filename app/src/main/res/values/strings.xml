@@ -36,16 +36,10 @@
     <string name="amount">Amount</string>
     <string name="cancel">Cancel</string>
     <string name="pay">Pay</string>
-    <string name="top_up_from">Top Up From</string>
+    <string name="topped_up_from">Topped Up From</string>
     <string name="reference">Reference ID</string>
     <string name="ok">OK</string>
     <string name="enter_name_mobile">Enter name or mobile number</string>
-    <string name="transfer_money">Transfer Money</string>
-    <string name="transfer_to">Transfer to</string>
-    <string name="transfer_question">What\'s the transfer for?</string>
-    <string name="fund_transfer">Fund Transfer</string>
-    <string name="receiver">Receiver</string>
-    <string name="remark">Remark</string>
     <string name="pending_request">Pending Request</string>
     <string name="cancel_request">Cancel Request</string>
     <string name="confirm_cancel_request">Are you sure you want to cancel the request?</string>
@@ -62,13 +56,23 @@
     <string name="date_and_time">Date &amp; time</string>
     <string name="contact">Contact</string>
     <string name="done">Done</string>
+    <string name="transfer_money">Transfer Money</string>
+    <string name="transfer_to">Transfer to</string>
+    <string name="transfer_question">What\'s the transfer for?</string>
+    <string name="fund_transfer">Fund Transfer</string>
+    <string name="receiver">Receiver</string>
+    <string name="remark">Remark</string>
+    <string name="platform">Platform</string>
+    <string name="paid_for">Paid For</string>
     <string name="split_bill">Split Bill</string>
     <string name="select_pay">Select &amp; Pay</string>
     <string name="split_note">Split with how many people?</string>
     <string name="minus">-</string>
     <string name="plus">+</string>
     <string name="select_item">Select Item</string>
+    <string name="bill_no">Bill No: #</string>
     <string name="check_uncheck">Check / Uncheck All</string>
+    <string name="tax">Tax (10%)</string>
     <string name="total">Total</string>
     <string name="split_into">Split Into</string>
     <string name="split_done_note1">Thank you</string>
@@ -105,4 +109,6 @@
     <string name="help_note19">Thank you for choosing SplitBill App! We’re here to help, every step of the way.</string>
     <string name="version">Version 3.7.24</string>
     <string name="logout">Logout</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

@@ -97,6 +97,19 @@ public class HomeFragment extends Fragment {
                     .commit();
         });
 
+        CardView payButton = view.findViewById(R.id.pay_button);
+        payButton.setOnClickListener(v -> {
+            Bundle bundle5 = new Bundle();
+            bundle5.putString("userId", userId);
+            bundle5.putDouble("walletAmt", walletAmt);
+            PayFragment payFragment = new PayFragment();
+            payFragment.setArguments(bundle5);
+            getParentFragmentManager().beginTransaction()
+                    .replace(R.id.frameLayout, payFragment)
+                    .addToBackStack(null)
+                    .commit();
+        });
+
         transactionRecyclerView = view.findViewById(R.id.transaction_list);
         transactionRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 

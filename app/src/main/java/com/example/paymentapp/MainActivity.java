@@ -123,9 +123,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         });
 
         // Set up Floating Action Button click listener
-        fab.setOnClickListener(view -> {
-            scan.startScan();
-        });
+        fab.setOnClickListener(view -> scan.startScan());
     }
 
     @Override

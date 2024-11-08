@@ -22,7 +22,7 @@ public class Transaction {
     public Transaction() {
     }
 
-    // For reload
+    // For reload and pay
     public Transaction(String transactionId, int iconResId, String datetime, String source, String refId, double amount) {
         this.transactionId = transactionId;
         this.iconResId = iconResId;
@@ -30,6 +30,22 @@ public class Transaction {
         this.source = source;
         this.refId = refId;
         this.status = 1;
+        this.amount = amount;
+    }
+
+    // For transfer
+    public Transaction(String transactionId, String recipientImageUrl, String senderImageUrl, String datetime, String source, String note, String refId, String mobileNumber, String recipientId, double amount) {
+        this.transactionId = transactionId;
+        this.iconResId = 0;
+        this.recipientImageUrl = recipientImageUrl;
+        this.senderImageUrl = senderImageUrl;
+        this.datetime = datetime;
+        this.source = source;
+        this.note = note;
+        this.refId = refId;
+        this.status = 1;
+        this.mobileNumber = mobileNumber;
+        this.recipientId = recipientId;
         this.amount = amount;
     }
 
@@ -49,21 +65,6 @@ public class Transaction {
         this.amount = amount;
     }
 
-    // For transfer
-    public Transaction(String transactionId, String recipientImageUrl, String senderImageUrl, String datetime, String source, String note, String refId, String mobileNumber, String recipientId, double amount) {
-        this.transactionId = transactionId;
-        this.iconResId = 0;
-        this.recipientImageUrl = recipientImageUrl;
-        this.senderImageUrl = senderImageUrl;
-        this.datetime = datetime;
-        this.source = source;
-        this.note = note;
-        this.refId = refId;
-        this.status = 1;
-        this.mobileNumber = mobileNumber;
-        this.recipientId = recipientId;
-        this.amount = amount;
-    }
 
     // Getter and Setter for parsedDate
     public Date getParsedDate() {

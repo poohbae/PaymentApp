@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,21 +24,24 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 
 public class SelectPayFragment extends Fragment {
 
-    String userId;
-    double totalPrice;
+    String userId, billNo;
+    double walletAmt, totalChecked;
 
     private RecyclerView ordersRecyclerView;
     private OrderAdapter orderAdapter;
     private List<HashMap<String, String>> ordersList = new ArrayList<>();
     private DatabaseReference ordersRef;
 
-    private TextView totalTextView;
+    private TextView billNoTextView, taxAmountTextView, totalAmountTextView;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -50,12 +54,16 @@ public class SelectPayFragment extends Fragment {
         TextView checkUncheckTextView = view.findViewById(R.id.uncheck);
         checkUncheckTextView.setOnClickListener(v -> orderAdapter.checkUncheckAll());
 
-        totalTextView = view.findViewById(R.id.total_amount);
-        totalTextView.setText("RM 0.00");
+        billNoTextView = view.findViewById(R.id.bill_no);
+        taxAmountTextView = view.findViewById(R.id.tax_amount);
+        taxAmountTextView.setText("RM 0.00");
+        totalAmountTextView = view.findViewById(R.id.total_amount);
+        totalAmountTextView.setText("RM 0.00");
 
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
+            walletAmt = arguments.getDouble("walletAmt");
         }
 
         ordersRecyclerView = view.findViewById(R.id.orders_recycler_view);
@@ -64,9 +72,11 @@ public class SelectPayFragment extends Fragment {
         orderAdapter = new OrderAdapter(ordersList, false, true);
         ordersRecyclerView.setAdapter(orderAdapter);
 
-        orderAdapter.setOnItemCheckedChangeListener(totalCheckedPrice ->
-                totalTextView.setText(String.format("RM %.2f", totalCheckedPrice))
-        );
+        orderAdapter.setOnItemCheckedChangeListener((totalCheckedTax, totalCheckedPrice) -> {
+            totalChecked = totalCheckedPrice + totalCheckedTax;
+            taxAmountTextView.setText(String.format("RM %.2f", totalCheckedTax));
+            totalAmountTextView.setText(String.format("RM %.2f", totalChecked));
+        });
 
         ordersRef = FirebaseDatabase.getInstance().getReference("Orders");
         loadOrders();
@@ -75,22 +85,66 @@ public class SelectPayFragment extends Fragment {
         payButton.setOnClickListener(v -> {
             List<String> checkedItemKeys = orderAdapter.getCheckedItemKeys();
 
+            // Validation: Check if the amount exceeds wallet balance
+            if (totalChecked > walletAmt) {
+                Toast.makeText(getContext(), "Amount exceeds wallet balance.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             if (checkedItemKeys.isEmpty()) {
                 Toast.makeText(getContext(), "Please select at least one item to proceed.", Toast.LENGTH_SHORT).show();
             } else {
+                // Update the status of each checked item in the database
                 for (String key : checkedItemKeys) {
                     ordersRef.child(key).child("status").setValue(1);
                 }
 
-                Bundle bundle = new Bundle();
-                bundle.putString("userId", userId);
+                // Reference to the user's wallet amount in the "Wallets" node
+                DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId);
 
-                SelectPayDoneFragment selectPayDoneFragment = new SelectPayDoneFragment();
-                selectPayDoneFragment.setArguments(bundle);
-                getParentFragmentManager().beginTransaction()
-                        .replace(R.id.frameLayout, selectPayDoneFragment)
-                        .addToBackStack(null)
-                        .commit();
+                // Fetch the current wallet balance
+                walletRef.get().addOnCompleteListener(task -> {
+                    if (task.isSuccessful() && task.getResult().exists()) {
+                        double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
+                        double updatedWalletAmt = currentWalletAmt - totalChecked;
+                        String dateTime = getCurrentDateTime();
+
+                        // Update the new wallet balance in the database
+                        walletRef.child("walletAmt").setValue(updatedWalletAmt).addOnCompleteListener(taskUpdate -> {
+                            if (taskUpdate.isSuccessful()) {
+                                DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
+                                String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
+
+                                Transaction transaction = new Transaction(transactionId, R.drawable.select_pay, dateTime, "Select & Pay", billNo, totalChecked);
+                                transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
+                                    if (task1.isSuccessful()) {
+                                        Log.d("Transaction", "Transaction saved successfully");
+
+                                        // Navigate to SelectPayDoneFragment
+                                        Bundle bundle = new Bundle();
+                                        bundle.putString("userId", userId);
+                                        bundle.putString("billNo", billNo);
+                                        bundle.putDouble("totalChecked", totalChecked);
+
+                                        SelectPayDoneFragment selectPayDoneFragment = new SelectPayDoneFragment();
+                                        selectPayDoneFragment.setArguments(bundle);
+                                        getParentFragmentManager().beginTransaction()
+                                                .replace(R.id.frameLayout, selectPayDoneFragment)
+                                                .addToBackStack(null)
+                                                .commit();
+                                    } else {
+                                        Log.e("Transaction", "Failed to save transaction", task1.getException());
+                                    }
+                                });
+
+                            } else {
+                                Toast.makeText(getContext(), "Failed to update wallet balance.", Toast.LENGTH_SHORT).show();
+                            }
+                        });
+                    } else {
+                        Toast.makeText(getContext(), "Failed to retrieve wallet balance.", Toast.LENGTH_SHORT).show();
+                    }
+                });
             }
         });
 
@@ -104,14 +158,14 @@ public class SelectPayFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     ordersList.clear();
 
-                    // Get the total count from the database
-                    if (dataSnapshot.child("total").getValue() != null) {
-                        totalPrice = dataSnapshot.child("total").getValue(Double.class);
+                    if (dataSnapshot.child("billNo").getValue() != null) {
+                        billNo = dataSnapshot.child("billNo").getValue(String.class);
+                        billNoTextView.setText(getString(R.string.bill_no) + billNo);
                     }
 
                     // Iterate through each order item
                     for (DataSnapshot orderSnapshot : dataSnapshot.getChildren()) {
-                        if (!orderSnapshot.getKey().equals("total")) { // Skip the "total" field
+                        if (!orderSnapshot.getKey().equals("billNo")) {
                             Long status = orderSnapshot.child("status").getValue(Long.class);  // Use Long for integer
 
                             // Only add orders with status = 0
@@ -135,6 +189,7 @@ public class SelectPayFragment extends Fragment {
                                 ordersList.add(order);
                             }
                         }
+
                     }
                     orderAdapter.initializeCheckedStates(ordersList.size());
                     orderAdapter.notifyDataSetChanged();
@@ -146,6 +201,10 @@ public class SelectPayFragment extends Fragment {
                 // Handle error
             }
         });
+    }
+
+    private String getCurrentDateTime() {
+        return new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault()).format(Calendar.getInstance().getTime());
     }
 
     // Hide Toolbar and BottomAppBar when this fragment is visible
