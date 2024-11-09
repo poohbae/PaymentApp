@@ -85,7 +85,7 @@ public class TransferFragment extends Fragment {
         userAdapter = new UserAdapter(userList, getContext(), this, UserAdapter.FragmentType.TRANSFER, userId, userImageUrl, walletAmt);
         cardRecyclerView.setAdapter(userAdapter);
 
-        userAdapter = new UserAdapter(userList, getContext(), this, UserAdapter.FragmentType.TRANSFER, userId, userImageUrl, walletAmt);
+        userAdapter = new UserAdapter(filteredUserList, getContext(), this, UserAdapter.FragmentType.TRANSFER, userId, userImageUrl, walletAmt);
         cardRecyclerView.setAdapter(userAdapter);
 
         return view;

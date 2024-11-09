@@ -162,6 +162,16 @@ public class PayFragment extends Fragment {
                 return;
             }
 
+            // Convert amount to double for comparison
+            double amount = Double.parseDouble(amountToSend);
+
+            // Validation: Check if the amount exceeds wallet balance
+            if (amount > walletAmt) {
+                inputAmountEditText.setError("Amount exceeds wallet balance");
+                inputAmountEditText.requestFocus();
+                return;
+            }
+
             Bundle bundle = new Bundle();
             bundle.putString("userId", userId);
             bundle.putString("amount", amountToSend);

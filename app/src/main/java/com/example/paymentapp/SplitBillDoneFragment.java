@@ -35,7 +35,7 @@ public class SplitBillDoneFragment extends Fragment {
     private static final int SPLIT_BILL_NOTIFICATION_PERMISSION = 101;
 
     String userId;
-    double splitPrice;
+    double finalRoundedSplitPrice;
     int quantity;
 
     @Override
@@ -48,11 +48,11 @@ public class SplitBillDoneFragment extends Fragment {
             userId = arguments.getString("userId");
             String billNo = arguments.getString("billNo");
             quantity = arguments.getInt("quantity", 1);
-            splitPrice = arguments.getDouble("splitPrice", 0.0);
+            finalRoundedSplitPrice = arguments.getDouble("finalRoundedSplitPrice", 0.0);
 
             Button backToHomeButton = view.findViewById(R.id.back_button);
             backToHomeButton.setOnClickListener(v -> {
-                showSplitBillNotification(splitPrice, billNo, getCurrentDateTime());
+                showSplitBillNotification(finalRoundedSplitPrice, billNo, getCurrentDateTime());
                 navigateToHomeFragment(userId);
             });
         }
@@ -61,7 +61,7 @@ public class SplitBillDoneFragment extends Fragment {
         for (int i = 0; i < quantity - 1; i++) {
             String guestName = "Guest " + (i + 1);
 
-            View guestView = createGuestView(guestName, "guest", splitPrice);
+            View guestView = createGuestView(guestName, "guest", finalRoundedSplitPrice);
             guestContainer.addView(guestView);
         }
 

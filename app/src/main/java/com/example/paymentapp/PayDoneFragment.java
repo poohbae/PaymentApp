@@ -81,7 +81,7 @@ public class PayDoneFragment extends Fragment {
                             // Fetch current wallet amount
                             double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
                             double payAmt = Double.parseDouble(amount);
-                            double updatedWalletAmt = currentWalletAmt + payAmt;
+                            double updatedWalletAmt = currentWalletAmt - payAmt;
 
                             // Update the wallet amount in Firebase
                             walletRef.child("walletAmt").setValue(updatedWalletAmt).addOnCompleteListener(taskUpdate -> {

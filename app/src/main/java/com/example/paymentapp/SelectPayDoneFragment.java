@@ -39,6 +39,7 @@ public class SelectPayDoneFragment extends Fragment {
     private static final int SELECT_PAY_NOTIFICATION_PERMISSION = 101;
 
     String userId;
+    double finalRoundedTotalChecked;
 
     private DatabaseReference ordersRef;
     private LinearLayout unpaidItemsContainer;
@@ -56,11 +57,11 @@ public class SelectPayDoneFragment extends Fragment {
         if (arguments != null) {
             userId = arguments.getString("userId");
             String billNo = arguments.getString("billNo");
-            double totalChecked = arguments.getDouble("totalChecked");
+            finalRoundedTotalChecked = arguments.getDouble("finalRoundedTotalChecked");
 
             Button backToHomeButton = view.findViewById(R.id.back_button);
             backToHomeButton.setOnClickListener(v -> {
-                showSelectPayNotification(totalChecked, billNo,  getCurrentDateTime());
+                showSelectPayNotification(finalRoundedTotalChecked, billNo,  getCurrentDateTime());
                 navigateToHomeFragment(userId);
             });
         }

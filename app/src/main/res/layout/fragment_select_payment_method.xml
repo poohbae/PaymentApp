@@ -78,8 +78,7 @@
                         android:layout_width="50dp"
                         android:layout_height="50dp"
                         android:layout_marginBottom="5dp"
-                        android:src="@drawable/split_bill"
-                        app:tint="@color/white" />
+                        android:src="@drawable/split_bill"/>
 
                     <TextView
                         android:layout_width="wrap_content"

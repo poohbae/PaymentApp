@@ -24,6 +24,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,7 +36,8 @@ import java.util.Locale;
 public class SplitBillFragment extends Fragment {
 
     String userId, billNo;
-    double walletAmt, taxAmount, totalPrice, splitPrice;
+    double walletAmt, taxAmount, totalPrice, splitPrice, finalRoundedSplitPrice;
+    BigDecimal roundedSplitPrice;
     int quantity;
 
     private RecyclerView ordersRecyclerView;
@@ -78,7 +81,7 @@ public class SplitBillFragment extends Fragment {
         Button payButton = view.findViewById(R.id.pay_button);
         payButton.setOnClickListener(v -> {
             // Validation: Check if the amount exceeds wallet balance
-            if (splitPrice > walletAmt) {
+            if (finalRoundedSplitPrice > walletAmt) {
                 Toast.makeText(getContext(), "Amount exceeds wallet balance.", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -90,7 +93,7 @@ public class SplitBillFragment extends Fragment {
             walletRef.get().addOnCompleteListener(task -> {
                 if (task.isSuccessful() && task.getResult().exists()) {
                     double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
-                    double updatedWalletAmt = currentWalletAmt - splitPrice;
+                    double updatedWalletAmt = currentWalletAmt - finalRoundedSplitPrice;
                     String dateTime = getCurrentDateTime();
 
                     // Update the new wallet balance in the database
@@ -99,7 +102,7 @@ public class SplitBillFragment extends Fragment {
                             DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                             String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
-                            Transaction transaction = new Transaction(transactionId, R.drawable.split_bill, dateTime, "Split Bill", billNo, splitPrice);
+                            Transaction transaction = new Transaction(transactionId, R.drawable.split_bill, dateTime, "Split Bill", billNo, finalRoundedSplitPrice);
                             transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                 if (task1.isSuccessful()) {
                                     Log.d("Transaction", "Transaction saved successfully");
@@ -109,7 +112,7 @@ public class SplitBillFragment extends Fragment {
                                     bundle.putString("userId", userId);
                                     bundle.putString("billNo", billNo);
                                     bundle.putInt("quantity", quantity);
-                                    bundle.putDouble("splitPrice", splitPrice);
+                                    bundle.putDouble("finalRoundedSplitPrice", finalRoundedSplitPrice);
 
                                     SplitBillDoneFragment splitBillDoneFragment = new SplitBillDoneFragment();
                                     splitBillDoneFragment.setArguments(bundle);
@@ -176,9 +179,13 @@ public class SplitBillFragment extends Fragment {
                     totalPrice += taxAmount;
                     splitPrice = totalPrice / quantity;
 
+                    // Use BigDecimal to round splitPrice to 2 decimal places
+                    roundedSplitPrice = BigDecimal.valueOf(splitPrice).setScale(2, RoundingMode.HALF_UP);
+                    finalRoundedSplitPrice = roundedSplitPrice.doubleValue();
+
                     taxAmountTextView.setText(String.format("RM %.2f", taxAmount));
                     totalAmountTextView.setText(String.format("RM %.2f", totalPrice));
-                    splitAmountTextView.setText(String.format("RM %.2f", splitPrice));
+                    splitAmountTextView.setText(String.format("RM %.2f", finalRoundedSplitPrice));
 
                     orderAdapter.initializeCheckedStates(ordersList.size());
                     orderAdapter.notifyDataSetChanged();

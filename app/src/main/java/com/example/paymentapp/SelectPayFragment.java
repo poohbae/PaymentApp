@@ -24,6 +24,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,7 +36,8 @@ import java.util.Locale;
 public class SelectPayFragment extends Fragment {
 
     String userId, billNo;
-    double walletAmt, totalChecked;
+    double walletAmt, totalChecked, finalRoundedTotalChecked;
+    BigDecimal roundedTotalChecked;
 
     private RecyclerView ordersRecyclerView;
     private OrderAdapter orderAdapter;
@@ -74,8 +77,11 @@ public class SelectPayFragment extends Fragment {
 
         orderAdapter.setOnItemCheckedChangeListener((totalCheckedTax, totalCheckedPrice) -> {
             totalChecked = totalCheckedPrice + totalCheckedTax;
+            roundedTotalChecked = new BigDecimal(totalChecked).setScale(2, RoundingMode.HALF_UP);
+            finalRoundedTotalChecked = roundedTotalChecked.doubleValue();
+
             taxAmountTextView.setText(String.format("RM %.2f", totalCheckedTax));
-            totalAmountTextView.setText(String.format("RM %.2f", totalChecked));
+            totalAmountTextView.setText(String.format("RM %.2f", finalRoundedTotalChecked));
         });
 
         ordersRef = FirebaseDatabase.getInstance().getReference("Orders");
@@ -86,7 +92,7 @@ public class SelectPayFragment extends Fragment {
             List<String> checkedItemKeys = orderAdapter.getCheckedItemKeys();
 
             // Validation: Check if the amount exceeds wallet balance
-            if (totalChecked > walletAmt) {
+            if (finalRoundedTotalChecked > walletAmt) {
                 Toast.makeText(getContext(), "Amount exceeds wallet balance.", Toast.LENGTH_SHORT).show();
                 return;
             }
@@ -106,7 +112,15 @@ public class SelectPayFragment extends Fragment {
                 walletRef.get().addOnCompleteListener(task -> {
                     if (task.isSuccessful() && task.getResult().exists()) {
                         double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
-                        double updatedWalletAmt = currentWalletAmt - totalChecked;
+
+                        // Convert currentWalletAmt and finalRoundedTotalChecked to BigDecimal
+                        BigDecimal currentWalletAmtBD = BigDecimal.valueOf(currentWalletAmt);
+                        BigDecimal finalRoundedTotalCheckedBD = BigDecimal.valueOf(finalRoundedTotalChecked);
+
+                        // Subtract and round to 2 decimal places
+                        BigDecimal updatedWalletAmtBD = currentWalletAmtBD.subtract(finalRoundedTotalCheckedBD).setScale(2, RoundingMode.HALF_UP);
+                        double updatedWalletAmt = updatedWalletAmtBD.doubleValue();
+
                         String dateTime = getCurrentDateTime();
 
                         // Update the new wallet balance in the database
@@ -115,7 +129,7 @@ public class SelectPayFragment extends Fragment {
                                 DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                 String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
-                                Transaction transaction = new Transaction(transactionId, R.drawable.select_pay, dateTime, "Select & Pay", billNo, totalChecked);
+                                Transaction transaction = new Transaction(transactionId, R.drawable.select_pay, dateTime, "Select & Pay", billNo, finalRoundedTotalChecked);
                                 transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
                                         Log.d("Transaction", "Transaction saved successfully");
@@ -124,7 +138,7 @@ public class SelectPayFragment extends Fragment {
                                         Bundle bundle = new Bundle();
                                         bundle.putString("userId", userId);
                                         bundle.putString("billNo", billNo);
-                                        bundle.putDouble("totalChecked", totalChecked);
+                                        bundle.putDouble("finalRoundedTotalChecked", finalRoundedTotalChecked);
 
                                         SelectPayDoneFragment selectPayDoneFragment = new SelectPayDoneFragment();
                                         selectPayDoneFragment.setArguments(bundle);
