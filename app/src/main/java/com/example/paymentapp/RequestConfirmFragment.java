@@ -22,11 +22,14 @@ public class RequestConfirmFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_request_confirm, container, false);
 
+        // Initialize the back button to navigate back to the previous fragment
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
+        // Retrieve arguments passed to this fragment
         Bundle arguments = getArguments();
         if (arguments != null) {
             String userId = arguments.getString("userId");
@@ -45,22 +48,24 @@ public class RequestConfirmFragment extends Fragment {
             double amount = Double.parseDouble(amountStr);
             amountTextView.setText(String.format("RM %.2f", amount));
 
+            // Load and display the person's image using Glide
             Glide.with(getContext())
-                    .load(personImageUrl)  // Load the image from Firebase Storage
-                    .placeholder(R.drawable.person)  // Optional placeholder image
+                    .load(personImageUrl)  // URL of the person’s image
+                    .placeholder(R.drawable.person)  // Placeholder image if loading fails
                     .into(personImageView);
             personNameTextView.setText(personName);
             mobileNumberTextView.setText(personMobileNumber);
 
+            // Set up 'Request' button to initiate the request and navigate to the next fragment
             Button requestButton = view.findViewById(R.id.request_button);
             requestButton.setOnClickListener(v -> {
+                // Capture any note entered by the user
                 String note = noteEditText.getText().toString().trim();
-
-                // Validation: Check if note is empty
                 if (note.trim().isEmpty()) {
-                    note = "N/A";
+                    note = "N/A";  // Default note if none is entered
                 }
 
+                // Pass data to RequestDoneFragment
                 Bundle bundle = new Bundle();
                 bundle.putString("userId", userId);
                 bundle.putString("userImageUrl", userImageUrl);
@@ -82,6 +87,7 @@ public class RequestConfirmFragment extends Fragment {
         return view;
     }
 
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -101,6 +107,7 @@ public class RequestConfirmFragment extends Fragment {
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();

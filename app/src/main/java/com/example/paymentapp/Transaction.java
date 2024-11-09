@@ -4,7 +4,7 @@ import java.util.Date;
 
 public class Transaction {
     public String transactionId;
-    public int iconResId; // reload
+    public int iconResId; // reload and pay
     public String recipientImageUrl; // request and transfer
     public String senderImageUrl;  // request and transfer
     public String datetime;
@@ -16,43 +16,44 @@ public class Transaction {
     public String recipientId; // request and transfer
     public double amount;
 
+    // Parsed date for internal processing, not stored in Firebase
     private Date parsedDate;
 
     // No-argument constructor required for Firebase
     public Transaction() {
     }
 
-    // For reload and pay
+    // Constructor for "reload" and "pay" transactions
     public Transaction(String transactionId, int iconResId, String datetime, String source, String refId, double amount) {
         this.transactionId = transactionId;
         this.iconResId = iconResId;
         this.datetime = datetime;
         this.source = source;
         this.refId = refId;
-        this.status = 1;
+        this.status = 1; // Default status for completed transactions
         this.amount = amount;
     }
 
-    // For transfer
+    // Constructor for "transfer" transactions
     public Transaction(String transactionId, String recipientImageUrl, String senderImageUrl, String datetime, String source, String note, String refId, String mobileNumber, String recipientId, double amount) {
         this.transactionId = transactionId;
-        this.iconResId = 0;
+        this.iconResId = 0; // No icon for "transfer" transactions
         this.recipientImageUrl = recipientImageUrl;
         this.senderImageUrl = senderImageUrl;
         this.datetime = datetime;
         this.source = source;
         this.note = note;
         this.refId = refId;
-        this.status = 1;
+        this.status = 1; // Default status for completed transactions
         this.mobileNumber = mobileNumber;
         this.recipientId = recipientId;
         this.amount = amount;
     }
 
-    // For request
+    // Constructor for "request" transactions
     public Transaction(String transactionId, String recipientImageUrl, String senderImageUrl, String datetime, String source, String note, String refId, int status, String mobileNumber, String recipientId, double amount) {
         this.transactionId = transactionId;
-        this.iconResId = 0;
+        this.iconResId = 0; // No icon for "request" transactions
         this.recipientImageUrl = recipientImageUrl;
         this.senderImageUrl = senderImageUrl;
         this.datetime = datetime;
@@ -65,8 +66,7 @@ public class Transaction {
         this.amount = amount;
     }
 
-
-    // Getter and Setter for parsedDate
+    // Getter and Setter for parsedDate, used for internal date processing
     public Date getParsedDate() {
         return parsedDate;
     }
@@ -75,4 +75,3 @@ public class Transaction {
         this.parsedDate = parsedDate;
     }
 }
-

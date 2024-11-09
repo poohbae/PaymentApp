@@ -20,7 +20,6 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.android.material.bottomappbar.BottomAppBar;
@@ -36,16 +35,18 @@ public class SelectPaymentMethodFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_select_payment_method, container, false);
 
+        // Retrieve arguments passed to this fragment
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
         }
 
-        fetchWalletAmount();
+        fetchWalletAmount(); // Fetch the wallet amount from Firebase
 
+        // Set up the back button to navigate to HomeFragment
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
@@ -60,9 +61,11 @@ public class SelectPaymentMethodFragment extends Fragment {
                     .commit();
         });
 
+        // Set up Split Bill button with click listener to show bottom dialog
         CardView splitBillButton = view.findViewById(R.id.split_bill);
         splitBillButton.setOnClickListener(v -> showBottomDialog());
 
+        // Set up Select and Pay button with click listener to navigate to SelectPayFragment
         CardView selectAndPayButton = view.findViewById(R.id.select_pay);
         selectAndPayButton.setOnClickListener(v -> {
             Bundle bundle = new Bundle();
@@ -81,6 +84,7 @@ public class SelectPaymentMethodFragment extends Fragment {
         return view;
     }
 
+    // Fetch wallet amount from Firebase for the specified user
     private void fetchWalletAmount() {
         DatabaseReference walletsRef = FirebaseDatabase.getInstance().getReference("Wallets");
 
@@ -97,6 +101,7 @@ public class SelectPaymentMethodFragment extends Fragment {
         });
     }
 
+    // Show bottom dialog for setting the number of people to split the bill with
     private void showBottomDialog() {
         final Dialog dialog = new Dialog(getActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -110,6 +115,7 @@ public class SelectPaymentMethodFragment extends Fragment {
         // Set default value to avoid empty EditText issues
         quantityEditText.setText("2");
 
+        // Handle the minus button click to decrease the quantity
         minusButton.setOnClickListener(v -> {
             String quantityText = quantityEditText.getText().toString();
             int quantity = quantityText.isEmpty() ? 2 : Integer.parseInt(quantityText);
@@ -119,15 +125,16 @@ public class SelectPaymentMethodFragment extends Fragment {
             }
         });
 
+        // Add TextWatcher to ensure quantity EditText does not become empty
         quantityEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // Code to execute before text changes
+                // No action needed here
             }
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                // Code to execute when text is being changed
+                // No action needed here
             }
 
             @Override
@@ -139,6 +146,7 @@ public class SelectPaymentMethodFragment extends Fragment {
             }
         });
 
+        // Handle the plus button click to increase the quantity
         plusButton.setOnClickListener(v -> {
             String quantityText = quantityEditText.getText().toString();
             int quantity = quantityText.isEmpty() ? 2 : Integer.parseInt(quantityText);
@@ -148,6 +156,7 @@ public class SelectPaymentMethodFragment extends Fragment {
             }
         });
 
+        // Confirm button to save the selected quantity and navigate to SplitBillFragment
         confirmButton.setOnClickListener(v -> {
             String quantityText = quantityEditText.getText().toString();
             int quantity = quantityText.isEmpty() ? 2 : Integer.parseInt(quantityText);
@@ -178,7 +187,7 @@ public class SelectPaymentMethodFragment extends Fragment {
         }
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -194,10 +203,11 @@ public class SelectPaymentMethodFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.hide();  // Hide FAB using the hide method
+            fab.hide();
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();
@@ -213,7 +223,7 @@ public class SelectPaymentMethodFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.show();  // Show FAB using the show method
+            fab.show();
         }
     }
 }

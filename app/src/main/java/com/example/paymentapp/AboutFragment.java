@@ -18,14 +18,17 @@ public class AboutFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_about, container, false);
 
+        // Set up the back button to navigate back to the previous fragment
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
         return view;
     }
 
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -41,10 +44,11 @@ public class AboutFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.hide();  // Hide FAB using the hide method
+            fab.hide();
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();
@@ -60,7 +64,7 @@ public class AboutFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.show();  // Show FAB using the show method
+            fab.show();
         }
     }
 }

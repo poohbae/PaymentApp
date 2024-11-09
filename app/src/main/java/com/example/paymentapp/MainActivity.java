@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     FirebaseUser currentUser;
     private Scan scan;
 
-    // Declare permission launcher
+    // Declare permission launcher for handling notification permissions
     private final ActivityResultLauncher<String> requestNotificationPermissionLauncher =
             registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
                 if (isGranted) {
@@ -64,24 +64,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         mAuth = FirebaseAuth.getInstance();
         currentUser = mAuth.getCurrentUser();
 
-        // Initialize Firebase Realtime Database reference
+        // Set Firebase Realtime Database reference for Users data
         databaseReference = FirebaseDatabase.getInstance("https://paymentapp-1f1bf-default-rtdb.firebaseio.com/").getReference("Users");
 
+        // Retrieve user details from Intent extras
         userId = getIntent().getStringExtra("userId");
         userImageUrl = getIntent().getStringExtra("userImageUrl");
         userName = getIntent().getStringExtra("userName");
         userMobileNumber = getIntent().getStringExtra("userMobileNumber");
 
+        // Initialize scan functionality with the current userId
         scan = new Scan(this, userId);
 
+        // Set toolbar title
         if (getSupportActionBar() != null && userName != null) {
             getSupportActionBar().setTitle("  Good Day, " + userName);
         }
 
-        // Check and request notifications permission
+        // Check and request notification permission
         checkAndRequestNotificationPermission();
 
-        // Load default fragment if there is no saved instance state
+        // Load default fragment when activity starts if there is no saved state
         if (savedInstanceState == null) {
             Bundle bundle = new Bundle();
             bundle.putString("userId", userId);
@@ -94,13 +97,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
 
         // Set up bottom navigation item selection listener
         bottomNavigationView.setOnItemSelectedListener(item -> {
-            // Uncheck all bottom navigation items
+            // Uncheck all items in bottom navigation to ensure only the selected item is checked
             for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
                 MenuItem menuItem = bottomNavigationView.getMenu().getItem(i);
                 menuItem.setChecked(false);
             }
-            item.setChecked(true);
+            item.setChecked(true);  // Mark the selected item as checked
 
+            // Navigate to the appropriate fragment based on selected item
             if (item.getItemId() == R.id.home) {
                 Bundle bundle = new Bundle();
                 bundle.putString("userId", userId);
@@ -122,17 +126,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             return true;
         });
 
-        // Set up Floating Action Button click listener
+        // Set up Floating Action Button to initiate scan functionality when clicked
         fab.setOnClickListener(view -> scan.startScan());
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        // Uncheck all bottom navigation items when one is selected
         bottomNavigationView.getMenu().setGroupCheckable(0, true, false);
         for (int i = 0; i < bottomNavigationView.getMenu().size(); i++) {
             bottomNavigationView.getMenu().getItem(i).setChecked(false);
         }
 
+        // Mark the selected item as checked
         item.setChecked(true);
         return true;
     }
@@ -140,11 +146,13 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
+        // Handle scan results if scan is initialized
         if (scan != null) {
             scan.handleActivityResult(requestCode, resultCode, data);
         }
     }
 
+    // Checks and requests notification permission for Android 13 (TIRAMISU) and above
     private void checkAndRequestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ActivityCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
@@ -153,6 +161,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         }
     }
 
+    // Shows a dialog to ask the user for notification permission
     private void showNotificationPermissionDialog() {
         new AlertDialog.Builder(this)
                 .setTitle("Allow Android Notifications")
@@ -163,6 +172,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 .show();
     }
 
+    // Requests notification permission from the user
     private void requestNotificationPermission() {
         requestNotificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
     }

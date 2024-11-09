@@ -50,8 +50,10 @@ public class SplitBillFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_split_bill, container, false);
 
+        // Set up the back button functionality
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
@@ -61,6 +63,7 @@ public class SplitBillFragment extends Fragment {
         splitIntoTextView = view.findViewById(R.id.split_into);
         splitAmountTextView = view.findViewById(R.id.split_amount);
 
+        // Retrieve arguments passed to the fragment
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
@@ -69,15 +72,18 @@ public class SplitBillFragment extends Fragment {
             splitIntoTextView.setText(getString(R.string.split_into) + " 1/" + quantity);
         }
 
+        // Initialize the RecyclerView and adapter for displaying orders
         ordersRecyclerView = view.findViewById(R.id.orders_recycler_view);
         ordersRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         orderAdapter = new OrderAdapter(ordersList, true, false);
         ordersRecyclerView.setAdapter(orderAdapter);
 
+        // Initialize Firebase database reference for orders
         ordersRef = FirebaseDatabase.getInstance().getReference("Orders");
         loadOrders();
 
+        // Set up the pay button with click listener
         Button payButton = view.findViewById(R.id.pay_button);
         payButton.setOnClickListener(v -> {
             // Validation: Check if the amount exceeds wallet balance
@@ -86,19 +92,20 @@ public class SplitBillFragment extends Fragment {
                 return;
             }
 
-            // Reference to the user's wallet balance in the database
+            // Reference user's wallet in Firebase
             DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId);
 
-            // Fetch the current wallet balance
             walletRef.get().addOnCompleteListener(task -> {
                 if (task.isSuccessful() && task.getResult().exists()) {
+                    // Get the current wallet balance
                     double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
                     double updatedWalletAmt = currentWalletAmt - finalRoundedSplitPrice;
                     String dateTime = getCurrentDateTime();
 
-                    // Update the new wallet balance in the database
+                    // Update wallet balance in Firebase
                     walletRef.child("walletAmt").setValue(updatedWalletAmt).addOnCompleteListener(taskUpdate -> {
                         if (taskUpdate.isSuccessful()) {
+                            // Record transaction in transaction history
                             DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                             String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
@@ -107,7 +114,7 @@ public class SplitBillFragment extends Fragment {
                                 if (task1.isSuccessful()) {
                                     Log.d("Transaction", "Transaction saved successfully");
 
-                                    // Navigate to SplitBillDoneFragment
+                                    // Pass data to SplitBillDoneFragment
                                     Bundle bundle = new Bundle();
                                     bundle.putString("userId", userId);
                                     bundle.putString("billNo", billNo);
@@ -138,6 +145,7 @@ public class SplitBillFragment extends Fragment {
         return view;
     }
 
+    // Load orders from Firebase and display each item
     private void loadOrders() {
         ordersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -145,6 +153,7 @@ public class SplitBillFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     ordersList.clear();
 
+                    // Set bill number if it exists
                     if (dataSnapshot.child("billNo").getValue() != null) {
                         billNo = dataSnapshot.child("billNo").getValue(String.class);
                         billNoTextView.setText(getString(R.string.bill_no) + billNo);
@@ -155,31 +164,30 @@ public class SplitBillFragment extends Fragment {
                         if (!orderSnapshot.getKey().equals("billNo")) {
                             HashMap<String, String> order = new HashMap<>();
 
-                            // Extract each field
+                            // Get item details
                             String name = orderSnapshot.child("name").getValue(String.class);
                             String image = orderSnapshot.child("image").getValue(String.class);
                             Double price = orderSnapshot.child("price").getValue(Double.class);  // Use Double for decimal
                             Long status = orderSnapshot.child("status").getValue(Long.class);  // Use Long for integer
 
-                            // Add the retrieved values to the order HashMap
                             order.put("name", name);
                             order.put("image", image);
                             totalPrice += price;
 
-                            String formattedPrice = price != null ? String.format("%.2f", price) : "0.00";  // Format to 2 decimal places
-                            order.put("price", formattedPrice);  // Store formatted price as a String
-
+                            // Format price to 2 decimal places and add to order list
+                            String formattedPrice = price != null ? String.format("%.2f", price) : "0.00";
+                            order.put("price", formattedPrice);
                             order.put("status", status != null ? status.toString() : "0");
 
-                            // Add each order to the list
                             ordersList.add(order);
                         }
                     }
+                    // Calculate tax, total, and split amounts
                     taxAmount = totalPrice * 0.1;
                     totalPrice += taxAmount;
                     splitPrice = totalPrice / quantity;
 
-                    // Use BigDecimal to round splitPrice to 2 decimal places
+                    // Round splitPrice to 2 decimal places
                     roundedSplitPrice = BigDecimal.valueOf(splitPrice).setScale(2, RoundingMode.HALF_UP);
                     finalRoundedSplitPrice = roundedSplitPrice.doubleValue();
 
@@ -199,11 +207,12 @@ public class SplitBillFragment extends Fragment {
         });
     }
 
+    // Returns the current date and time formatted as "dd MMM yyyy, hh:mma"
     private String getCurrentDateTime() {
         return new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault()).format(Calendar.getInstance().getTime());
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -219,10 +228,11 @@ public class SplitBillFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.hide();  // Hide FAB using the hide method
+            fab.hide();
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();
@@ -238,7 +248,7 @@ public class SplitBillFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.show();  // Show FAB using the show method
+            fab.show();
         }
     }
 }

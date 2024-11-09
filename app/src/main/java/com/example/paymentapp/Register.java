@@ -48,10 +48,10 @@ public class Register extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_register);
 
-        // Initialize Firebase Auth
+        // Initialize Firebase Authentication
         mAuth = FirebaseAuth.getInstance();
 
-        // Initialize Firebase Database references
+        // Initialize Firebase Database references for users and wallets
         databaseReferenceUsers = FirebaseDatabase.getInstance().getReference("Users");
         databaseReferenceWallets = FirebaseDatabase.getInstance().getReference("Wallets");
 
@@ -69,7 +69,7 @@ public class Register extends AppCompatActivity {
         verifiedButton = findViewById(R.id.verified_button);
         signIn = findViewById(R.id.sign_in);
 
-        // Password visibility toggle logic
+        // Toggle visibility of password
         togglePasswordVisibility.setOnClickListener(new View.OnClickListener() {
             boolean isPasswordVisible = false;
 
@@ -97,6 +97,7 @@ public class Register extends AppCompatActivity {
             }
         });
 
+        // Toggle visibility of confirm password
         toggleConfirmPasswordVisibility.setOnClickListener(new View.OnClickListener() {
             boolean isConfirmPasswordVisible = false;
 
@@ -124,15 +125,14 @@ public class Register extends AppCompatActivity {
             }
         });
 
+        // Set up upload image button click event
         uploadImageButton.setOnClickListener(v -> {
             String nameInput = nameEditText.getText().toString().trim();
 
             if (nameInput.isEmpty()) {
-                // Show a message if the name field is empty
                 Toast.makeText(Register.this, "Please enter your name before uploading the image", Toast.LENGTH_SHORT).show();
             } else {
-                // Allow image upload if the name is entered
-                openImageChooser();
+                openImageChooser();  // Allow image upload if name is entered
             }
         });
 
@@ -144,29 +144,28 @@ public class Register extends AppCompatActivity {
             String password = passwordEditText.getText().toString();
             String confirmPassword = confirmPasswordEditText.getText().toString();
 
+            // Validate user input
             if (validateInput(name, mobileNumber, email, password, confirmPassword)) {
                 registerUserWithEmailPassword(email, password);
             }
         });
 
-        // Set up sign-in redirect
+        // Redirect to sign-in page on clicking 'sign in' text
         signIn.setOnClickListener(view -> {
             Intent intent = new Intent(getApplicationContext(), Login.class);
             startActivity(intent);
             finish();
         });
 
-        // Set up verified button click event
+        // Verify email button to save data after email verification
         verifiedButton.setOnClickListener(view -> {
             FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
 
             if (user != null) {
-                // Reload the user to check if their email is verified
+                // Check if email is verified
                 user.reload().addOnCompleteListener(reloadTask -> {
                     if (user.isEmailVerified()) {
-                        // Save the user data to the database
-                        storeUserDataWithImage();
-                        // Redirect to the login page
+                        storeUserDataWithImage();  // Save user data to the database
                         Intent intent = new Intent(Register.this, Login.class);
                         startActivity(intent);
                         finish();
@@ -180,7 +179,7 @@ public class Register extends AppCompatActivity {
         });
     }
 
-    // Function to validate inputs
+    // Validates user input during registration
     private boolean validateInput(String name, String mobileNumber, String email, String password, String confirmPassword) {
         if (name.isEmpty()) {
             nameEditText.setError("Name cannot be empty");
@@ -215,20 +214,20 @@ public class Register extends AppCompatActivity {
         return true;
     }
 
-    // Handle the result of the permission request
+    // Handles permission result for accessing media files
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == REQUEST_CODE_READ_MEDIA_IMAGES) {
-            // If permission is granted, proceed with the image chooser
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                openImageChooser();
+                openImageChooser();  // Open image chooser if permission is granted
             } else {
                 Toast.makeText(this, "Permission to access media was denied.", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
+    // Opens image chooser for profile picture selection
     private void openImageChooser() {
         Intent intent = new Intent();
         intent.setType("image/*");
@@ -236,16 +235,18 @@ public class Register extends AppCompatActivity {
         startActivityForResult(Intent.createChooser(intent, "Select Profile Image"), PICK_IMAGE_REQUEST);
     }
 
+    // Handles result of image chooser
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
             imageUri = data.getData();
-            userProfileImage.setImageURI(imageUri);  // Display the selected image
+            userProfileImage.setImageURI(imageUri);  // Display selected image
             uploadImageToFirebase();
         }
     }
 
+    // Uploads selected profile image to Firebase Storage
     private void uploadImageToFirebase() {
         if (imageUri != null) {
             imageFileName = nameEditText.getText().toString().trim().toLowerCase();
@@ -266,13 +267,13 @@ public class Register extends AppCompatActivity {
         }
     }
 
-    // Function to register user with Firebase Authentication
+    // Registers user with Firebase Authentication and sends email verification
     private void registerUserWithEmailPassword(String email, String password) {
         mAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener(task -> {
             if (task.isSuccessful()) {
                 FirebaseUser user = mAuth.getCurrentUser();
                 if (user != null) {
-                    // Send verification email
+                    // Send email verification
                     user.sendEmailVerification().addOnCompleteListener(verificationTask -> {
                         if (verificationTask.isSuccessful()) {
                             Toast.makeText(Register.this, "Verification email sent. Please verify your email.", Toast.LENGTH_SHORT).show();
@@ -287,7 +288,7 @@ public class Register extends AppCompatActivity {
         });
     }
 
-    // Function to store user data and wallet in the Firebase Database after verification
+    // Saves user data and wallet information to Firebase Database after email verification
     private void storeUserDataWithImage() {
         FirebaseUser firebaseUser = FirebaseAuth.getInstance().getCurrentUser();
         if (firebaseUser != null) {
@@ -296,14 +297,12 @@ public class Register extends AppCompatActivity {
             String mobileNumber = mobileNumberEditText.getText().toString().trim();
             String email = firebaseUser.getEmail();
 
-            // Create a user object with the image URL
+            // Create User and Wallet objects
             User user = new User(name, mobileNumber, email, imageUrl);
-
-            // Create a wallet object for the user, linked to the userId
-            String walletId = "W" + userId; // Wallet ID linked to user
+            String walletId = "W" + userId;
             Wallet wallet = new Wallet(0.0);
 
-            // Save user data to Realtime Database
+            // Save user data in Realtime Database
             databaseReferenceUsers.child(userId).setValue(user).addOnCompleteListener(task -> {
                 if (task.isSuccessful()) {
                     // Save wallet data after user data
@@ -327,7 +326,7 @@ public class Register extends AppCompatActivity {
         }
     }
 
-    // User class to store user details
+    // Inner class representing a User in Firebase Database
     public static class User {
         public String name;
         public String mobileNumber;
@@ -342,14 +341,14 @@ public class Register extends AppCompatActivity {
         }
     }
 
-    // Wallet class to store wallet details linked with userId
+    // Inner class representing a Wallet associated with a user
     public static class Wallet {
         public double walletAmt;
         public ArrayList<Transaction> transactionHistory;
 
         public Wallet(double walletAmt) {
             this.walletAmt = walletAmt;
-            this.transactionHistory = new ArrayList<>(); // Ensure transactionHistory is initialized
+            this.transactionHistory = new ArrayList<>();  // Initialize transaction history
         }
     }
 }

@@ -42,8 +42,10 @@ public class HomeFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_home, container, false);
 
+        // Retrieve userId from the arguments passed to this fragment
         Bundle bundle = getArguments();
         if (bundle != null) {
             userId = bundle.getString("userId");
@@ -51,11 +53,12 @@ public class HomeFragment extends Fragment {
 
         TextView balanceAmount = view.findViewById(R.id.balance_amount);
 
-        // Fetch data
+        // Fetch wallet balance and user information from Firebase
         fetchWalletAmount(balanceAmount);
         fetchMobileNumber();
         fetchImageUrl();
 
+        // Set up "Reload" button and navigate to ReloadFragment when clicked
         CardView reloadButton = view.findViewById(R.id.reload_button);
         reloadButton.setOnClickListener(v -> {
             Bundle bundle2 = new Bundle();
@@ -69,6 +72,7 @@ public class HomeFragment extends Fragment {
                     .commit();
         });
 
+        // Set up "Request" button and navigate to RequestFragment when clicked
         CardView requestButton = view.findViewById(R.id.request_button);
         requestButton.setOnClickListener(v -> {
             Bundle bundle3 = new Bundle();
@@ -83,6 +87,7 @@ public class HomeFragment extends Fragment {
                     .commit();
         });
 
+        // Set up "Transfer" button and navigate to TransferFragment when clicked
         CardView transferButton = view.findViewById(R.id.transfer_button);
         transferButton.setOnClickListener(v -> {
             Bundle bundle4 = new Bundle();
@@ -97,6 +102,7 @@ public class HomeFragment extends Fragment {
                     .commit();
         });
 
+        // Set up "Pay" button and navigate to PayFragment when clicked
         CardView payButton = view.findViewById(R.id.pay_button);
         payButton.setOnClickListener(v -> {
             Bundle bundle5 = new Bundle();
@@ -110,16 +116,19 @@ public class HomeFragment extends Fragment {
                     .commit();
         });
 
+        // Set up RecyclerView to display transaction history
         transactionRecyclerView = view.findViewById(R.id.transaction_list);
         transactionRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
-        // Initialize transactions list and adapter
+        // Initialize transaction list and adapter
         transactions = new ArrayList<>();
         transactionAdapter = new TransactionAdapter(transactions, getContext(), userId);
         transactionRecyclerView.setAdapter(transactionAdapter);
 
+        // Fetch and display transaction data
         fetchAndPopulateTransactions();
 
+        // Set up "See All" button to display all transactions in a dialog
         TextView seeAllButton = view.findViewById(R.id.see_all_button);
         seeAllButton.setOnClickListener(v -> showBottomDialog());
 
@@ -130,7 +139,7 @@ public class HomeFragment extends Fragment {
     public void onResume() {
         super.onResume();
 
-        // Fetch and display the wallet balance
+        // Refresh wallet balance and transaction history when fragment is visible
         TextView balanceAmount = getView().findViewById(R.id.balance_amount);
         fetchWalletAmount(balanceAmount);
 
@@ -140,6 +149,7 @@ public class HomeFragment extends Fragment {
         fetchAndPopulateTransactions();
     }
 
+    // Fetches the user's wallet amount from Firebase and updates the balance text
     private void fetchWalletAmount(TextView balanceAmount) {
         DatabaseReference walletsRef = FirebaseDatabase.getInstance().getReference("Wallets");
 
@@ -165,6 +175,7 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    // Fetches the user's mobile number from Firebase
     private void fetchMobileNumber() {
         DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("Users").child(userId);
 
@@ -178,7 +189,7 @@ public class HomeFragment extends Fragment {
             Toast.makeText(getActivity(), "Failed to retrieve mobile number.", Toast.LENGTH_SHORT).show();
         });
     }
-
+    // Fetches the user's profile image URL from Firebase
     private void fetchImageUrl() {
         DatabaseReference usersRef = FirebaseDatabase.getInstance().getReference("Users").child(userId);
 
@@ -193,6 +204,7 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    // Fetches transaction history from Firebase, sorts by date, and populates the RecyclerView
     private void fetchAndPopulateTransactions() {
         DatabaseReference transactionHistoryRef = FirebaseDatabase.getInstance()
                 .getReference("Wallets").child("W" + userId).child("transactionHistory");
@@ -205,27 +217,27 @@ public class HomeFragment extends Fragment {
                 for (DataSnapshot snapshot : task.getResult().getChildren()) {
                     Transaction transaction = snapshot.getValue(Transaction.class);
 
-                    // Add transaction only if status is not 0
+                    // Add transaction if the status is not 0
                     if (transaction != null && transaction.status != 0) {
                         try {
-                            // Parse the datetime string to a Date object
                             Date transactionDate = dateFormat.parse(transaction.datetime);
-                            transaction.setParsedDate(transactionDate);  // Assume you add a parsedDate field in Transaction class
+                            transaction.setParsedDate(transactionDate);
                         } catch (ParseException e) {
                             e.printStackTrace();
-                            continue;  // Skip this transaction if parsing fails
+                            continue;  // if parsing fails
                         }
                         transactions.add(transaction);
                     }
                 }
 
-                // Sort transactions in descending order by datetime and notify adapter
+                // Sort transactions in descending order by date and notify adapter
                 transactions.sort((t1, t2) -> t2.getParsedDate().compareTo(t1.getParsedDate()));
                 transactionAdapter.notifyDataSetChanged();
             }
         });
     }
 
+    // Displays a bottom dialog showing all transaction history
     private void showBottomDialog() {
         final Dialog dialog = new Dialog(getActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -234,15 +246,15 @@ public class HomeFragment extends Fragment {
         ImageView closeButton = dialog.findViewById(R.id.close_button);
         RecyclerView transactionHistoryRecyclerView = dialog.findViewById(R.id.transaction_history_recycler_view);
 
-        // Initialize RecyclerView
+        // Set up RecyclerView in dialog to display full transaction history
         transactionHistoryRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         TransactionAdapter transactionDialogAdapter = new TransactionAdapter(transactions, getActivity(), userId);
         transactionHistoryRecyclerView.setAdapter(transactionDialogAdapter);
 
-        // Close dialog when close button is clicked
+        // Close the dialog when the close button is clicked
         closeButton.setOnClickListener(view -> dialog.dismiss());
 
-        // Show the dialog
+        // Show the dialog with custom animation and style
         dialog.show();
         Window window = dialog.getWindow();
         if (window != null) {

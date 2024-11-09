@@ -39,18 +39,20 @@ public class TransferFragment extends Fragment {
     private RecyclerView cardRecyclerView;
     private UserAdapter userAdapter;
 
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_transfer, container, false);
 
+        // Back button to navigate back to the previous fragment
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
         TextView balanceAmountTextView = view.findViewById(R.id.balance_amount);
         EditText searchInput = view.findViewById(R.id.search);
 
+        // Retrieve data from arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
@@ -59,9 +61,11 @@ public class TransferFragment extends Fragment {
             balanceAmountTextView.setText(String.format("RM %.2f", walletAmt));
         }
 
+        // Initialize database reference for user data
         userListRef = FirebaseDatabase.getInstance().getReference("Users");
         loadUsers();
 
+        // Set up text change listener for search functionality
         searchInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -79,6 +83,7 @@ public class TransferFragment extends Fragment {
             }
         });
 
+        // Set up RecyclerView to display the user list
         cardRecyclerView = view.findViewById(R.id.card_recycler_view);
         cardRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -91,6 +96,7 @@ public class TransferFragment extends Fragment {
         return view;
     }
 
+    // Load users from Firebase and add them to the user list
     private void loadUsers() {
         userList.clear();
 
@@ -101,7 +107,7 @@ public class TransferFragment extends Fragment {
                     for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                         String userIdFromDB = userSnapshot.getKey();
 
-                        if (!userIdFromDB.equals(userId)) {
+                        if (!userIdFromDB.equals(userId)) {  // Exclude the logged-in user
                             HashMap<String, String> user = (HashMap<String, String>) userSnapshot.getValue();
                             if (user != null) {
                                 user.put("id", userIdFromDB);
@@ -111,8 +117,6 @@ public class TransferFragment extends Fragment {
                     }
 
                     userList.sort((user1, user2) -> user1.get("name").compareToIgnoreCase(user2.get("name")));
-
-                    // Initialize filteredUserList with all users initially
                     filteredUserList.clear();
                     filteredUserList.addAll(userList);
                     userAdapter.notifyDataSetChanged();
@@ -131,10 +135,8 @@ public class TransferFragment extends Fragment {
         filteredUserList.clear();
 
         if (query.isEmpty()) {
-            // If search query is empty, restore the full user list
-            filteredUserList.addAll(userList);
+            filteredUserList.addAll(userList);  // Show all users if query is empty
         } else {
-            // Otherwise, filter the list based on the query
             for (HashMap<String, String> user : userList) {
                 String userName = user.get("name").toLowerCase();
                 String mobileNumber = user.get("mobileNumber").toLowerCase();
@@ -144,11 +146,10 @@ public class TransferFragment extends Fragment {
             }
         }
 
-        // Notify adapter of the updated filtered list
-        userAdapter.notifyDataSetChanged();
+        userAdapter.notifyDataSetChanged();  // Notify adapter of the updated filtered list
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -164,10 +165,11 @@ public class TransferFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.hide();  // Hide FAB using the hide method
+            fab.hide();
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();
@@ -183,7 +185,7 @@ public class TransferFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.show();  // Show FAB using the show method
+            fab.show();
         }
     }
 }

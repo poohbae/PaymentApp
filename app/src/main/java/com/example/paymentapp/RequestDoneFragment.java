@@ -26,9 +26,10 @@ public class RequestDoneFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_request_done, container, false);
 
-        // Get the passed arguments
+        // Retrieve arguments passed from the previous fragment
         Bundle arguments = getArguments();
         if (arguments != null) {
             String userId = arguments.getString("userId");
@@ -50,9 +51,11 @@ public class RequestDoneFragment extends Fragment {
             dateTimeTextView.setText(dateTime);
             personNameTextView.setText(personName);
             mobileNumberTextView.setText(personMobileNumber);
+
             double amount = Double.parseDouble(amountStr);
             amountTextView.setText(String.format("RM %.2f", amount));
 
+            // Display the note if available; hide the note label if it's "N/A"
             if ("N/A".equals(note)) {
                 noteLabelTextView.setVisibility(View.INVISIBLE);
                 noteTextView.setVisibility(View.INVISIBLE);
@@ -61,34 +64,38 @@ public class RequestDoneFragment extends Fragment {
                 noteTextView.setText(note);
             }
 
+            // Generate and display a random reference ID
             TextView referenceIdTextView = view.findViewById(R.id.reference_id);
             Random random = new Random();
             long referenceNumber = 1000000000L + (long) (random.nextDouble() * 9000000000L);
             String referenceId = String.valueOf(referenceNumber);
             referenceIdTextView.setText(referenceId);
 
+            // Set up the "Done" button to finalize the request and save to database
             Button doneButton = view.findViewById(R.id.done_button);
             doneButton.setOnClickListener(v -> {
-                // Fetch current wallet amount from Firebase and update
+                // Reference to the user's wallet in Firebase
                 DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId);
 
+                // Fetch and update wallet data in Firebase
                 walletRef.get().addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         if (task.getResult().exists()) {
-                            // Fetch current wallet amount
+                            // Retrieve the current wallet amount
                             double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
 
-                            // Update the wallet amount in Firebase
+                            // Update wallet amount and save transaction details
                             walletRef.child("walletAmt").setValue(currentWalletAmt).addOnCompleteListener(taskUpdate -> {
                                 if (taskUpdate.isSuccessful()) {
                                     DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                     String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
+                                    // Create a Transaction object to store in Firebase
                                     Transaction transaction = new Transaction(transactionId, userImageUrl, personImageUrl, dateTime, "Request", note, referenceId, 0, personMobileNumber, userId, amount);
                                     transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Log.d("Transaction", "Transaction saved successfully");
-                                            navigateToHomeFragment(userId);
+                                            navigateToHomeFragment(userId); // Navigate to HomeFragment upon success
                                         } else {
                                             Log.e("Transaction", "Failed to save transaction", task1.getException());
                                         }
@@ -105,6 +112,7 @@ public class RequestDoneFragment extends Fragment {
         return view;
     }
 
+    // Navigate back to the HomeFragment after transaction completion
     private void navigateToHomeFragment(String userId) {
         HomeFragment homeFragment = new HomeFragment();
         Bundle bundle = new Bundle();
@@ -117,11 +125,12 @@ public class RequestDoneFragment extends Fragment {
                 .commit();
     }
 
+    // Returns the current date and time formatted as "dd MMM yyyy, hh:mma"
     private String getCurrentDateTime() {
         return new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault()).format(Calendar.getInstance().getTime());
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -141,7 +150,7 @@ public class RequestDoneFragment extends Fragment {
         }
     }
 
-    // Show Toolbar and BottomAppBar when leaving this fragment
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();

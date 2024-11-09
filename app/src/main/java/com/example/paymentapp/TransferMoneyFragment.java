@@ -24,10 +24,11 @@ public class TransferMoneyFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_transfer_money, container, false);
 
+        // Back button to navigate back to the previous fragment
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
-        // Retrieve the person name from the arguments
+        // Retrieve data from arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
             String userId = arguments.getString("userId");
@@ -45,10 +46,10 @@ public class TransferMoneyFragment extends Fragment {
             TextView transferNoteTextView = view.findViewById(R.id.transfer_note);
             EditText transferPurposeEditText = view.findViewById(R.id.transfer_purpose);
 
-            // Load the image using Glide from the URL
+            // Load and display the person's image using Glide
             Glide.with(getContext())
-                    .load(personImageUrl)  // Load the image from Firebase Storage
-                    .placeholder(R.drawable.person)  // Optional placeholder image
+                    .load(personImageUrl)  // URL of the person’s image
+                    .placeholder(R.drawable.person)  // Placeholder image if loading fails
                     .into(personImageView);
             personNameTextView.setText(personName);
             mobileNumberTextView.setText(personMobileNumber);
@@ -58,18 +59,16 @@ public class TransferMoneyFragment extends Fragment {
             inputAmountEditText.addTextChangedListener(new android.text.TextWatcher() {
                 @Override
                 public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                    // No need to do anything before the text is changed
+                    // No action needed before text change
                 }
 
                 @Override
                 public void onTextChanged(CharSequence s, int start, int before, int count) {
                     String input = s.toString();
 
-                    // If the input contains a decimal point, check the number of decimal places
+                    // Limit to two decimal places
                     if (input.contains(".")) {
                         int decimalIndex = input.indexOf(".");
-
-                        // If more than two decimal places are entered, truncate the input
                         if (input.length() - decimalIndex > 3) {
                             inputAmountEditText.setText(input.substring(0, decimalIndex + 3));
                             inputAmountEditText.setSelection(inputAmountEditText.getText().length());
@@ -79,40 +78,38 @@ public class TransferMoneyFragment extends Fragment {
 
                 @Override
                 public void afterTextChanged(android.text.Editable s) {
-                    // No need to do anything after the text is changed
+                    // No action needed after text change
                 }
             });
 
             // Set up a click listener for proceeding to TransferDoneFragment
             Button transferButton = view.findViewById(R.id.transfer_button);
             transferButton.setOnClickListener(v -> {
-                // Get the values entered by the user
+                // Retrieve user-entered amount and purpose
                 String amountStr = inputAmountEditText.getText().toString().trim();
                 String transferPurpose = transferPurposeEditText.getText().toString().trim();
 
-                // Validation: Check if the amount is empty
+                // Validation: Check if the amount field is empty
                 if (amountStr.isEmpty()) {
                     inputAmountEditText.setError("Amount cannot be empty");
                     inputAmountEditText.requestFocus();
                     return;
                 }
 
-                // Convert amount to double for comparison
+                // Validation: Ensure the entered amount does not exceed wallet balance
                 double amount = Double.parseDouble(amountStr);
-
-                // Validation: Check if the amount exceeds wallet balance
                 if (amount > walletAmt) {
                     inputAmountEditText.setError("Amount exceeds wallet balance");
                     inputAmountEditText.requestFocus();
                     return;
                 }
 
-                // Validation: Check if transfer purpose is empty
+                // Set default purpose if none is provided
                 if (transferPurpose.isEmpty()) {
-                    transferPurpose = "Fund Transfer"; // Set to default value if empty
+                    transferPurpose = "Fund Transfer";
                 }
 
-                // Create a new bundle to pass the data to TransferDoneFragment
+                // Pass data to TransferDoneFragment
                 Bundle bundle = new Bundle();
                 bundle.putString("userId", userId);
                 bundle.putString("userImageUrl", userImageUrl);
@@ -123,11 +120,9 @@ public class TransferMoneyFragment extends Fragment {
                 bundle.putString("personId", personId);
                 bundle.putString("transferPurpose", transferPurpose);
 
-                // Create TransferDoneFragment instance and pass the arguments
                 TransferDoneFragment transferDoneFragment = new TransferDoneFragment();
                 transferDoneFragment.setArguments(bundle);
 
-                // Replace the current fragment with TransferDoneFragment
                 getParentFragmentManager().beginTransaction()
                         .replace(R.id.frameLayout, transferDoneFragment)
                         .addToBackStack(null)
@@ -138,49 +133,43 @@ public class TransferMoneyFragment extends Fragment {
         return view;
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
 
-        // Hide the Toolbar
         if (getActivity() instanceof AppCompatActivity) {
             ((AppCompatActivity) getActivity()).getSupportActionBar().hide();
         }
 
-        // Hide the BottomAppBar
         BottomAppBar bottomAppBar = getActivity().findViewById(R.id.bottomAppBar);
         if (bottomAppBar != null) {
             bottomAppBar.setVisibility(View.GONE);
         }
 
-        // Hide the FAB
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.hide();  // Hide FAB using the hide method
+            fab.hide();
         }
     }
 
-    // Show Toolbar and BottomAppBar when leaving this fragment
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();
 
-        // Show the Toolbar again when leaving this fragment
         if (getActivity() instanceof AppCompatActivity) {
             ((AppCompatActivity) getActivity()).getSupportActionBar().show();
         }
 
-        // Show the BottomAppBar again
         BottomAppBar bottomAppBar = getActivity().findViewById(R.id.bottomAppBar);
         if (bottomAppBar != null) {
             bottomAppBar.setVisibility(View.VISIBLE);
         }
 
-        // Show the FAB again
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.show();  // Show FAB using the show method
+            fab.show();
         }
     }
 }

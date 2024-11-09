@@ -36,7 +36,7 @@ public class ReloadFragment extends Fragment {
     String userId;
     double walletAmt;
 
-    private DatabaseReference paymentMethodsRef;
+    private DatabaseReference paymentMethodsRef; // Reference to payment methods in Firebase
     private List<HashMap<String, String>> paymentMethodsList = new ArrayList<>();
     private List<String> bankNames = new ArrayList<>();
 
@@ -45,6 +45,7 @@ public class ReloadFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_reload, container, false);
 
+        // Back button to navigate to the previous fragment
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
@@ -64,6 +65,7 @@ public class ReloadFragment extends Fragment {
 
         paymentMethodsRef = FirebaseDatabase.getInstance().getReference("PaymentMethods");
 
+        // Retrieve userId and wallet amount from the arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
@@ -71,12 +73,13 @@ public class ReloadFragment extends Fragment {
             balanceAmountTextView.setText(String.format("RM %.2f", walletAmt));
         }
 
-        // Load Payment Methods from Firebase
+        // Load available payment methods from Firebase
         loadPaymentMethods();
 
-        // Set up a PopupMenu to show when the drop-down arrow is clicked
+        // Set up a PopupMenu to display payment methods when the drop-down arrow is clicked
         dropDownArrow.setOnClickListener(v -> showPopupMenu(v));
 
+        // Set amount buttons to populate amount field when clicked
         rm100Button.setOnClickListener(v -> {
             selectedAmount = "100";
             inputAmountEditText.setText("100");
@@ -101,11 +104,11 @@ public class ReloadFragment extends Fragment {
             updateAmount("500");
         });
 
-        // Set a TextWatcher on the inputAmount EditText to update the top-up and total amounts dynamically
+        // Listen for manual changes in the inputAmount field
         inputAmountEditText.addTextChangedListener(new android.text.TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // No need to do anything before the text is changed
+                // No action required before text changes
             }
 
             @Override
@@ -114,51 +117,49 @@ public class ReloadFragment extends Fragment {
 
                 if (!input.isEmpty()) {
                     try {
+                        // Limit the maximum input value to 10,000
                         double inputValue = Double.parseDouble(input);
-
-                        // Check if input value exceeds the maximum allowed amount
                         if (inputValue > 10000) {
-                            inputAmountEditText.setText(input.substring(0, start));  // Truncate the input at the last valid point
+                            inputAmountEditText.setText(input.substring(0, start));  // Truncate to last valid point
                             inputAmountEditText.setSelection(inputAmountEditText.getText().length());  // Move cursor to the end
                             return;
                         }
 
+                        // Limit decimal places to two digits
                         if (input.contains(".")) {
                             int decimalIndex = input.indexOf(".");
-
-                            // Check if there are more than 2 digits after the decimal point
-                            if (input.length() - decimalIndex > 3) { // Allow 1 for the decimal point and 2 for decimal places
-                                // If more than 2 digits are entered after the decimal, truncate the input
+                            if (input.length() - decimalIndex > 3) {
                                 input = input.substring(0, decimalIndex + 3);
                                 inputAmountEditText.setText(input);
-                                inputAmountEditText.setSelection(input.length());  // Move cursor to the end
+                                inputAmountEditText.setSelection(input.length());
                             }
                         }
 
-                        // Update the amount to display in other TextViews without rounding
+                        // Update displayed amounts
                         updateAmount(input);
 
                     } catch (NumberFormatException e) {
-                        // Handle exception if the input amount is not valid
-                        updateAmount("0");
+                        updateAmount("0"); // Reset on invalid input
                     }
                 } else {
-                    updateAmount("0"); // Reset the amount to 0 if the EditText is empty
+                    updateAmount("0"); // Reset if input is empty
                 }
             }
 
             @Override
             public void afterTextChanged(android.text.Editable s) {
-                // No need to do anything after the text is changed
+                // No action required after text changes
             }
         });
 
+        // Set up the 'Pay Now' button
         payNowButton.setOnClickListener(v -> {
             String manualAmount = inputAmountEditText.getText().toString().trim();
             String amountToSend;
             String bankName = bankNameTextView.getText().toString();
             int bankImageResId = (int) bankImageView.getTag();
 
+            // Determine the amount to send
             if (!manualAmount.isEmpty()) {
                 amountToSend = manualAmount;
                 updateAmount(manualAmount);
@@ -170,6 +171,7 @@ public class ReloadFragment extends Fragment {
                 return;
             }
 
+            // Pass data to ReloadMoneyFragment
             Bundle bundle = new Bundle();
             bundle.putString("userId", userId);
             bundle.putString("amount", amountToSend);
@@ -188,23 +190,25 @@ public class ReloadFragment extends Fragment {
         return view;
     }
 
+    // Updates the amount fields based on the specified input amount
     private void updateAmount(String amount) {
         double parsedAmount = 0;
         try {
             parsedAmount = Double.parseDouble(amount);
         } catch (NumberFormatException e) {
-            // Handle exception if the input amount is not valid
+            // Handle invalid input by setting parsedAmount to 0
+            parsedAmount = 0;
         }
 
-        // Truncate the amount to two decimal places without rounding
+        // Format and display amount without rounding
         String formattedAmount = String.format("RM %.2f", Math.floor(parsedAmount * 100) / 100);
         topUpAmountTextView.setText(formattedAmount);
         totalAmountTextView.setText(formattedAmount);
     }
 
-    // Method to load Payment Methods from Firebase
+    // Loads available payment methods from Firebase and sets the initial display
     private void loadPaymentMethods() {
-        // Clear the lists before loading to avoid duplicates
+        // Clear previous data to avoid duplicates
         paymentMethodsList.clear();
         bankNames.clear();
 
@@ -214,11 +218,11 @@ public class ReloadFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot methodSnapshot : dataSnapshot.getChildren()) {
                         HashMap<String, String> paymentMethod = (HashMap<String, String>) methodSnapshot.getValue();
-                        paymentMethodsList.add(paymentMethod);  // Add each payment method to the list
-                        bankNames.add(paymentMethod.get("name"));  // Add bank names to the popup list
+                        paymentMethodsList.add(paymentMethod);  // Add each payment method
+                        bankNames.add(paymentMethod.get("name"));  // Add bank name to list
                     }
 
-                    // Update UI with the first payment method (Maybank)
+                    // Display the first payment method
                     if (!paymentMethodsList.isEmpty()) {
                         HashMap<String, String> firstMethod = paymentMethodsList.get(0);  // Get the first payment method
                         String bankName = firstMethod.get("name");
@@ -228,7 +232,7 @@ public class ReloadFragment extends Fragment {
 
                         bankNameTextView.setText(bankName);
                         bankImageView.setImageResource(resID);
-                        bankImageView.setTag(resID);  // Save the resource ID in the tag for future use
+                        bankImageView.setTag(resID); // Store the resource ID for future use
                     }
                 }
             }
@@ -240,11 +244,11 @@ public class ReloadFragment extends Fragment {
         });
     }
 
-    // Show PopupMenu anchored to the arrow
+    // Displays a PopupMenu anchored to the drop-down arrow to show available payment methods
     private void showPopupMenu(View v) {
         PopupMenu popupMenu = new PopupMenu(getContext(), v);
         for (String bankName : bankNames) {
-            popupMenu.getMenu().add(bankName);  // Add bank names to the popup menu
+            popupMenu.getMenu().add(bankName);  // Add bank names to popup menu
         }
 
         popupMenu.setOnMenuItemClickListener(item -> {
@@ -263,11 +267,10 @@ public class ReloadFragment extends Fragment {
             }
             return true;
         });
-
-        popupMenu.show();  // Show the popup menu below the drop-down arrow
+        popupMenu.show(); // Display the popup menu
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -286,6 +289,7 @@ public class ReloadFragment extends Fragment {
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();

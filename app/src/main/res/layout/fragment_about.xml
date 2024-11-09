@@ -41,50 +41,50 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="25dp"
             android:text="@string/about_note1"
             android:textColor="@color/black"
-            android:textSize="15sp"
-            android:layout_marginBottom="25dp"/>
+            android:textSize="15sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
             android:text="@string/about_note2"
             android:textColor="@color/black"
-            android:textSize="15sp"
-            android:layout_marginBottom="5dp"/>
+            android:textSize="15sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="5dp"
             android:text="@string/about_note3"
             android:textColor="@color/black"
-            android:textSize="15sp"
-            android:layout_marginBottom="5dp"/>
+            android:textSize="15sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="25dp"
             android:text="@string/about_note4"
             android:textColor="@color/black"
-            android:textSize="15sp"
-            android:layout_marginBottom="25dp"/>
+            android:textSize="15sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:text="@string/about_note5"
             android:textColor="@color/black"
-            android:textSize="15sp"
-            android:layout_marginBottom="10dp"/>
+            android:textSize="15sp" />
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
             android:text="@string/about_note6"
             android:textColor="@color/black"
-            android:textSize="15sp"
-            android:layout_marginBottom="10dp"/>
+            android:textSize="15sp" />
 
     </LinearLayout>
 

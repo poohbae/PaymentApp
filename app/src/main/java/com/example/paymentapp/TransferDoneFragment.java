@@ -43,7 +43,7 @@ public class TransferDoneFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_transfer_done, container, false);
 
-        // Get the passed arguments
+        // Retrieve data from arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
             String userId = arguments.getString("userId");
@@ -56,15 +56,13 @@ public class TransferDoneFragment extends Fragment {
             String personId = arguments.getString("personId");
             String transferPurpose = arguments.getString("transferPurpose");
 
-            // Set the values to TextViews
             TextView amountTextView = view.findViewById(R.id.total_amount);
             TextView dateTimeTextView = view.findViewById(R.id.date_time);
             ImageView personImageView = view.findViewById(R.id.person_image);
             TextView personNameTextView = view.findViewById(R.id.person_name);
             TextView transferPurposeTextView = view.findViewById(R.id.transfer_purpose);
 
-            // Set the values retrieved from the bundle
-            double amountValue = Double.parseDouble(amount); // Convert String to double
+            double amountValue = Double.parseDouble(amount);
             amountTextView.setText(String.format("RM %.2f", amountValue));
             dateTimeTextView.setText(dateTime);
             Glide.with(getContext())
@@ -74,15 +72,17 @@ public class TransferDoneFragment extends Fragment {
             personNameTextView.setText(personName);
             transferPurposeTextView.setText(transferPurpose);
 
+            // Generate and display a random reference ID
             TextView referenceIdTextView = view.findViewById(R.id.reference_id);
             Random random = new Random();
             long referenceNumber = 1000000000L + (long) (random.nextDouble() * 9000000000L);
             String referenceId = String.valueOf(referenceNumber);
             referenceIdTextView.setText(referenceId);
 
+            // Set up the "OK" button to update wallet balance and save transaction history
             Button okButton = view.findViewById(R.id.ok_button);
             okButton.setOnClickListener(v -> {
-                // Fetch current wallet amount from Firebase and update
+                // Reference user's wallet in Firebase
                 DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId);
 
                 walletRef.get().addOnCompleteListener(task -> {
@@ -91,30 +91,34 @@ public class TransferDoneFragment extends Fragment {
                         Double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
                         double transferAmt = Double.parseDouble(amount);
 
+                        // Check if there is sufficient balance
                         if (currentWalletAmt == null || currentWalletAmt < transferAmt) {
                             Toast.makeText(getContext(), "Insufficient wallet balance.", Toast.LENGTH_SHORT).show();
                             return;
                         }
 
+                        // Deduct transfer amount from user's wallet
                         double updatedWalletAmt = currentWalletAmt - transferAmt;
 
                         // Update the wallet amount in Firebase
                         walletRef.child("walletAmt").setValue(updatedWalletAmt).addOnCompleteListener(taskUpdate -> {
                             if (taskUpdate.isSuccessful()) {
+                                // Reference to transaction history in Firebase
                                 DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                 String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
+                                // Create and save the transaction in the user's history
                                 Transaction transaction = new Transaction(transactionId, personImageUrl, userImageUrl, dateTime, "Transfer", transferPurpose, referenceId, personMobileNumber, personId, transferAmt);
                                 transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
-                                        // Now, update the recipient's wallet amount and add transaction to recipient's history
+                                        // Update recipient's wallet balance and save transaction in their history
                                         DatabaseReference recipientWalletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + personId);
                                         recipientWalletRef.get().addOnCompleteListener(recipientTask -> {
                                             if (recipientTask.isSuccessful() && recipientTask.getResult().exists()) {
                                                 // Fetch recipient's current wallet amount
                                                 Double recipientWalletAmt = recipientTask.getResult().child("walletAmt").getValue(Double.class);
                                                 if (recipientWalletAmt != null) {
-                                                    // Update recipient's wallet amount
+                                                    // Add the transfer amount to recipient's wallet
                                                     recipientWalletRef.child("walletAmt").setValue(recipientWalletAmt + transferAmt).addOnCompleteListener(updateTask -> {
                                                         if (updateTask.isSuccessful()) {
                                                             // Add transaction to recipient's transaction history
@@ -156,20 +160,21 @@ public class TransferDoneFragment extends Fragment {
         return view;
     }
 
+    // Displays a notification for the transfer action completion
     private void showTransferNotification(double amount, String name, String dateTime) {
         createNotificationChannel();  // Create notification channel for Android 8.0+
 
-        // Build the notification with expanded content
+        // Build the notification
         @SuppressLint("DefaultLocale") String notificationContent = String.format("You have successfully transferred RM %.2f to %s on %s.", amount, name, dateTime);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
                 .setSmallIcon(R.drawable.notifications)
                 .setContentTitle("Transfer Completed Successfully")
                 .setContentText(notificationContent)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))  // Expanded text style
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true);
 
-        // Display the notification
+        // Check and request notification permission if not granted
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, TRANSFER_NOTIFICATION_PERMISSION);
@@ -178,6 +183,7 @@ public class TransferDoneFragment extends Fragment {
         notificationManager.notify(1, builder.build());
     }
 
+    // Creates a notification channel for transfer notifications (required for Android 8.0+)
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Transfer Notification";
@@ -186,6 +192,7 @@ public class TransferDoneFragment extends Fragment {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
 
+            // Register the channel with the system
             NotificationManager notificationManager = requireContext().getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
@@ -193,6 +200,7 @@ public class TransferDoneFragment extends Fragment {
         }
     }
 
+    // Navigates to HomeFragment after transfer completion
     private void navigateToHomeFragment(String userId) {
         HomeFragment homeFragment = new HomeFragment();
         Bundle bundle = new Bundle();
@@ -205,11 +213,12 @@ public class TransferDoneFragment extends Fragment {
                 .commit();
     }
 
+    // Returns the current date and time formatted as "dd MMM yyyy, hh:mma"
     private String getCurrentDateTime() {
         return new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault()).format(Calendar.getInstance().getTime());
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -229,7 +238,7 @@ public class TransferDoneFragment extends Fragment {
         }
     }
 
-    // Show Toolbar and BottomAppBar when leaving this fragment
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();

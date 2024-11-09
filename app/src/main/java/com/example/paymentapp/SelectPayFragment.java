@@ -49,8 +49,10 @@ public class SelectPayFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_select_pay, container, false);
 
+        // Set up the back button functionality
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
@@ -63,18 +65,21 @@ public class SelectPayFragment extends Fragment {
         totalAmountTextView = view.findViewById(R.id.total_amount);
         totalAmountTextView.setText("RM 0.00");
 
+        // Retrieve arguments passed to the fragment
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
             walletAmt = arguments.getDouble("walletAmt");
         }
 
+        // Initialize the RecyclerView and adapter for displaying orders
         ordersRecyclerView = view.findViewById(R.id.orders_recycler_view);
         ordersRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
         orderAdapter = new OrderAdapter(ordersList, false, true);
         ordersRecyclerView.setAdapter(orderAdapter);
 
+        // Listener for item check/uncheck events to update the total amount
         orderAdapter.setOnItemCheckedChangeListener((totalCheckedTax, totalCheckedPrice) -> {
             totalChecked = totalCheckedPrice + totalCheckedTax;
             roundedTotalChecked = new BigDecimal(totalChecked).setScale(2, RoundingMode.HALF_UP);
@@ -84,9 +89,11 @@ public class SelectPayFragment extends Fragment {
             totalAmountTextView.setText(String.format("RM %.2f", finalRoundedTotalChecked));
         });
 
+        // Initialize Firebase database reference for orders
         ordersRef = FirebaseDatabase.getInstance().getReference("Orders");
         loadOrders();
 
+        // Set up the pay button with click listener
         Button payButton = view.findViewById(R.id.pay_button);
         payButton.setOnClickListener(v -> {
             List<String> checkedItemKeys = orderAdapter.getCheckedItemKeys();
@@ -97,15 +104,16 @@ public class SelectPayFragment extends Fragment {
                 return;
             }
 
+            // Check if at least one item is selected
             if (checkedItemKeys.isEmpty()) {
                 Toast.makeText(getContext(), "Please select at least one item to proceed.", Toast.LENGTH_SHORT).show();
             } else {
-                // Update the status of each checked item in the database
+                // Update the status of each checked item in Firebase database
                 for (String key : checkedItemKeys) {
                     ordersRef.child(key).child("status").setValue(1);
                 }
 
-                // Reference to the user's wallet amount in the "Wallets" node
+                // Retrieve current wallet balance from Firebase
                 DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId);
 
                 // Fetch the current wallet balance
@@ -113,28 +121,28 @@ public class SelectPayFragment extends Fragment {
                     if (task.isSuccessful() && task.getResult().exists()) {
                         double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
 
-                        // Convert currentWalletAmt and finalRoundedTotalChecked to BigDecimal
+                        // Subtract selected amount from wallet balance
                         BigDecimal currentWalletAmtBD = BigDecimal.valueOf(currentWalletAmt);
                         BigDecimal finalRoundedTotalCheckedBD = BigDecimal.valueOf(finalRoundedTotalChecked);
 
-                        // Subtract and round to 2 decimal places
                         BigDecimal updatedWalletAmtBD = currentWalletAmtBD.subtract(finalRoundedTotalCheckedBD).setScale(2, RoundingMode.HALF_UP);
                         double updatedWalletAmt = updatedWalletAmtBD.doubleValue();
 
                         String dateTime = getCurrentDateTime();
 
-                        // Update the new wallet balance in the database
+                        // Update wallet balance in Firebase
                         walletRef.child("walletAmt").setValue(updatedWalletAmt).addOnCompleteListener(taskUpdate -> {
                             if (taskUpdate.isSuccessful()) {
                                 DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                 String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
+                                // Record transaction in transaction history
                                 Transaction transaction = new Transaction(transactionId, R.drawable.select_pay, dateTime, "Select & Pay", billNo, finalRoundedTotalChecked);
                                 transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                     if (task1.isSuccessful()) {
                                         Log.d("Transaction", "Transaction saved successfully");
 
-                                        // Navigate to SelectPayDoneFragment
+                                        // Pass data to SelectPayDoneFragment
                                         Bundle bundle = new Bundle();
                                         bundle.putString("userId", userId);
                                         bundle.putString("billNo", billNo);
@@ -165,6 +173,7 @@ public class SelectPayFragment extends Fragment {
         return view;
     }
 
+    // Load orders from Firebase and display unpaid items
     private void loadOrders() {
         ordersRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -172,12 +181,13 @@ public class SelectPayFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     ordersList.clear();
 
+                    // Set bill number if it exists
                     if (dataSnapshot.child("billNo").getValue() != null) {
                         billNo = dataSnapshot.child("billNo").getValue(String.class);
                         billNoTextView.setText(getString(R.string.bill_no) + billNo);
                     }
 
-                    // Iterate through each order item
+                    // Add unpaid orders to list
                     for (DataSnapshot orderSnapshot : dataSnapshot.getChildren()) {
                         if (!orderSnapshot.getKey().equals("billNo")) {
                             Long status = orderSnapshot.child("status").getValue(Long.class);  // Use Long for integer
@@ -186,9 +196,7 @@ public class SelectPayFragment extends Fragment {
                             if (status != null && status == 0) {
                                 HashMap<String, String> order = new HashMap<>();
 
-                                // Add database key for reference
-                                order.put("key", orderSnapshot.getKey()); // Save Firebase key
-
+                                order.put("key", orderSnapshot.getKey());
                                 String name = orderSnapshot.child("name").getValue(String.class);
                                 String image = orderSnapshot.child("image").getValue(String.class);
                                 Double price = orderSnapshot.child("price").getValue(Double.class);  // Use Double for decimal
@@ -217,11 +225,12 @@ public class SelectPayFragment extends Fragment {
         });
     }
 
+    // Returns the current date and time formatted as "dd MMM yyyy, hh:mma"
     private String getCurrentDateTime() {
         return new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault()).format(Calendar.getInstance().getTime());
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -237,10 +246,11 @@ public class SelectPayFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.hide();  // Hide FAB using the hide method
+            fab.hide();
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();
@@ -256,7 +266,7 @@ public class SelectPayFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.show();  // Show FAB using the show method
+            fab.show();
         }
     }
 }

@@ -38,9 +38,10 @@ public class PayDoneFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_pay_done, container, false);
 
-        // Retrieve the data from the arguments
+        // Retrieve data passed from the previous fragment
         Bundle arguments = getArguments();
         if (arguments != null) {
             String userId = arguments.getString("userId");
@@ -49,36 +50,36 @@ public class PayDoneFragment extends Fragment {
             int platformImageResId = arguments.getInt("platformImageRes", -1);
             String platformName = arguments.getString("platformName", "Default Platform");
 
-            // Set the amount to the TextViews
             TextView totalAmountTextView = view.findViewById(R.id.total_amount);
             TextView totalAmount2TextView = view.findViewById(R.id.total_amount2);
             TextView dateTimeTextView = view.findViewById(R.id.date_time);
             ImageView platformImageView = view.findViewById(R.id.platform_image);
             TextView platformNameTextView = view.findViewById(R.id.platform_name);
 
-            double amountValue = Double.parseDouble(amount); // Convert String to double
+            double amountValue = Double.parseDouble(amount);
             totalAmountTextView.setText(String.format("RM %.2f", amountValue));
             totalAmount2TextView.setText(String.format("RM %.2f", amountValue));
             dateTimeTextView.setText(dateTime);
             platformImageView.setImageResource(platformImageResId);
             platformNameTextView.setText(platformName);
 
-            // Generate a random reference ID
+            // Generate and display a random reference ID
             TextView referenceIdTextView = view.findViewById(R.id.reference_id);
             Random random = new Random();
             long referenceNumber = 1000000000L + (long) (random.nextDouble() * 9000000000L);
             String referenceId = String.valueOf(referenceNumber);
             referenceIdTextView.setText(referenceId);
 
+            // Set up the "OK" button to update the wallet and save the transaction
             Button okButton = view.findViewById(R.id.ok_button);
             okButton.setOnClickListener(v -> {
-                // Fetch current wallet amount from Firebase and update
+                // Reference the user's wallet in Firebase
                 DatabaseReference walletRef = FirebaseDatabase.getInstance().getReference("Wallets").child("W" + userId); // Removed extra "W"
 
                 walletRef.get().addOnCompleteListener(task -> {
                     if (task.isSuccessful()) {
                         if (task.getResult().exists()) {
-                            // Fetch current wallet amount
+                            // Retrieve current wallet amount
                             double currentWalletAmt = task.getResult().child("walletAmt").getValue(Double.class);
                             double payAmt = Double.parseDouble(amount);
                             double updatedWalletAmt = currentWalletAmt - payAmt;
@@ -86,15 +87,17 @@ public class PayDoneFragment extends Fragment {
                             // Update the wallet amount in Firebase
                             walletRef.child("walletAmt").setValue(updatedWalletAmt).addOnCompleteListener(taskUpdate -> {
                                 if (taskUpdate.isSuccessful()) {
+                                    // Save the transaction to transaction history in Firebase
                                     DatabaseReference transactionHistoryRef = walletRef.child("transactionHistory");
                                     String transactionId = transactionHistoryRef.push().getKey(); // Generate transaction ID
 
+                                    // Create a Transaction object to save in the database
                                     Transaction transaction = new Transaction(transactionId, platformImageResId, dateTime, "Pay", referenceId, payAmt);
                                     transactionHistoryRef.child(transactionId).setValue(transaction).addOnCompleteListener(task1 -> {
                                         if (task1.isSuccessful()) {
                                             Log.d("Transaction", "Transaction saved successfully");
-                                            showPayNotification(payAmt, platformName, dateTime);
-                                            navigateToHomeFragment(userId);
+                                            showPayNotification(payAmt, platformName, dateTime); // Show notification for payment completion
+                                            navigateToHomeFragment(userId); // Navigate back to the home fragment
                                         } else {
                                             Log.e("Transaction", "Failed to save transaction", task1.getException());
                                         }
@@ -109,20 +112,21 @@ public class PayDoneFragment extends Fragment {
         return view;
     }
 
+    // Displays a notification for the completed payment
     private void showPayNotification(double amount, String platformName, String dateTime) {
         createNotificationChannel();  // Create notification channel for Android 8.0+
 
-        // Build the notification with expanded content
+        // Build notification content
         @SuppressLint("DefaultLocale") String notificationContent = String.format("You have successfully paid RM %.2f for %s on %s", amount, platformName, dateTime);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
                 .setSmallIcon(R.drawable.notifications)
                 .setContentTitle("Pay Completed Successfully")
                 .setContentText(notificationContent)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))  // Expanded text style
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true);
 
-        // Display the notification
+        // Check and request notification permission if not granted
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, PAY_NOTIFICATION_PERMISSION);
@@ -131,6 +135,7 @@ public class PayDoneFragment extends Fragment {
         notificationManager.notify(1, builder.build());
     }
 
+    // Creates a notification channel for payment notifications (required for Android 8.0+)
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Pay Notification";
@@ -139,6 +144,7 @@ public class PayDoneFragment extends Fragment {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
 
+            // Register the channel with the system
             NotificationManager notificationManager = requireContext().getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
@@ -146,6 +152,7 @@ public class PayDoneFragment extends Fragment {
         }
     }
 
+    // Navigates back to the HomeFragment after payment completion
     private void navigateToHomeFragment(String userId) {
         HomeFragment homeFragment = new HomeFragment();
         Bundle bundle = new Bundle();
@@ -158,10 +165,12 @@ public class PayDoneFragment extends Fragment {
                 .commit();
     }
 
+    // Returns the current date and time formatted as "dd MMM yyyy, hh:mma"
     private String getCurrentDateTime() {
         return new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault()).format(Calendar.getInstance().getTime());
     }
 
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -180,6 +189,7 @@ public class PayDoneFragment extends Fragment {
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();

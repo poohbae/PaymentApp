@@ -41,8 +41,10 @@ public class SplitBillDoneFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_split_bill_done, container, false);
 
+        // Retrieve arguments passed to this fragment
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
@@ -52,15 +54,18 @@ public class SplitBillDoneFragment extends Fragment {
 
             Button backToHomeButton = view.findViewById(R.id.back_button);
             backToHomeButton.setOnClickListener(v -> {
+                // Show a notification after payment and navigate to the home fragment
                 showSplitBillNotification(finalRoundedSplitPrice, billNo, getCurrentDateTime());
                 navigateToHomeFragment(userId);
             });
         }
 
+        // Add guest views based on the quantity
         LinearLayout guestContainer = view.findViewById(R.id.guest_container);
         for (int i = 0; i < quantity - 1; i++) {
             String guestName = "Guest " + (i + 1);
 
+            // Create and add guest view for each guest
             View guestView = createGuestView(guestName, "guest", finalRoundedSplitPrice);
             guestContainer.addView(guestView);
         }
@@ -68,6 +73,7 @@ public class SplitBillDoneFragment extends Fragment {
         return view;
     }
 
+    // Create a view for each guest, showing their name and split bill amount
     private View createGuestView(String name, String image, Double price) {
         Context context = getContext();
 
@@ -114,20 +120,21 @@ public class SplitBillDoneFragment extends Fragment {
         return itemLayout;
     }
 
+    // Show a notification after a successful "Split Bill" action
     private void showSplitBillNotification(double amount, String billNo, String dateTime) {
         createNotificationChannel();  // Create notification channel for Android 8.0+
 
-        // Build the notification with expanded content
+        // Build the notification
         @SuppressLint("DefaultLocale") String notificationContent = String.format("You have successfully paid RM %.2f for Bill No: #%s on %s", amount, billNo, dateTime);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
                 .setSmallIcon(R.drawable.notifications)
                 .setContentTitle("Split Bill Completed Successfully")
                 .setContentText(notificationContent)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))  // Expanded text style
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true);
 
-        // Display the notification
+        // Check and request notification permission if not granted
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, SPLIT_BILL_NOTIFICATION_PERMISSION);
@@ -136,6 +143,7 @@ public class SplitBillDoneFragment extends Fragment {
         notificationManager.notify(1, builder.build());
     }
 
+    // Creates a notification channel for payment notifications (required for Android 8.0+)
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Split Bill Notification";
@@ -144,6 +152,7 @@ public class SplitBillDoneFragment extends Fragment {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
 
+            // Register the channel with the system
             NotificationManager notificationManager = requireContext().getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
@@ -151,6 +160,7 @@ public class SplitBillDoneFragment extends Fragment {
         }
     }
 
+    // Navigate back to the HomeFragment
     private void navigateToHomeFragment(String userId) {
         HomeFragment homeFragment = new HomeFragment();
         Bundle bundle = new Bundle();
@@ -163,16 +173,18 @@ public class SplitBillDoneFragment extends Fragment {
                 .commit();
     }
 
+    // Returns the current date and time formatted as "dd MMM yyyy, hh:mma"
     private String getCurrentDateTime() {
         return new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault()).format(Calendar.getInstance().getTime());
     }
 
+    // Converts a value in dp to px based on the device's screen density
     private int dpToPx(Context context, int dp) {
         float density = context.getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -188,10 +200,11 @@ public class SplitBillDoneFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.hide();  // Hide FAB using the hide method
+            fab.hide();
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();
@@ -207,7 +220,7 @@ public class SplitBillDoneFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.show();  // Show FAB using the show method
+            fab.show();
         }
     }
 }

@@ -41,18 +41,20 @@ public class SelectPayDoneFragment extends Fragment {
     String userId;
     double finalRoundedTotalChecked;
 
-    private DatabaseReference ordersRef;
+    private DatabaseReference ordersRef;  // Firebase database reference for orders
     private LinearLayout unpaidItemsContainer;
     private TextView unpaidItemLabel;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_select_pay_done, container, false);
 
         unpaidItemsContainer = view.findViewById(R.id.unpaid_item_container);
         unpaidItemLabel = view.findViewById(R.id.unpaid_item_label);
 
+        // Retrieve arguments passed to this fragment
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
@@ -61,12 +63,13 @@ public class SelectPayDoneFragment extends Fragment {
 
             Button backToHomeButton = view.findViewById(R.id.back_button);
             backToHomeButton.setOnClickListener(v -> {
+                // Show a notification after payment and navigate to the home fragment
                 showSelectPayNotification(finalRoundedTotalChecked, billNo,  getCurrentDateTime());
                 navigateToHomeFragment(userId);
             });
         }
 
-        // Initialize Firebase Database reference
+        // Initialize Firebase Database reference for orders
         ordersRef = FirebaseDatabase.getInstance().getReference("Orders");
 
         // Load unpaid orders
@@ -75,6 +78,7 @@ public class SelectPayDoneFragment extends Fragment {
         return view;
     }
 
+    // Load unpaid orders from the Firebase database
     private void loadUnpaidOrders() {
         ordersRef.orderByChild("status").equalTo(0).addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -82,20 +86,20 @@ public class SelectPayDoneFragment extends Fragment {
                 unpaidItemsContainer.removeAllViews(); // Clear previous views
 
                 if (dataSnapshot.exists()) {
-                    unpaidItemLabel.setText("Unpaid Items"); // Reset label to "Unpaid Item"
+                    unpaidItemLabel.setText("Unpaid Items"); // Set label text to "Unpaid Items"
 
-                    // Loop through each unpaid order and add to the container
+                    // Loop through each unpaid order and create a view for each item
                     for (DataSnapshot orderSnapshot : dataSnapshot.getChildren()) {
                         String name = orderSnapshot.child("name").getValue(String.class);
                         String image = orderSnapshot.child("image").getValue(String.class);
                         Double price = orderSnapshot.child("price").getValue(Double.class);
 
-                        // Dynamically create a layout for each order item
+                        // Dynamically create a layout view for each order item
                         View orderView = createOrderView(name, image, price);
-                        unpaidItemsContainer.addView(orderView);
+                        unpaidItemsContainer.addView(orderView);  // Add each item view to the container
                     }
                 } else {
-                    // Update label to "No unpaid item" if no unpaid orders are found
+                    // Update label if there are no unpaid items
                     unpaidItemLabel.setText("No unpaid item");
                 }
             }
@@ -107,6 +111,7 @@ public class SelectPayDoneFragment extends Fragment {
         });
     }
 
+    // Dynamically create a view to display each unpaid order item
     private View createOrderView(String name, String image, Double price) {
         Context context = getContext();
 
@@ -150,20 +155,21 @@ public class SelectPayDoneFragment extends Fragment {
         return itemLayout;
     }
 
+    // Show a notification after a successful "Select and Pay" action
     private void showSelectPayNotification(double amount, String billNo, String dateTime) {
         createNotificationChannel();  // Create notification channel for Android 8.0+
 
-        // Build the notification with expanded content
+        // Build the notification
         @SuppressLint("DefaultLocale") String notificationContent = String.format("You have successfully paid RM %.2f for Bill No: #%s on %s", amount, billNo, dateTime);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
                 .setSmallIcon(R.drawable.notifications)
                 .setContentTitle("Select and Pay Completed Successfully")
                 .setContentText(notificationContent)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))  // Expanded text style
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true);
 
-        // Display the notification
+        // Check and request notification permission if not granted
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, SELECT_PAY_NOTIFICATION_PERMISSION);
@@ -172,6 +178,7 @@ public class SelectPayDoneFragment extends Fragment {
         notificationManager.notify(1, builder.build());
     }
 
+    // Creates a notification channel for payment notifications (required for Android 8.0+)
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Select and Pay Notification";
@@ -180,6 +187,7 @@ public class SelectPayDoneFragment extends Fragment {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
 
+            // Register the channel with the system
             NotificationManager notificationManager = requireContext().getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
@@ -187,6 +195,7 @@ public class SelectPayDoneFragment extends Fragment {
         }
     }
 
+    // Navigate back to the HomeFragment
     private void navigateToHomeFragment(String userId) {
         HomeFragment homeFragment = new HomeFragment();
         Bundle bundle = new Bundle();
@@ -199,16 +208,18 @@ public class SelectPayDoneFragment extends Fragment {
                 .commit();
     }
 
+    // Returns the current date and time formatted as "dd MMM yyyy, hh:mma"
     private String getCurrentDateTime() {
         return new SimpleDateFormat("dd MMM yyyy, hh:mma", Locale.getDefault()).format(Calendar.getInstance().getTime());
     }
 
+    // Converts a value in dp to px based on the device's screen density
     private int dpToPx(Context context, int dp) {
         float density = context.getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -224,10 +235,11 @@ public class SelectPayDoneFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.hide();  // Hide FAB using the hide method
+            fab.hide();
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();
@@ -243,7 +255,7 @@ public class SelectPayDoneFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.show();  // Show FAB using the show method
+            fab.show();
         }
     }
 }

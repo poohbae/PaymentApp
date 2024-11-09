@@ -32,7 +32,6 @@
             android:textStyle="bold" />
     </LinearLayout>
 
-    <!-- Scrollable content starts here -->
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent">
@@ -46,157 +45,156 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="20dp"
                 android:text="@string/help_note1"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="20dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note2"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note3"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note4"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="25dp"
                 android:text="@string/help_note5"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="25dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note6"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note7"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note8"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="25dp"
                 android:text="@string/help_note9"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="25dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note10"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note11"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note12"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="25dp"
                 android:text="@string/help_note13"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="25dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note14"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note15"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="5dp"
                 android:text="@string/help_note16"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="5dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="25dp"
                 android:text="@string/help_note17"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="25dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
                 android:text="@string/help_note18"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="10dp"/>
+                android:textSize="15sp" />
 
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginBottom="10dp"
                 android:text="@string/help_note19"
                 android:textColor="@color/black"
-                android:textSize="15sp"
-                android:layout_marginBottom="10dp"/>
+                android:textSize="15sp" />
 
         </LinearLayout>
     </ScrollView>
-    <!-- Scrollable content ends here -->
 
 </LinearLayout>

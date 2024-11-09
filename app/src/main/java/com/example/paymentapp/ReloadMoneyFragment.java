@@ -19,8 +19,10 @@ public class ReloadMoneyFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_reload_money, container, false);
 
+        // Back button to navigate back to the previous fragment
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
@@ -28,7 +30,7 @@ public class ReloadMoneyFragment extends Fragment {
         ImageView bankImageView = view.findViewById(R.id.bank_image);
         TextView bankNameTextView = view.findViewById(R.id.bank_name);
 
-        // Retrieve the amount from the arguments
+        // Retrieve the arguments passed to this fragment
         Bundle arguments = getArguments();
         if (arguments != null) {
             String userId = arguments.getString("userId");
@@ -36,37 +38,35 @@ public class ReloadMoneyFragment extends Fragment {
             int bankImageResId = arguments.getInt("bankImageRes", -1);
             String bankName = arguments.getString("bankName");
 
+            // Display the amount and bank details
             double amountValue = Double.parseDouble(amount); // Convert String to double
             totalAmountTextView.setText(String.format("RM %.2f", amountValue));
             bankImageView.setImageResource(bankImageResId);
             bankNameTextView.setText(bankName);
 
-            // Set up a click listener for proceeding to ReloadDoneFragment
+            // Set up 'Pay' button click listener
             Button payButton = view.findViewById(R.id.pay_button);
             payButton.setOnClickListener(v -> {
-                // Create a new bundle to pass the data to ReloadDoneFragment
+                // Pass data to ReloadDoneFragment
                 Bundle bundle = new Bundle();
                 bundle.putString("userId", userId);
                 bundle.putString("amount", amount);
                 bundle.putInt("bankImageRes", bankImageResId);
                 bundle.putString("bankName", bankName);
 
-                // Create ReloadDoneFragment instance and pass the arguments
                 ReloadDoneFragment reloadDoneFragment = new ReloadDoneFragment();
                 reloadDoneFragment.setArguments(bundle);
 
-                // Replace the current fragment with ReloadDoneFragment
                 getParentFragmentManager().beginTransaction()
                         .replace(R.id.frameLayout, reloadDoneFragment)
                         .addToBackStack(null)
                         .commit();
             });
         }
-
         return view;
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -86,7 +86,7 @@ public class ReloadMoneyFragment extends Fragment {
         }
     }
 
-    // Show Toolbar and BottomAppBar when leaving this fragment
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();

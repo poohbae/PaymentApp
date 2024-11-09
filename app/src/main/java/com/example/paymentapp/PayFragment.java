@@ -43,8 +43,10 @@ public class PayFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // Inflate layout for this fragment
         View view = inflater.inflate(R.layout.fragment_pay, container, false);
 
+        // Initialize back button for navigation
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
@@ -62,6 +64,7 @@ public class PayFragment extends Fragment {
 
         platformsRef = FirebaseDatabase.getInstance().getReference("Platforms");
 
+        // Retrieve user data passed as arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
@@ -69,12 +72,13 @@ public class PayFragment extends Fragment {
             balanceAmountTextView.setText(String.format("RM %.2f", walletAmt));
         }
 
-        // Load Payment Methods from Firebase
+        // Load platforms from Firebase
         loadPlatforms();
 
-        // Set up a PopupMenu to show when the drop-down arrow is clicked
+        // Set up a PopupMenu for selecting a platform
         dropDownArrow.setOnClickListener(v -> showPopupMenu(v));
 
+        // Set amount buttons to update amount when clicked
         rm20Button.setOnClickListener(v -> {
             selectedAmount = "20";
             inputAmountEditText.setText("20");
@@ -93,11 +97,11 @@ public class PayFragment extends Fragment {
             updateAmount("100");
         });
 
-        // Set a TextWatcher on the inputAmount EditText to update the top-up and total amounts dynamically
+        // Listen for changes in the input amount to update displayed total dynamically
         inputAmountEditText.addTextChangedListener(new android.text.TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-                // No need to do anything before the text is changed
+                // No action needed before text change
             }
 
             @Override
@@ -108,43 +112,41 @@ public class PayFragment extends Fragment {
                     try {
                         double inputValue = Double.parseDouble(input);
 
-                        // Check if input value exceeds the maximum allowed amount
+                        // Prevent input values greater than 1000
                         if (inputValue > 1000) {
-                            inputAmountEditText.setText(input.substring(0, start));  // Truncate the input at the last valid point
+                            inputAmountEditText.setText(input.substring(0, start));  // Truncate to last valid point
                             inputAmountEditText.setSelection(inputAmountEditText.getText().length());  // Move cursor to the end
                             return;
                         }
 
+                        // Limit to two decimal places
                         if (input.contains(".")) {
                             int decimalIndex = input.indexOf(".");
-
-                            // Check if there are more than 2 digits after the decimal point
-                            if (input.length() - decimalIndex > 3) { // Allow 1 for the decimal point and 2 for decimal places
-                                // If more than 2 digits are entered after the decimal, truncate the input
+                            if (input.length() - decimalIndex > 3) {
                                 input = input.substring(0, decimalIndex + 3);
                                 inputAmountEditText.setText(input);
                                 inputAmountEditText.setSelection(input.length());  // Move cursor to the end
                             }
                         }
 
-                        // Update the amount to display in other TextViews without rounding
+                        // Update displayed amount
                         updateAmount(input);
 
                     } catch (NumberFormatException e) {
-                        // Handle exception if the input amount is not valid
-                        updateAmount("0");
+                        updateAmount("0");  // Handle invalid input by resetting amount to 0
                     }
                 } else {
-                    updateAmount("0"); // Reset the amount to 0 if the EditText is empty
+                    updateAmount("0");  // Reset to 0 if input is empty
                 }
             }
 
             @Override
             public void afterTextChanged(android.text.Editable s) {
-                // No need to do anything after the text is changed
+                // No action needed after text change
             }
         });
 
+        // Handle pay button click to proceed to payment completion
         payNowButton.setOnClickListener(v -> {
             String manualAmount = inputAmountEditText.getText().toString().trim();
             String amountToSend;
@@ -162,16 +164,15 @@ public class PayFragment extends Fragment {
                 return;
             }
 
-            // Convert amount to double for comparison
+            // Validate amount does not exceed wallet balance
             double amount = Double.parseDouble(amountToSend);
-
-            // Validation: Check if the amount exceeds wallet balance
             if (amount > walletAmt) {
                 inputAmountEditText.setError("Amount exceeds wallet balance");
                 inputAmountEditText.requestFocus();
                 return;
             }
 
+            // Pass data to PayDoneFragment
             Bundle bundle = new Bundle();
             bundle.putString("userId", userId);
             bundle.putString("amount", amountToSend);
@@ -190,22 +191,24 @@ public class PayFragment extends Fragment {
         return view;
     }
 
+    // Updates the total amount to display based on user input
     private void updateAmount(String amount) {
         double parsedAmount = 0;
         try {
             parsedAmount = Double.parseDouble(amount);
         } catch (NumberFormatException e) {
-            // Handle exception if the input amount is not valid
+            // Handle invalid input by setting parsedAmount to 0
+            parsedAmount = 0;
         }
 
-        // Truncate the amount to two decimal places without rounding
+        // Format amount to two decimal places
         String formattedAmount = String.format("RM %.2f", Math.floor(parsedAmount * 100) / 100);
         totalAmountTextView.setText(formattedAmount);
     }
 
-    // Method to load Payment Methods from Firebase
+    // Loads available platforms from Firebase and sets the first one by default
     private void loadPlatforms() {
-        // Clear the lists before loading to avoid duplicates
+        // Clear lists to prevent duplicate entries
         platformsList.clear();
         platformNames.clear();
 
@@ -215,13 +218,13 @@ public class PayFragment extends Fragment {
                 if (dataSnapshot.exists()) {
                     for (DataSnapshot methodSnapshot : dataSnapshot.getChildren()) {
                         HashMap<String, String> platform = (HashMap<String, String>) methodSnapshot.getValue();
-                        platformsList.add(platform);  // Add each payment method to the list
-                        platformNames.add(platform.get("name"));  // Add bank names to the popup list
+                        platformsList.add(platform);  // Add platform to list
+                        platformNames.add(platform.get("name"));  // Add platform name to popup list
                     }
 
-                    // Update UI with the first platform (Netflix)
+                    // Display the first platform by default
                     if (!platformsList.isEmpty()) {
-                        HashMap<String, String> firstMethod = platformsList.get(0);  // Get the first payment method
+                        HashMap<String, String> firstMethod = platformsList.get(0);
                         String platformName = firstMethod.get("name");
                         String imageResourceName = firstMethod.get("image");
 
@@ -229,26 +232,27 @@ public class PayFragment extends Fragment {
 
                         platformNameTextView.setText(platformName);
                         platformImageView.setImageResource(resID);
-                        platformImageView.setTag(resID);  // Save the resource ID in the tag for future use
+                        platformImageView.setTag(resID);
                     }
                 }
             }
 
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                // Handle error
+                // Handle any errors
             }
         });
     }
 
-    // Show PopupMenu anchored to the arrow
+    // Displays a popup menu with available payment platforms for selection
     private void showPopupMenu(View v) {
         PopupMenu popupMenu = new PopupMenu(getContext(), v);
-        for (String bankName : platformNames) {
-            popupMenu.getMenu().add(bankName);  // Add bank names to the popup menu
+        for (String platformName : platformNames) {
+            popupMenu.getMenu().add(platformName);  // Add platform name to menu
         }
 
         popupMenu.setOnMenuItemClickListener(item -> {
+            // Update selected platform details
             for (HashMap<String, String> method : platformsList) {
                 if (method.get("name").equals(item.getTitle())) {
                     String bankName = method.get("name");
@@ -258,17 +262,16 @@ public class PayFragment extends Fragment {
                     platformNameTextView.setText(bankName);
                     platformImageView.setImageResource(resID);
                     platformImageView.setTag(resID);
-
                     break;
                 }
             }
             return true;
         });
 
-        popupMenu.show();  // Show the popup menu below the drop-down arrow
+        popupMenu.show();  // Show the popup menu
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -287,6 +290,7 @@ public class PayFragment extends Fragment {
         }
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();

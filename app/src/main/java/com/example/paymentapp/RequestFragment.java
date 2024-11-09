@@ -75,11 +75,13 @@ public class RequestFragment extends Fragment {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_request, container, false);
 
+        // Initialize the back button for navigation
         ImageView backButton = view.findViewById(R.id.back_button);
         backButton.setOnClickListener(v -> getParentFragmentManager().popBackStack());
 
         EditText searchInput = view.findViewById(R.id.search);
 
+        // Retrieve user data passed through arguments
         Bundle arguments = getArguments();
         if (arguments != null) {
             userId = arguments.getString("userId");
@@ -87,9 +89,11 @@ public class RequestFragment extends Fragment {
             userImageUrl = arguments.getString("userImageUrl");
         }
 
+        // Initialize database reference for user data
         userListRef = FirebaseDatabase.getInstance().getReference("Users");
-        loadUsers();
+        loadUsers();  // Load list of users
 
+        // Set up text change listener for search functionality
         searchInput.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -107,6 +111,7 @@ public class RequestFragment extends Fragment {
             }
         });
 
+        // Set up RecyclerView to display the user list
         cardRecyclerView = view.findViewById(R.id.card_recycler_view);
         cardRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
@@ -116,15 +121,18 @@ public class RequestFragment extends Fragment {
         userAdapter = new UserAdapter(filteredUserList, getContext(), this, UserAdapter.FragmentType.REQUEST, userId, userImageUrl, 0.0);
         cardRecyclerView.setAdapter(userAdapter);
 
+        // Set up 'See All' button to display all requests
         TextView seeAllButton = view.findViewById(R.id.see_all_button);
         seeAllButton.setOnClickListener(v -> showBottomDialog());
 
+        // Initialize list to store pending requests
         pendingRequests = new ArrayList<>();
         fetchAndPopulatePendingRequests(view.findViewById(R.id.request_list));
 
         return view;
     }
 
+    // Load users from Firebase and add them to the user list
     private void loadUsers() {
         userList.clear();
 
@@ -135,7 +143,7 @@ public class RequestFragment extends Fragment {
                     for (DataSnapshot userSnapshot : dataSnapshot.getChildren()) {
                         String userIdFromDB = userSnapshot.getKey();
 
-                        if (!userIdFromDB.equals(userId)) {
+                        if (!userIdFromDB.equals(userId)) {  // Exclude the logged-in user
                             HashMap<String, String> user = (HashMap<String, String>) userSnapshot.getValue();
                             if (user != null) {
                                 user.put("id", userIdFromDB);
@@ -145,8 +153,6 @@ public class RequestFragment extends Fragment {
                     }
 
                     userList.sort((user1, user2) -> user1.get("name").compareToIgnoreCase(user2.get("name")));
-
-                    // Initialize filteredUserList with all users initially
                     filteredUserList.clear();
                     filteredUserList.addAll(userList);
                     userAdapter.notifyDataSetChanged();
@@ -165,10 +171,8 @@ public class RequestFragment extends Fragment {
         filteredUserList.clear();
 
         if (query.isEmpty()) {
-            // If search query is empty, restore the full user list
-            filteredUserList.addAll(userList);
+            filteredUserList.addAll(userList);  // Show all users if query is empty
         } else {
-            // Otherwise, filter the list based on the query
             for (HashMap<String, String> user : userList) {
                 String userName = user.get("name").toLowerCase();
                 String mobileNumber = user.get("mobileNumber").toLowerCase();
@@ -178,22 +182,21 @@ public class RequestFragment extends Fragment {
             }
         }
 
-        // Notify adapter of the updated filtered list
-        userAdapter.notifyDataSetChanged();
+        userAdapter.notifyDataSetChanged();  // Notify adapter of the updated filtered list
     }
 
+    // Fetch and populate pending requests from Firebase and display them
     private void fetchAndPopulatePendingRequests(LinearLayout pendingRequestList) {
         DatabaseReference walletsRef = FirebaseDatabase.getInstance().getReference("Wallets");
 
-        // Iterate through all wallets in the database
         walletsRef.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot snapshot) {
-                pendingRequestList.removeAllViews();  // Clear old views before adding new ones
-                pendingRequests.clear();  // Clear the old transaction list
+                pendingRequestList.removeAllViews();
+                pendingRequests.clear();
 
                 for (DataSnapshot walletSnapshot : snapshot.getChildren()) {
-                    String walletOwnerId = walletSnapshot.getKey(); // Get wallet owner's ID
+                    String walletOwnerId = walletSnapshot.getKey();
 
                     // Iterate through each transaction in the wallet
                     DataSnapshot transactionHistory = walletSnapshot.child("transactionHistory");
@@ -210,34 +213,30 @@ public class RequestFragment extends Fragment {
                         String recipientId = transactionSnapshot.child("recipientId").getValue(String.class);
                         double amount = transactionSnapshot.child("amount").getValue(Double.class);
 
+                        // Only display pending requests
                         if (status != 0) continue;
 
                         // Scenario 1: Someone is requesting money from the logged-in user
                         if (mobileNumber.equals(userMobileNumber)) {
-                            // Show "Accept" icon
                             Transaction transaction = new Transaction(transactionId, recipientImageUrl, null, datetime, source, note, refId, status, mobileNumber, recipientId, amount);
                             pendingRequests.add(transaction);
                         }
 
                         // Scenario 2: Logged-in user is requesting money from others
                         if (walletOwnerId.equals("W" + userId)) {
-                            // Show "Call" icon because the logged-in user is the requester
                             Transaction transaction = new Transaction(transactionId, null, senderImageUrl, datetime, source, note, refId, status, mobileNumber, recipientId, amount);
                             pendingRequests.add(transaction);
                         }
                     }
                 }
 
-                // Populate the pending requests list
                 for (Transaction transaction : pendingRequests) {
                     String note = transaction.note.equals("N/A") ? "Ref ID: " + transaction.refId : transaction.note + " (Ref ID: " + transaction.refId + ")";
 
-                    // Show "Accept" icon if the logged-in user is the recipient
+                    // Determine if the user is the requester or recipient and add to list
                     if (transaction.mobileNumber.equals(userMobileNumber)) {
                         addPendingTransactionItem(pendingRequestList, transaction.recipientImageUrl, null, transaction.datetime, transaction.source, note, transaction.mobileNumber, transaction.recipientId, String.format("RM %.2f", transaction.amount), getActivity(), transaction.transactionId, true);
-                    }
-                    // Show "Call" icon if the logged-in user is the requester
-                    else {
+                    } else {
                         addPendingTransactionItem(pendingRequestList, null, transaction.senderImageUrl, transaction.datetime, transaction.source, note, transaction.mobileNumber, transaction.recipientId, String.format("RM %.2f", transaction.amount), getActivity(), transaction.transactionId, false);
                     }
                 }
@@ -250,6 +249,7 @@ public class RequestFragment extends Fragment {
         });
     }
 
+    // Helper method to add a pending transaction item to the list
     private void addPendingTransactionItem(LinearLayout parent, String userImageUrl, String imageUrl, String date, String source, String note, String mobileNumber, String recipientId, String amount, Context context, String transactionId, boolean isAcceptIcon) {
         LinearLayout transactionItem = new LinearLayout(context);
         transactionItem.setOrientation(LinearLayout.HORIZONTAL);
@@ -264,15 +264,8 @@ public class RequestFragment extends Fragment {
         LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dpToPx(context, 40), dpToPx(context, 40));
         icon.setLayoutParams(iconParams);
 
-        String imageToLoad;
-        if (isAcceptIcon) {
-            // If the logged-in user is the recipient, show the requester's image (userImageUrl)
-            imageToLoad = userImageUrl;
-        } else {
-            // If the logged-in user is the requester, show the recipient's image (imageUrl)
-            imageToLoad = imageUrl;
-        }
-        Glide.with(context).load(imageToLoad).into(icon);  // Load the image for pending requests
+        String imageToLoad = isAcceptIcon ? userImageUrl : imageUrl;
+        Glide.with(context).load(imageToLoad).into(icon);  // Load the image
         transactionItem.addView(icon);
 
         LinearLayout textContainer = new LinearLayout(context);
@@ -301,19 +294,17 @@ public class RequestFragment extends Fragment {
         transactionItem.addView(textContainer);
 
         if (isAcceptIcon) {
-            // Show "Accept" icon if the current user is being requested
             ImageView acceptIcon = new ImageView(context);
             LinearLayout.LayoutParams acceptIconParams = new LinearLayout.LayoutParams(dpToPx(context, 35), dpToPx(context, 35));
             acceptIcon.setLayoutParams(acceptIconParams);
-            acceptIcon.setImageResource(R.drawable.send);  // Replace with your accept icon resource
+            acceptIcon.setImageResource(R.drawable.send);
             acceptIcon.setPadding(dpToPx(context, 0), dpToPx(context, 5), dpToPx(context, 15), dpToPx(context, 5));
-            transactionItem.addView(acceptIcon);
-
             acceptIcon.setOnClickListener(v -> handleAcceptTransaction(transactionId, context, parent, userId, recipientId, amount));
+            transactionItem.addView(acceptIcon);
 
             TextView transactionAmount = new TextView(context);
             transactionAmount.setText(String.format("- %s", amount));
-            transactionAmount.setTextColor(Color.parseColor("#FF9800"));  // Orange color for pending request
+            transactionAmount.setTextColor(Color.parseColor("#FF9800"));
             transactionAmount.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16);
             transactionItem.addView(transactionAmount);
 
@@ -323,27 +314,21 @@ public class RequestFragment extends Fragment {
             cancelIcon.setLayoutParams(cancelIconParams);
             cancelIcon.setImageResource(R.drawable.cancel);
             cancelIcon.setPadding(dpToPx(context, 0), dpToPx(context, 5), dpToPx(context, 15), dpToPx(context, 5));
+            cancelIcon.setOnClickListener(v -> showConfirmationDialog(transactionId, context, parent));
             transactionItem.addView(cancelIcon);
-
-            cancelIcon.setOnClickListener(v -> {
-                showConfirmationDialog(transactionId, context, parent);
-            });
 
             ImageView callIcon = new ImageView(context);
             LinearLayout.LayoutParams callIconParams = new LinearLayout.LayoutParams(dpToPx(context, 35), dpToPx(context, 35));
             callIcon.setLayoutParams(callIconParams);
             callIcon.setImageResource(R.drawable.call);
             callIcon.setPadding(dpToPx(context, 0), dpToPx(context, 5), dpToPx(context, 15), dpToPx(context, 5));
-            transactionItem.addView(callIcon);
-
             callIcon.setOnClickListener(v -> {
                 Toast.makeText(context, "Calling: " + mobileNumber, Toast.LENGTH_SHORT).show();
-
-                // Open the dialer with the number
                 Intent intent = new Intent(Intent.ACTION_DIAL);
                 intent.setData(Uri.parse("tel:" + mobileNumber));
                 context.startActivity(intent);
             });
+            transactionItem.addView(callIcon);
 
             TextView transactionAmount = new TextView(context);
             transactionAmount.setText(String.format("+ %s", amount));
@@ -355,6 +340,7 @@ public class RequestFragment extends Fragment {
         parent.addView(transactionItem);
     }
 
+    // Show the bottom dialog displaying all pending requests
     private void showBottomDialog() {
         final Dialog dialog = new Dialog(getActivity());
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -362,6 +348,7 @@ public class RequestFragment extends Fragment {
 
         LinearLayout requestHistory = dialog.findViewById(R.id.pending_request);
         ImageView closeButton = dialog.findViewById(R.id.close_button);
+        closeButton.setOnClickListener(view -> dialog.dismiss());
 
         for (Transaction transaction : pendingRequests) {
             String note = transaction.note.equals("N/A") ? "Ref ID: " + transaction.refId : transaction.note + " (Ref ID: " + transaction.refId + ")";
@@ -369,14 +356,10 @@ public class RequestFragment extends Fragment {
             // Show "Accept" icon if the logged-in user is the recipient
             if (transaction.mobileNumber.equals(userMobileNumber)) {
                 addPendingTransactionItem(requestHistory, transaction.recipientImageUrl, null, transaction.datetime, transaction.source, note, transaction.mobileNumber, transaction.recipientId, String.format("RM %.2f", transaction.amount), getActivity(), transaction.transactionId, true);
-            }
-            // Show "Call" icon if the logged-in user is the requester
-            else {
+            } else {
                 addPendingTransactionItem(requestHistory, null, transaction.senderImageUrl, transaction.datetime, transaction.source, note, transaction.mobileNumber, transaction.recipientId, String.format("RM %.2f", transaction.amount), getActivity(), transaction.transactionId, false);
             }
         }
-
-        closeButton.setOnClickListener(view -> dialog.dismiss());
 
         dialog.show();
         Window window = dialog.getWindow();
@@ -388,6 +371,7 @@ public class RequestFragment extends Fragment {
         }
     }
 
+    // Show confirmation dialog for cancelling a request
     private void showConfirmationDialog(String transactionId, Context context, LinearLayout parent) {
         final View dialogView = getLayoutInflater().inflate(R.layout.confirmation_dialog, null);
 
@@ -399,26 +383,23 @@ public class RequestFragment extends Fragment {
         final AlertDialog dialog = builder.create();
         dialog.show();
 
-        // Handle confirm button click
+        // Handle confirm button click to cancel request in Firebase
         Button confirmButton = dialog.getButton(AlertDialog.BUTTON_POSITIVE);
         confirmButton.setOnClickListener(view -> {
-            // Delete the respective transaction from Firebase
             DatabaseReference transactionRef = FirebaseDatabase.getInstance().getReference("Wallets")
                     .child("W" + userId)
                     .child("transactionHistory")
                     .child(transactionId);
 
             transactionRef.removeValue().addOnSuccessListener(aVoid -> {
-                // Remove the view from parent container and refresh pending requests
                 Toast.makeText(context, "Request canceled successfully.", Toast.LENGTH_SHORT).show();
                 fetchAndPopulatePendingRequests(parent);
-                dialog.dismiss(); // Close the confirmation dialog
-            }).addOnFailureListener(e -> {
-                Toast.makeText(context, "Failed to cancel the request.", Toast.LENGTH_SHORT).show();
-            });
+                dialog.dismiss();
+            }).addOnFailureListener(e -> Toast.makeText(context, "Failed to cancel the request.", Toast.LENGTH_SHORT).show());
         });
     }
 
+    // Accepts a transaction request and updates Firebase records accordingly
     private void handleAcceptTransaction(String transactionId, Context context, LinearLayout parent, String userId, String recipientId, String amount) {
         DatabaseReference currentUserWalletRef = FirebaseDatabase.getInstance().getReference("Wallets")
                 .child("W" + userId).child("walletAmt");
@@ -443,7 +424,7 @@ public class RequestFragment extends Fragment {
                         DatabaseReference recipientTransactionRef = FirebaseDatabase.getInstance().getReference("Wallets")
                                 .child("W" + recipientId).child("transactionHistory").child(transactionId);
 
-                        // Step 1: Fetch the recipient's wallet amount and update it
+                        // Step 1: Fetch the recipient's wallet amount
                         recipientWalletRef.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot recipientSnapshot) {
@@ -472,7 +453,6 @@ public class RequestFragment extends Fragment {
                                                                                         // Copy the transaction details to user's transaction history
                                                                                         userTransactionHistoryRef.setValue(recipientTransactionSnapshot.getValue())
                                                                                                 .addOnSuccessListener(aVoid3 -> {
-                                                                                                    // Fetch recipient's name from Users node
                                                                                                     DatabaseReference recipientUserRef = FirebaseDatabase.getInstance().getReference("Users").child(recipientId).child("name");
                                                                                                     recipientUserRef.addListenerForSingleValueEvent(new ValueEventListener() {
                                                                                                         @Override
@@ -546,20 +526,21 @@ public class RequestFragment extends Fragment {
         });
     }
 
+    // Displays a notification for the request approval completion
     private void showRequestNotification(double amount, String name, String dateTime) {
         createNotificationChannel();  // Create notification channel for Android 8.0+
 
-        // Build the notification with expanded content
+        // Build notification content
         @SuppressLint("DefaultLocale") String notificationContent = String.format("You have successfully approved the request for RM %.2f from %s on %s", amount, name, dateTime);
         NotificationCompat.Builder builder = new NotificationCompat.Builder(requireContext(), CHANNEL_ID)
                 .setSmallIcon(R.drawable.notifications)
                 .setContentTitle("Request Approved Successfully")
                 .setContentText(notificationContent)
-                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))  // Expanded text style
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationContent))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true);
 
-        // Display the notification
+        // Check and request notification permission if not granted
         NotificationManagerCompat notificationManager = NotificationManagerCompat.from(requireContext());
         if (ActivityCompat.checkSelfPermission(getContext(), android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(requireActivity(), new String[]{android.Manifest.permission.POST_NOTIFICATIONS}, REQUEST_NOTIFICATION_PERMISSION);
@@ -568,6 +549,7 @@ public class RequestFragment extends Fragment {
         notificationManager.notify(1, builder.build());
     }
 
+    // Creates a notification channel for request notifications (required for Android 8.0+)
     private void createNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             CharSequence name = "Request Notification";
@@ -576,6 +558,7 @@ public class RequestFragment extends Fragment {
             NotificationChannel channel = new NotificationChannel(CHANNEL_ID, name, importance);
             channel.setDescription(description);
 
+            // Register the channel with the system
             NotificationManager notificationManager = requireContext().getSystemService(NotificationManager.class);
             if (notificationManager != null) {
                 notificationManager.createNotificationChannel(channel);
@@ -583,12 +566,13 @@ public class RequestFragment extends Fragment {
         }
     }
 
+    // Converts a value in dp to px based on the device's screen density
     private int dpToPx(Context context, int dp) {
         float density = context.getResources().getDisplayMetrics().density;
         return Math.round(dp * density);
     }
 
-    // Hide Toolbar and BottomAppBar when this fragment is visible
+    // Hide the ActionBar, BottomAppBar, and FloatingActionButton in this fragment
     @Override
     public void onResume() {
         super.onResume();
@@ -604,13 +588,14 @@ public class RequestFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.hide();  // Hide FAB using the hide method
+            fab.hide();
         }
 
         // Re-fetch pending requests when the fragment is resumed
         fetchAndPopulatePendingRequests(getView().findViewById(R.id.request_list));
     }
 
+    // Show the ActionBar, BottomAppBar, and FloatingActionButton when leaving this fragment
     @Override
     public void onPause() {
         super.onPause();
@@ -626,7 +611,7 @@ public class RequestFragment extends Fragment {
 
         FloatingActionButton fab = getActivity().findViewById(R.id.fab);
         if (fab != null) {
-            fab.show();  // Show FAB using the show method
+            fab.show();
         }
     }
 }
